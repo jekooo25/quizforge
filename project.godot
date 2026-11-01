@@ -2,17 +2,22 @@ config_version=5
 
 [application]
 
-config/name="Quizmon"
-config/description="A quiz battles in the shape of a monster RPG. Answer fast, hit hard."
-run/main_scene="res://scenes/battle.tscn"
+config/name="Quizforge"
+config/description="Turn your reviewer into a battle."
+run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
+
+[autoload]
+
+Nav="*res://scripts/ui/nav.gd"
 
 [display]
 
-window/size/viewport_width=1152
-window/size/viewport_height=648
+window/size/viewport_width=1280
+window/size/viewport_height=562
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+window/handheld/orientation=1
 
 [rendering]
 

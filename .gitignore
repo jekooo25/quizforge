@@ -12,3 +12,6 @@ build/
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# Dropped reference material, not part of the game
+prototype-refs/

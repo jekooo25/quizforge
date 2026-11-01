@@ -1,11 +1,10 @@
 extends Node
-## Debug harness: boots the battle scene, optionally answers a question, then
-## saves a PNG of the viewport so the layout and feedback can be inspected.
-## godot --path . res://tests/capture.tscn -- --out shot.png --delay 1.2 [--answer]
+## Screenshot harness for the whole app.
+## godot --path . res://tests/capture.tscn -- --screen res://scripts/screens/menu_screen.gd --out shot.png --delay 1.0
 
-var _out_path: String = "user://shot.png"
-var _delay: float = 1.2
-var _answer: bool = false
+var _out_path := "user://shot.png"
+var _delay := 1.0
+var _screen := ""
 
 
 func _ready() -> void:
@@ -18,19 +17,23 @@ func _ready() -> void:
 			"--delay":
 				if i + 1 < args.size():
 					_delay = float(args[i + 1])
-			"--answer":
-				_answer = true
+			"--screen":
+				if i + 1 < args.size():
+					_screen = args[i + 1]
 
-	var battle: Node = load("res://scenes/battle.tscn").instantiate()
-	add_child(battle)
+	var main_scene: Node = load("res://scenes/main.tscn").instantiate()
+	add_child(main_scene)
 
-	if _answer:
-		await get_tree().create_timer(0.7).timeout
-		battle._on_answer(battle._correct_index)
-		await get_tree().create_timer(maxf(_delay - 0.7, 0.25)).timeout
-	else:
-		await get_tree().create_timer(_delay).timeout
+	if _screen != "":
+		await get_tree().process_frame
+		var script: GDScript = load(_screen)
+		if script == null:
+			printerr("could not load screen: ", _screen)
+			get_tree().quit(1)
+			return
+		Nav.show_screen(script.new())
 
+	await get_tree().create_timer(_delay).timeout
 	await RenderingServer.frame_post_draw
 
 	var image := get_viewport().get_texture().get_image()
