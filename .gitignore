@@ -1,0 +1,14 @@
+# Godot 4 generated state
+.godot/
+export_presets.cfg
+
+# Build output
+build/
+*.exe
+*.pck
+*.zip
+
+# OS noise
+Thumbs.db
+desktop.ini
+.DS_Store
