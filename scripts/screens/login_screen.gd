@@ -65,11 +65,11 @@ func _ready() -> void:
 
 
 func _on_login() -> void:
-	var name := _username.text.strip_edges()
-	if name == "":
+	var entered := _username.text.strip_edges()
+	if entered == "":
 		_error.text = "Enter a username to continue."
 		return
-	Nav.user["username"] = name
+	Nav.user["username"] = entered
 	Nav.show_screen(load("res://scripts/screens/loading_screen.gd").new().setup("login"))
 
 

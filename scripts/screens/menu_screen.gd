@@ -52,11 +52,11 @@ func _ready() -> void:
 
 
 func _footer_text() -> String:
-	var name := Nav.display_name()
+	var who := Nav.display_name()
 	var school := str(Nav.user.get("school", ""))
 	if school == "":
-		return "Signed in as " + name
-	return "%s  ·  %s" % [name, school]
+		return "Signed in as " + who
+	return "%s  ·  %s" % [who, school]
 
 
 func _on_item(action: String) -> void:

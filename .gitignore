@@ -15,3 +15,12 @@ desktop.ini
 
 # Dropped reference material, not part of the game
 prototype-refs/
+
+# Python (question generation server)
+__pycache__/
+*.pyc
+.venv/
+venv/
+server/*.questions.json
+server/.env
+
