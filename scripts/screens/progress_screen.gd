@@ -1,13 +1,13 @@
 extends Control
 ## Progress: what we know about this student so far.
 
-const Backdrop := preload("res://scripts/ui/backdrop.gd")
-
-var _stats: Array = []
+func _or_dash(value: String) -> String:
+	var v := value.strip_edges()
+	return v if v != "" else "—"
 
 
 func _ready() -> void:
-	var bg: Control = Backdrop.new()
+	var bg: Control = PhotoBackdrop.create()
 	add_child(bg)
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
@@ -19,15 +19,17 @@ func _ready() -> void:
 	board.custom_minimum_size = Vector2(660, 400)
 	center.add_child(board)
 
-	var title := UITheme.script("Progress", 34, UITheme.YELLOW_DEEP)
+	var title := UITheme.script("Progress", 34, UITheme.WOOD_DARK)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	board.content.add_child(title)
 
+	# an empty field should read as empty, not as a blank row
+	var who := Nav.display_name() if str(Nav.user.get("first_name", "")).strip_edges() != "" else "—"
 	var lines := [
-		{"k": "Student", "v": Nav.display_name()},
-		{"k": "School", "v": str(Nav.user.get("school", "—"))},
-		{"k": "Student ID", "v": str(Nav.user.get("student_id", "—"))},
-		{"k": "Reviewer", "v": str(Nav.user.get("reviewer_file", "")).get_file() if str(Nav.user.get("reviewer_file", "")) != "" else "—"},
+		{"k": "Student", "v": who},
+		{"k": "School", "v": _or_dash(str(Nav.user.get("school", "")))},
+		{"k": "Student ID", "v": _or_dash(str(Nav.user.get("student_id", "")))},
+		{"k": "Reviewer", "v": _or_dash(str(Nav.user.get("reviewer_file", "")).get_file())},
 		{"k": "Encounters", "v": Nav.encounter_title if Nav.encounter_ready else "0"},
 	]
 	for line in lines:

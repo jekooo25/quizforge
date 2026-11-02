@@ -1,12 +1,11 @@
 extends Control
 ## Main menu on the bulletin board, mascot peeking over the top edge.
 
-const Backdrop := preload("res://scripts/ui/backdrop.gd")
 const Cat := preload("res://scripts/ui/cat_mascot.gd")
 
 
 func _ready() -> void:
-	var bg: Control = Backdrop.new()
+	var bg: Control = PhotoBackdrop.create()
 	add_child(bg)
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
@@ -16,10 +15,10 @@ func _ready() -> void:
 	cat.anchor_right = 0.5
 	cat.anchor_top = 0.0
 	cat.anchor_bottom = 0.0
-	cat.offset_left = -55.0
-	cat.offset_right = 105.0
-	cat.offset_top = -14.0
-	cat.offset_bottom = 136.0
+	cat.offset_left = -80.0
+	cat.offset_right = 80.0
+	cat.offset_top = -36.0
+	cat.offset_bottom = 148.0
 	add_child(cat)
 
 	var center := CenterContainer.new()
@@ -30,7 +29,7 @@ func _ready() -> void:
 	board.custom_minimum_size = Vector2(800, 380)
 	center.add_child(board)
 
-	var title := UITheme.script("Main menu", 34, UITheme.YELLOW_DEEP)
+	var title := UITheme.script("Main menu", 34, UITheme.WOOD_DARK)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	board.content.add_child(title)
 

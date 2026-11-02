@@ -1,11 +1,9 @@
 extends Control
 ## Settings: music and SFX sliders on the yellow panel from the design.
 
-const Backdrop := preload("res://scripts/ui/backdrop.gd")
-
 
 func _ready() -> void:
-	var bg: Control = Backdrop.new()
+	var bg: Control = PhotoBackdrop.create()
 	add_child(bg)
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
