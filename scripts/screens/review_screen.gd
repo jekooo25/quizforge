@@ -26,7 +26,15 @@ func setup(payload: Dictionary) -> Control:
 	_payload = payload
 	_questions = QuizData.from_server(payload)
 	if _questions.is_empty():
-		_questions = QuizData.load_saved().get("questions", [])
+		# This is a fallback: a failed/empty payload must not silently turn into
+		# whatever quiz happened to be saved from an earlier run.
+		var saved := QuizData.load_saved()
+		_questions = saved.get("questions", [])
+		print("[review] payload had 0 questions — REUSED saved quiz: %d questions, title '%s'" % [
+			_questions.size(), str(saved.get("title", ""))])
+	else:
+		print("[review] payload: %d questions, %d pages" % [
+			_questions.size(), payload.get("pages", []).size()])
 	return self
 
 
@@ -185,7 +193,7 @@ func _build_source() -> void:
 			continue
 		wrote_any = true
 		if pages.size() > 1:
-			var head := UITheme.small("Page %d" % int(page.get("page", 0)), 11, UITheme.MUTED)
+			var head := UITheme.small("PDF page %d" % int(page.get("page", 0)), 11, UITheme.MUTED)
 			_content.add_child(head)
 		var body := UITheme.sans(text, 14, UITheme.INK)
 		body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -323,12 +331,36 @@ func _update_status() -> void:
 		return
 	var problems := QuizData.validate(_questions)
 	if problems.is_empty():
-		_status.text = "%d question%s, all valid." % [
-			_questions.size(), "" if _questions.size() == 1 else "s"]
+		var used: Array = _payload.get("source", {}).get("used_pages", [])
+		var span := "" if used.is_empty() else "  PDF pages %s." % _page_span(used)
+		_status.text = "%d question%s, all valid.%s" % [
+			_questions.size(), "" if _questions.size() == 1 else "s", span]
 		_status.add_theme_color_override("font_color", Color(0.30, 0.52, 0.32))
 	else:
 		_status.text = "%s  (%d more)" % [problems[0], problems.size() - 1] if problems.size() > 1 else problems[0]
 		_status.add_theme_color_override("font_color", UITheme.RED)
+
+
+## 40, 41, 42, 50 -> "40-42, 50"
+func _page_span(pages: Array) -> String:
+	if pages.is_empty():
+		return "none"
+	var nums: Array[int] = []
+	for p in pages:
+		nums.append(int(p))
+	nums.sort()
+	var parts: Array[String] = []
+	var start := nums[0]
+	var prev := nums[0]
+	for i in range(1, nums.size()):
+		if nums[i] == prev + 1:
+			prev = nums[i]
+			continue
+		parts.append("%d" % start if start == prev else "%d-%d" % [start, prev])
+		start = nums[i]
+		prev = nums[i]
+	parts.append("%d" % start if start == prev else "%d-%d" % [start, prev])
+	return ", ".join(parts)
 
 
 # ------------------------------------------------------------------ regenerating
@@ -352,7 +384,8 @@ func _on_regenerate() -> void:
 	_set_busy(true)
 	_status.add_theme_color_override("font_color", UITheme.MUTED)
 	_status.text = "Writing new questions…"
-	_client.regenerate(_payload.get("pages", []), maxi(5, _questions.size()))
+	var avoid: Array = _payload.get("source", {}).get("used_pages", [])
+	_client.regenerate(_payload.get("pages", []), maxi(5, _questions.size()), avoid)
 
 
 func _set_busy(busy: bool) -> void:
@@ -373,12 +406,20 @@ func _on_regenerated(data: Dictionary) -> void:
 	_questions = fresh
 	if str(_payload.get("title", "")).strip_edges() == "":
 		_payload["title"] = str(data.get("title", ""))
+	if data.has("used_pages"):
+		if typeof(_payload.get("source")) != TYPE_DICTIONARY:
+			_payload["source"] = {}
+		_payload["source"]["used_pages"] = data.get("used_pages", [])
 	_tab = "questions"
 	_refresh()
 
+	var span := ""
+	var used: Array = _payload.get("source", {}).get("used_pages", [])
+	if not used.is_empty():
+		span = " from PDF pages %s" % _page_span(used)
 	_status.add_theme_color_override("font_color", Color(0.30, 0.52, 0.32))
-	_status.text = "New set written: %d questions (%s)." % [
-		fresh.size(), str(data.get("provider", "ai"))]
+	_status.text = "New set written%s: %d questions (%s)." % [
+		span, fresh.size(), str(data.get("provider", "ai"))]
 
 
 func _on_client_failed(message: String) -> void:
@@ -402,6 +443,13 @@ func _on_save() -> void:
 		_status.add_theme_color_override("font_color", UITheme.RED)
 		_status.text = "Could not save the quiz."
 		return
+
+	print("[review] saved %d questions, title '%s' to %s" % [
+		_questions.size(), title, ProjectSettings.globalize_path(QuizData.SAVE_PATH)])
+
+	# filed on the shelf as well, so My quizzes can list and replay it
+	var kept_id := QuizLibrary.add(title, _questions, "generated")
+	print("[review] filed in library as '%s'" % kept_id)
 
 	Nav.encounter_ready = true
 	Nav.encounter_title = title
