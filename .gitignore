@@ -24,3 +24,15 @@ venv/
 server/*.questions.json
 server/.env
 
+# Credentials never go in git
+secrets.gd
+*.env
+*.key
+
+# Godot atomic-save leftovers
+*.tmp
+*.TMP
+
+# Third-party addon binaries (50MB of prebuilt libraries)
+addons/*/bin/
+

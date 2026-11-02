@@ -1,8 +1,6 @@
 extends Control
 ## Sign up, step 2 of 2: school credentials.
 
-const Backdrop := preload("res://scripts/ui/backdrop.gd")
-
 var _student_id: LineEdit
 var _email: LineEdit
 var _school: LineEdit
@@ -12,7 +10,7 @@ var _error: Label
 
 
 func _ready() -> void:
-	var bg: Control = Backdrop.new()
+	var bg: Control = PhotoBackdrop.create()
 	add_child(bg)
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
@@ -20,7 +18,7 @@ func _ready() -> void:
 	add_child(center)
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
-	var card := UITheme.panel(UITheme.CREAM, 18, 0.96)
+	var card := UITheme.panel(UITheme.CREAM, 18, 0.985)
 	card.custom_minimum_size = Vector2(620, 0)
 	center.add_child(card)
 
@@ -28,7 +26,7 @@ func _ready() -> void:
 	box.add_theme_constant_override("separation", 10)
 	card.add_child(box)
 
-	box.add_child(UITheme.logo(24))
+	box.add_child(UITheme.logo_dark(24))
 
 	var heading := UITheme.sans("School credentials", 19, UITheme.INK)
 	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

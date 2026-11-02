@@ -139,6 +139,23 @@ static func field(placeholder: String, secret := false) -> LineEdit:
 	return e
 
 
+## A dropdown that matches the text fields instead of Godot's grey default.
+static func select() -> OptionButton:
+	var o := OptionButton.new()
+	o.custom_minimum_size = Vector2(0.0, 34.0)
+	o.add_theme_font_size_override("font_size", 14)
+	o.add_theme_color_override("font_color", INK)
+	o.add_theme_color_override("font_hover_color", INK)
+	o.add_theme_color_override("font_pressed_color", INK)
+	o.add_theme_color_override("font_focus_color", INK)
+	o.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	o.add_theme_stylebox_override("normal", padded(box(PAPER, Color(0.796, 0.776, 0.722), 1, 7), 10, 6))
+	o.add_theme_stylebox_override("hover", padded(box(PAPER, YELLOW_DEEP, 1, 7), 10, 6))
+	o.add_theme_stylebox_override("pressed", padded(box(CREAM_SOFT, YELLOW_DEEP, 2, 7), 10, 6))
+	o.add_theme_stylebox_override("focus", padded(box(PAPER, YELLOW_DEEP, 2, 7), 10, 6))
+	return o
+
+
 ## A form row: right-aligned label, then the input.
 static func form_row(label_text: String, control: Control, label_width := 150.0) -> HBoxContainer:
 	var row := HBoxContainer.new()
@@ -156,14 +173,20 @@ static func panel(color: Color, radius := 16, alpha := 0.94) -> PanelContainer:
 	var p := PanelContainer.new()
 	var c := color
 	c.a = alpha
-	p.add_theme_stylebox_override("panel", padded(box(c, Color(0, 0, 0, 0), 0, radius), 26, 20))
+	var sb := padded(box(c, Color(0, 0, 0, 0), 0, radius), 26, 20)
+	# a soft shadow so the card separates from a busy photo behind it
+	sb.shadow_color = Color(0.10, 0.08, 0.04, 0.28)
+	sb.shadow_size = 9
+	sb.shadow_offset = Vector2(0, 4)
+	p.add_theme_stylebox_override("panel", sb)
 	return p
 
 
-static func logo(size := 40) -> Label:
-	var l := pixel("Quizforge", size, YELLOW)
-	l.add_theme_color_override("font_outline_color", Color(0.42, 0.26, 0.03, 0.6))
-	l.add_theme_constant_override("outline_size", maxi(2, int(size / 14.0)))
+static func logo(size := 40, tint := YELLOW, outline := Color(0.42, 0.26, 0.03, 0.6)) -> Label:
+	var l := pixel("Quizforge", size, tint)
+	if outline.a > 0.0:
+		l.add_theme_color_override("font_outline_color", outline)
+		l.add_theme_constant_override("outline_size", maxi(2, int(size / 14.0)))
 	l.add_theme_color_override("font_shadow_color", Color(0.30, 0.18, 0.0, 0.30))
 	l.add_theme_constant_override("shadow_offset_x", 2)
 	l.add_theme_constant_override("shadow_offset_y", 3)
@@ -171,6 +194,11 @@ static func logo(size := 40) -> Label:
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	l.custom_minimum_size = Vector2(0.0, float(size) * 2.0)
 	return l
+
+
+## The logo as it appears on cream panels: dark, so it doesn't wash out.
+static func logo_dark(size := 26) -> Label:
+	return logo(size, WOOD_DARK, Color.TRANSPARENT)
 
 
 static func pill(text: String, bg: Color, fg: Color, size := 11) -> PanelContainer:

@@ -1,8 +1,6 @@
 extends Control
 ## Sign up, step 1 of 2: the student's name.
 
-const Backdrop := preload("res://scripts/ui/backdrop.gd")
-
 var _first: LineEdit
 var _middle: LineEdit
 var _last: LineEdit
@@ -11,7 +9,7 @@ var _error: Label
 
 
 func _ready() -> void:
-	var bg: Control = Backdrop.new()
+	var bg: Control = PhotoBackdrop.create()
 	add_child(bg)
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
@@ -19,7 +17,7 @@ func _ready() -> void:
 	add_child(center)
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
-	var card := UITheme.panel(UITheme.CREAM, 18, 0.96)
+	var card := UITheme.panel(UITheme.CREAM, 18, 0.985)
 	card.custom_minimum_size = Vector2(600, 0)
 	center.add_child(card)
 
@@ -27,7 +25,7 @@ func _ready() -> void:
 	box.add_theme_constant_override("separation", 11)
 	card.add_child(box)
 
-	box.add_child(UITheme.logo(24))
+	box.add_child(UITheme.logo_dark(24))
 
 	var heading := UITheme.sans("Your Full Name", 19, UITheme.INK)
 	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -44,9 +42,7 @@ func _ready() -> void:
 	_last = UITheme.field("Enter your last name")
 	grid.add_child(UITheme.form_row("Last Name", _last))
 
-	_suffix = OptionButton.new()
-	_suffix.custom_minimum_size = Vector2(0, 34)
-	_suffix.add_theme_font_size_override("font_size", 14)
+	_suffix = UITheme.select()
 	for option in ["Suffix (if there's any)", "Jr.", "Sr.", "II", "III", "IV"]:
 		_suffix.add_item(option)
 	grid.add_child(UITheme.form_row("Suffix", _suffix))

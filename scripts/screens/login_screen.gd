@@ -1,15 +1,13 @@
 extends Control
 ## Login. The credential check is local-only for now — any non-empty pair passes.
 
-const Backdrop := preload("res://scripts/ui/backdrop.gd")
-
 var _username: LineEdit
 var _password: LineEdit
 var _error: Label
 
 
 func _ready() -> void:
-	var bg: Control = Backdrop.new()
+	var bg: Control = PhotoBackdrop.create()
 	add_child(bg)
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
@@ -17,7 +15,7 @@ func _ready() -> void:
 	add_child(center)
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
-	var card := UITheme.panel(UITheme.CREAM, 18, 0.96)
+	var card := UITheme.panel(UITheme.CREAM, 18, 0.985)
 	card.custom_minimum_size = Vector2(440, 0)
 	center.add_child(card)
 
@@ -25,7 +23,7 @@ func _ready() -> void:
 	box.add_theme_constant_override("separation", 12)
 	card.add_child(box)
 
-	box.add_child(UITheme.logo(26))
+	box.add_child(UITheme.logo_dark(26))
 
 	var spacer := Control.new()
 	spacer.custom_minimum_size = Vector2(0, 8)
