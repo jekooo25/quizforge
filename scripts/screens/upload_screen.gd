@@ -8,6 +8,8 @@ var _chosen_path := ""
 var _file_label: Label
 var _continue: Button
 var _dialog: FileDialog
+var _range: LineEdit
+var _range_hint: Label
 
 
 func _ready() -> void:
@@ -57,6 +59,31 @@ func _ready() -> void:
 	_file_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	drop.add_child(_file_label)
 
+	# Optional: read only part of a long PDF, e.g. the chapter being studied.
+	var range_row := HBoxContainer.new()
+	range_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	range_row.add_theme_constant_override("separation", 8)
+	board.content.add_child(range_row)
+
+	var range_label := UITheme.sans("PDF pages", 13, UITheme.MUTED)
+	range_row.add_child(range_label)
+
+	_range = UITheme.field("40-65 (optional)")
+	_range.custom_minimum_size = Vector2(180, 32)
+	_range.add_theme_font_size_override("font_size", 13)
+	# Without this the field stretches to whatever height the row ends up with.
+	_range.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_range.text = str(Nav.user.get("page_range", ""))
+	_range.text_changed.connect(_on_range_changed)
+	range_row.add_child(_range)
+
+	# On its own line: inside the row a wrapping label gets one character of
+	# width, wraps per-letter, and stretches the row down the board.
+	_range_hint = UITheme.sans("Leave empty to sample the whole file", 11, UITheme.MUTED)
+	_range_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_range_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	board.content.add_child(_range_hint)
+
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 18)
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -103,7 +130,42 @@ func _on_file_selected(path: String) -> void:
 	_continue.disabled = false
 
 
+func _on_range_changed(_text: String) -> void:
+	_range_hint.text = "Leave empty to sample the whole file"
+	_range_hint.add_theme_color_override("font_color", UITheme.MUTED)
+
+
+## (0, 0) means empty; (-1, -1) means the student typed something unreadable.
+func _range_pair() -> Vector2i:
+	var text := _range.text.strip_edges()
+	if text == "":
+		return Vector2i.ZERO
+	var re := RegEx.new()
+	var err := re.compile("(?i)^(?:pdf\\s+)?(?:pages?|pp?\\.?)?\\s*(\\d+)\\s*(?:(?:-|\\.\\.|to)\\s*(\\d+))?$")
+	if err != OK:
+		return Vector2i(-1, -1)
+	var m := re.search(text)
+	if m == null:
+		return Vector2i(-1, -1)
+	var low := int(m.get_string(1))
+	var high := int(m.get_string(2)) if m.get_string(2) != "" else low
+	if low < 1:
+		return Vector2i(-1, -1)
+	if high < low:
+		var swap := low
+		low = high
+		high = swap
+	return Vector2i(low, high)
+
+
 func _on_continue() -> void:
+	var pair := _range_pair()
+	if pair.x == -1:
+		_range_hint.text = "Use a range like 40-65, or leave it empty."
+		_range_hint.add_theme_color_override("font_color", UITheme.RED)
+		return
+	Nav.user["page_range"] = "" if pair == Vector2i.ZERO else "%d-%d" % [pair.x, pair.y]
+
 	var dialog := BoardDialog.ask("Allow permission to save data as backup?", "OK", "Cancel")
 	add_child(dialog)
 	dialog.confirmed.connect(_start_generation.bind(true))
