@@ -5,8 +5,13 @@ signal screen_changed(screen_name: String)
 
 const SAVE_PATH := "user://quizforge_save.json"
 
+## 2: the server address moved into a hidden developer menu, so an address a
+## student typed under v1 is discarded on load instead of lingering in profiles.
+const PROFILE_VERSION := 2
+
 var user := {
 	"username": "",
+	"role": "student",
 	"first_name": "",
 	"middle_initial": "",
 	"last_name": "",
@@ -48,11 +53,17 @@ func load_profile() -> void:
 		return
 
 	var saved = parsed.get("user", {})
+	var saved_version := int(parsed.get("profile_version", 0))
 	if typeof(saved) == TYPE_DICTIONARY:
 		for key in saved:
 			# never restore a password from disk, even an old save that had one
 			if key != "password":
 				user[key] = saved[key]
+	user["profile_version"] = PROFILE_VERSION
+	if saved_version < PROFILE_VERSION:
+		# v1 let a student type a server address; that is not a preference worth
+		# carrying forward, so the build default takes over from here on
+		user["server_url"] = ""
 	encounter_ready = bool(parsed.get("encounter_ready", false))
 	encounter_title = str(parsed.get("encounter_title", ""))
 
@@ -93,6 +104,7 @@ func save_profile() -> void:
 	var safe_user := user.duplicate()
 	safe_user.erase("password")
 	var data := {
+		"profile_version": PROFILE_VERSION,
 		"user": safe_user,
 		"encounter_ready": encounter_ready,
 		"encounter_title": encounter_title,

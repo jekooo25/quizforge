@@ -22,7 +22,8 @@ with `canvas_items` stretch, so it scales to any device.
 | `signup_name_screen.gd` | Sign up step 1 — full name |
 | `signup_school_screen.gd` | Sign up step 2 — school credentials |
 | `loading_screen.gd` | Branded wait screen, then the menu |
-| `menu_screen.gd` | Wooden board, mascot peeking over the top |
+| `menu_screen.gd` | Four tiles on the campus photo, mascot top right |
+| `my_quizzes_screen.gd` | The shelf: every quiz made here (and later, received by code) |
 | `upload_screen.gd` | Reviewer picker + backup consent |
 | `generation_screen.gd` | Five-stage pipeline, then Play Encounter |
 | `settings_screen.gd` | Music / SFX |
@@ -104,14 +105,21 @@ filters it happily writes questions about bibliography entries.
 
 ## Pointing the app at the server
 
-Settings → **Server** holds the question-server address. It is saved with the
-profile and read back on launch, so a phone can be pointed at a laptop or a
-deployed server without rebuilding. Enter `192.168.x.x:8765` for a LAN demo
-(`http://` is added for you) or the HTTPS URL for a deployment.
+Students never configure an address. The build ships with one, in
+`scripts/quiz/server_config.gd`:
 
-The build-wide default lives in `scripts/quiz/server_config.gd`
-(`DEFAULT_URL`), which ships empty on purpose: an address saved in Settings
-wins, and the app never silently assumes the phone's own `127.0.0.1`.
+```gdscript
+const DEFAULT_URL := "http://127.0.0.1:8765"
+```
+
+Change that line to the hosted HTTPS URL and rebuild — it is the only place in
+the app that knows where the server is.
+
+For LAN testing there is a hidden developer menu: **Settings → tap the version
+label seven times**. It holds an address override (saved with the profile) and a
+**Reset to default** button that hands control back to `DEFAULT_URL`. Profiles
+written before v0.1.0 had an address typed into Settings; those are discarded on
+load, so no shipped profile keeps pointing at someone's laptop.
 
 ## Test
 

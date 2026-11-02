@@ -1,14 +1,12 @@
 class_name ServerConfig
 extends RefCounted
-## Where the question server lives.
+## Where the question server lives — the one line to change per build.
 ##
-## This is the one place to set the address for a build. Leave it empty and the
-## student/teacher enters the address in Settings instead — the app never
-## silently assumes the phone's own loopback (127.0.0.1), which is a different
-## machine on a phone and the usual reason "it works on the laptop" fails.
+## Students never configure this. The address is baked into the build here, and
+## the only override is the hidden developer menu (behind the Settings version
+## label), which exists for LAN testing on a laptop.
 ##
-## For a LAN demo, set this to the laptop's address, or type that address into
-## Settings once (it is saved with the profile and wins over this default).
-## For a deployed server, put the HTTPS URL here.
+## To point the app at a hosted server, change DEFAULT_URL to the HTTPS URL and
+## rebuild. Nothing else in the app reads an address.
 
-const DEFAULT_URL := ""
+const DEFAULT_URL := "http://127.0.0.1:8765"
