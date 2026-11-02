@@ -8,6 +8,8 @@ extends Control
 const ROUND_TIME := 12.0
 const REVEAL_DELAY := 0.95
 
+const Dev := preload("res://scripts/ui/dev.gd")
+
 const BG := Color(0.078, 0.075, 0.106)
 const PANEL := Color(0.133, 0.122, 0.180)
 const EDGE := Color(0.208, 0.188, 0.290)
@@ -33,6 +35,7 @@ const QUESTIONS := [
 var player: Creature
 var enemy: Creature
 var _questions: Array = []
+var _source: String = ""
 var streak: int = 0
 var _state: String = "idle"
 var _time_left: float = 0.0
@@ -58,11 +61,45 @@ var overlay: Control
 func _ready() -> void:
 	# The reviewed set wins; the built-in questions keep the battle playable
 	# on its own, before any reviewer has been generated.
-	_questions = QuizData.load_saved().get("questions", [])
+	var saved := QuizData.load_saved()
+	_questions = saved.get("questions", [])
 	if _questions.is_empty():
 		_questions = QUESTIONS.duplicate()
+		_source = "BUILT-IN QUESTIONS (no saved quiz)"
+	else:
+		_source = "saved quiz, %d questions, title '%s', saved %s" % [
+			_questions.size(),
+			str(saved.get("title", "")),
+			Time.get_datetime_string_from_unix_time(
+				FileAccess.get_modified_time(QuizData.SAVE_PATH))]
+	print("[battle] quiz source: ", _source)
+	print("[battle] file: ", ProjectSettings.globalize_path(QuizData.SAVE_PATH))
+	print("[battle] first question: ", str(_questions[0].get("q", "")) if not _questions.is_empty() else "(none)")
 	_build_ui()
+	if Dev.overlay_on():
+		_add_debug_label()
 	_start_battle()
+
+
+## TEMPORARY: says which set the battle is actually playing.
+func _add_debug_label() -> void:
+	var label := Label.new()
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.anchor_top = 1.0
+	label.anchor_bottom = 1.0
+	label.offset_left = 10.0
+	label.offset_right = 760.0
+	label.offset_top = -46.0
+	label.offset_bottom = -4.0
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.add_theme_font_size_override("font_size", 10)
+	label.add_theme_color_override("font_color", Color(0.62, 1.0, 0.62))
+	label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.85))
+	label.add_theme_constant_override("shadow_offset_x", 1)
+	label.add_theme_constant_override("shadow_offset_y", 1)
+	var first := str(_questions[0].get("q", "")) if not _questions.is_empty() else "(none)"
+	label.text = "[battle] " + _source + "\nfirst: " + first
+	add_child(label)
 
 
 # ---------------------------------------------------------------- UI building
