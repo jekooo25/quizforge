@@ -13,6 +13,17 @@ const STAGES := [
 
 const SPEED := 26.0  # percent per second
 
+## The server does the real work: a phone can't parse a PDF and shouldn't hold
+## an API key. Progress parks at 92% until it answers, so the bar never lies
+## about finishing.
+const HOLD_AT := 92.0
+
+var _client: QuizClient
+var _payload: Dictionary = {}
+var _server_done := false
+var _using_sample := false
+var _failure := ""
+
 var _progress: float = 0.0
 var _stage: int = -1
 var _finished: bool = false
@@ -20,9 +31,12 @@ var _finished: bool = false
 var _bar: ProgressBar
 var _pct: Label
 var _stage_label: Label
+var _sub: Label
 var _chips: Array[PanelContainer] = []
 var _chip_labels: Array[Label] = []
 var _actions: VBoxContainer
+var _review: Button
+var _retry: Button
 
 
 func _ready() -> void:
@@ -60,11 +74,10 @@ func _ready() -> void:
 	var avatar := PanelContainer.new()
 	avatar.add_theme_stylebox_override("panel",
 		UITheme.box(UITheme.NIGHT_SOFT, Color(0.898, 0.702, 0.106, 0.45), 1, 44))
-	avatar.custom_minimum_size = Vector2(88, 88)
+	avatar.custom_minimum_size = Vector2(112, 112)
 	avatar_row.add_child(avatar)
 	var cat: Control = Cat.new()
-	cat.custom_minimum_size = Vector2(84, 84)
-	cat.set("scale_factor", 0.8)
+	cat.custom_minimum_size = Vector2(108, 108)
 	avatar.add_child(cat)
 
 	var title := UITheme.pixel("Your Encounter is Ready", 17, Color.WHITE)
@@ -73,7 +86,10 @@ func _ready() -> void:
 
 	var sub := UITheme.small("Questions are checked and saved for offline play", 12, Color(0.62, 0.66, 0.72))
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	sub.custom_minimum_size = Vector2(760, 0)
 	box.add_child(sub)
+	_sub = sub
 
 	var gap := Control.new()
 	gap.custom_minimum_size = Vector2(0, 14)
@@ -119,11 +135,18 @@ func _ready() -> void:
 	_actions.modulate.a = 0.0
 	box.add_child(_actions)
 
-	var play := UITheme.button("Play Encounter", "navy", 42)
-	play.custom_minimum_size = Vector2(260, 42)
-	play.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	play.pressed.connect(_play)
-	_actions.add_child(play)
+	_review = UITheme.button("Review questions", "navy", 42)
+	_review.custom_minimum_size = Vector2(280, 42)
+	_review.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_review.pressed.connect(_review_questions)
+	_actions.add_child(_review)
+
+	_retry = UITheme.button("Try again", "cream", 36)
+	_retry.custom_minimum_size = Vector2(200, 36)
+	_retry.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_retry.visible = false
+	_retry.pressed.connect(_retry_generation)
+	_actions.add_child(_retry)
 
 	var back := UITheme.script_button("← Main menu", 19)
 	back.add_theme_color_override("font_color", Color(0.72, 0.76, 0.82))
@@ -134,12 +157,15 @@ func _ready() -> void:
 	_actions.add_child(back)
 
 	_apply_stage(0)
+	_start_generation()
 
 
 func _process(delta: float) -> void:
 	if _finished:
 		return
-	_progress = minf(_progress + delta * SPEED, 100.0)
+	# Park at the hold point until the server answers, then finish up.
+	var ceiling := 100.0 if _server_done else HOLD_AT
+	_progress = minf(_progress + delta * SPEED, ceiling)
 	_bar.value = _progress
 	_pct.text = "%d%%" % int(_progress)
 
@@ -151,7 +177,7 @@ func _process(delta: float) -> void:
 		stage = i
 	_apply_stage(stage)
 
-	if _progress >= 100.0:
+	if _server_done and _progress >= 100.0:
 		_finish()
 
 
@@ -196,21 +222,100 @@ func _finish() -> void:
 	_finished = true
 	_bar.value = 100.0
 	_pct.text = "100%"
-	_stage_label.text = "Encounter built"
+	_stage_label.text = "Ready to review"
 	for i in _chips.size():
 		_style_chip(_chips[i], true, false)
 		_chip_labels[i].text = "✓   " + str(STAGES[i]["name"])
 
-	Nav.encounter_ready = true
-	Nav.encounter_title = str(Nav.user.get("reviewer_file", "")).get_file().get_basename()
-	if Nav.encounter_title == "":
-		Nav.encounter_title = "Reviewer Encounter"
+	# Not marked ready yet: the encounter only becomes playable once the
+	# student has reviewed and saved the set.
+	Nav.encounter_title = _title_text()
 	Nav.save_profile()
+
+	_retry.visible = _failure != ""
 
 	var tween := create_tween()
 	tween.tween_property(_actions, "modulate:a", 1.0, 0.4)
 
 
-func _play() -> void:
-	var battle: Control = load("res://scenes/battle.tscn").instantiate()
-	Nav.show_screen(battle)
+# --------------------------------------------------------------- generation
+
+func _start_generation() -> void:
+	if _client == null:
+		_client = QuizClient.new()
+		add_child(_client)
+		_client.generated.connect(_on_generated)
+		_client.failed.connect(_on_failed)
+
+	var path := str(Nav.user.get("reviewer_file", "")).strip_edges()
+	if path == "" or not FileAccess.file_exists(path):
+		_use_sample("No reviewer file was found, so a sample set is shown.")
+		return
+
+	_sub.text = "Sending your reviewer to the question server…"
+	_sub.add_theme_color_override("font_color", Color(0.62, 0.66, 0.72))
+	_client.generate_file(path, 10)
+
+
+func _on_generated(data: Dictionary) -> void:
+	_payload = data
+	_server_done = true
+	_using_sample = false
+	_failure = ""
+	_progress = maxf(_progress, HOLD_AT)
+
+	var provider := str(data.get("source", {}).get("provider", data.get("provider", "ai")))
+	var wording := "written offline from the text" if provider == "offline" else "written by " + provider
+	_sub.text = "Questions %s — review them before playing." % wording
+	_sub.add_theme_color_override("font_color", Color(0.74, 0.78, 0.84))
+
+
+func _on_failed(message: String) -> void:
+	# Degrade rather than dead-end: a demo that dies because wifi dropped is
+	# worse than a clearly-labelled sample set the student can edit.
+	_failure = message
+	_use_sample("%s Showing a sample set so you can keep going." % message)
+
+
+func _use_sample(note: String) -> void:
+	_using_sample = true
+	_payload = {
+		"title": str(Nav.user.get("reviewer_file", "")).get_file().get_basename(),
+		"pages": [],
+		"questions": QuizData.sample(),
+		"source": {"provider": "sample"},
+	}
+	_server_done = true
+	_progress = maxf(_progress, HOLD_AT)
+	if _sub != null:
+		_sub.text = note
+		_sub.add_theme_color_override("font_color", Color(0.95, 0.75, 0.32))
+
+
+func _retry_generation() -> void:
+	_finished = false
+	_server_done = false
+	_failure = ""
+	_using_sample = false
+	_payload = {}
+	_progress = 0.0
+	_stage = -1
+	_bar.value = 0.0
+	_pct.text = "0%"
+	_retry.visible = false
+	_actions.modulate.a = 0.0
+	_start_generation()
+
+
+func _title_text() -> String:
+	var t := str(_payload.get("title", "")).strip_edges()
+	if t == "":
+		t = str(Nav.user.get("reviewer_file", "")).get_file().get_basename()
+	if t == "":
+		t = "Reviewer Encounter"
+	return t
+
+
+func _review_questions() -> void:
+	var screen: Control = load("res://scripts/screens/review_screen.gd").new()
+	Nav.show_screen(screen.setup(_payload))

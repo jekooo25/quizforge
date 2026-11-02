@@ -41,6 +41,9 @@ func _screen() -> Node:
 
 
 func _run() -> void:
+	# Start from a clean slate so a previous run's quiz doesn't leak in.
+	if FileAccess.file_exists(QuizData.SAVE_PATH):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(QuizData.SAVE_PATH))
 	await get_tree().process_frame
 	var main_scene: Node = load("res://scenes/main.tscn").instantiate()
 	get_tree().root.add_child(main_scene)
@@ -134,14 +137,34 @@ func _run() -> void:
 	print("-- generation completes --")
 	await get_tree().create_timer(5.0).timeout
 	_check(_screen()._finished == true, "generation finished")
-	_check(Nav.encounter_ready == true, "encounter marked ready")
 	_check(_screen()._pct.text == "100%", "progress reaches 100%")
+	_check(_screen()._using_sample == true, "unreachable file falls back to the sample set")
 
-	print("-- encounter starts --")
-	_press(_screen(), "Play Encounter")
+	print("-- review and edit --")
+	_press(_screen(), "Review questions")
 	await get_tree().process_frame
 	await get_tree().process_frame
-	_check(_screen().get_script().resource_path.ends_with("battle.gd"), "encounter battle loads")
+	_check(_screen().get_script().resource_path.ends_with("review_screen.gd"), "review screen opens")
+	_check(_screen()._questions.size() == QuizData.sample().size(), "questions arrive in the review screen")
+	_check(_screen()._tab == "questions", "opens on the Questions tab")
+	_check(_screen()._status.text.contains("valid"), "the sample set validates")
+
+	print("-- review validation --")
+	var review := _screen()
+	var first_choice: LineEdit = review._rows[0]["choices"][0]
+	first_choice.text = ""
+	first_choice.text_changed.emit("")
+	review._on_save()
+	await get_tree().process_frame
+	_check(_screen() == review, "an empty choice blocks save")
+	_check(review._status.text.contains("empty"), "the empty choice is reported")
+	first_choice.text = "Venus"
+	first_choice.text_changed.emit("Venus")
+	review._on_save()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_check(_screen().get_script().resource_path.ends_with("battle.gd"), "saving starts the encounter")
+	_check(Nav.encounter_ready == true, "encounter marked ready after saving")
 
 	print("")
 	if failures == 0:

@@ -5,6 +5,8 @@ extends Node
 var _out_path := "user://shot.png"
 var _delay := 1.0
 var _screen := ""
+var _payload := ""
+var _tab := ""
 
 
 func _ready() -> void:
@@ -20,6 +22,12 @@ func _ready() -> void:
 			"--screen":
 				if i + 1 < args.size():
 					_screen = args[i + 1]
+			"--payload":
+				if i + 1 < args.size():
+					_payload = args[i + 1]
+			"--tab":
+				if i + 1 < args.size():
+					_tab = args[i + 1]
 
 	var main_scene: Node = load("res://scenes/main.tscn").instantiate()
 	add_child(main_scene)
@@ -31,7 +39,16 @@ func _ready() -> void:
 			printerr("could not load screen: ", _screen)
 			get_tree().quit(1)
 			return
-		Nav.show_screen(script.new())
+		var screen: Control = script.new()
+		if _payload != "" and screen.has_method("setup"):
+			var parsed = JSON.parse_string(FileAccess.get_file_as_string(_payload))
+			if typeof(parsed) == TYPE_DICTIONARY:
+				screen = screen.setup(parsed)
+			else:
+				printerr("could not read payload: ", _payload)
+		Nav.show_screen(screen)
+		if _tab != "" and screen.has_method("_select_tab"):
+			screen._select_tab(_tab)
 
 	await get_tree().create_timer(_delay).timeout
 	await RenderingServer.frame_post_draw

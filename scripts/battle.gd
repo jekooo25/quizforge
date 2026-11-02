@@ -32,6 +32,7 @@ const QUESTIONS := [
 
 var player: Creature
 var enemy: Creature
+var _questions: Array = []
 var streak: int = 0
 var _state: String = "idle"
 var _time_left: float = 0.0
@@ -55,6 +56,11 @@ var overlay: Control
 
 
 func _ready() -> void:
+	# The reviewed set wins; the built-in questions keep the battle playable
+	# on its own, before any reviewer has been generated.
+	_questions = QuizData.load_saved().get("questions", [])
+	if _questions.is_empty():
+		_questions = QUESTIONS.duplicate()
 	_build_ui()
 	_start_battle()
 
@@ -293,7 +299,7 @@ func _begin_round() -> void:
 
 func _draw_question() -> Dictionary:
 	if _pool.is_empty():
-		_pool = QUESTIONS.duplicate()
+		_pool = _questions.duplicate(true)
 		_pool.shuffle()
 	return _pool.pop_back()
 
