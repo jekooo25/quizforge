@@ -58,6 +58,50 @@ for real art and nothing else changes.
 The honest gap: **nothing reads the uploaded reviewer yet**, and there's no
 question generator. That's the next build, and it defines the product.
 
+## Question generation (`server/`)
+
+This is the part that makes it Quizforge instead of a quiz UI: a file goes in,
+questions come out.
+
+```powershell
+# one-time: dependencies live outside the project so OneDrive doesn't sync them
+py -m venv C:\Users\myles\Tools\qfenv
+C:\Users\myles\Tools\qfenv\Scripts\python.exe -m pip install pymupdf pillow
+
+# key goes in the user environment, never in the repo
+[Environment]::SetEnvironmentVariable("GEMINI_API_KEY", "your-key", "User")
+```
+
+```powershell
+# AI generation (needs the key)
+py server/spike.py "reviewer.pdf" --count 10 --provider gemini
+
+# offline fallback: no key, no network, weaker questions
+py server/spike.py "reviewer.pdf" --count 10 --provider offline
+```
+
+Inputs: `.pdf`, `.txt`/`.md`/`.csv`, and images (photos of pages). PDFs with a
+text layer are read directly; scanned pages and photos go to the vision model
+as images. Measured: ~14s for 10 questions from a 7-page PDF.
+
+Every provider returns one shape, so the app never learns which one ran:
+
+```json
+{ "source": {"file": "...", "pages": 7, "chars": 9942, "method": "text"},
+  "title": "...",
+  "pages": [{"page": 1, "text": "..."}],
+  "questions": [{"id": "q1", "question": "...",
+                 "choices": ["a", "b", "c", "d"], "answer": 2,
+                 "explanation": "...", "source_quote": "..."}] }
+```
+
+`pages` feeds the review-and-edit screen; `source_quote` is why each question
+exists. `QF_GEMINI_MODEL` / `QF_OPENAI_MODEL` override the model name.
+
+**Offline is a fallback, not a substitute.** It blanks keywords and borrows
+distractors, so it cannot tell what matters in a document — without noise
+filters it happily writes questions about bibliography entries.
+
 ## Test
 
 ```powershell

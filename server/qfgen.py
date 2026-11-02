@@ -401,7 +401,7 @@ def gemini_questions(pages: list[dict], count: int = 10, images: list[bytes] | N
     key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
     if not key:
         raise ProviderError("GEMINI_API_KEY is not set")
-    model = os.environ.get("QF_GEMINI_MODEL", "gemini-2.5-flash")
+    model = os.environ.get("QF_GEMINI_MODEL", "gemini-3-flash-preview")
     url = (
         "https://generativelanguage.googleapis.com/v1beta/models/"
         f"{model}:generateContent?key={key}"
