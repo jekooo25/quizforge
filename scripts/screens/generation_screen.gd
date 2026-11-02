@@ -1,7 +1,8 @@
 extends Control
 ## "Building Encounter": the five-stage generation screen.
 
-const Cat := preload("res://scripts/ui/cat_mascot.gd")
+const SPRITE := preload("res://assets/sprites/cat_on_books.png")
+const Dev := preload("res://scripts/ui/dev.gd")
 
 const STAGES := [
 	{"name": "Reading Files", "to": 18.0},
@@ -37,6 +38,10 @@ var _chip_labels: Array[Label] = []
 var _actions: VBoxContainer
 var _review: Button
 var _retry: Button
+var _sample: Button
+var _headline: Label
+var _debug_label: Label
+var _debug_lines: Array[String] = []
 
 
 func _ready() -> void:
@@ -71,18 +76,18 @@ func _ready() -> void:
 	var avatar_row := HBoxContainer.new()
 	avatar_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	box.add_child(avatar_row)
-	var avatar := PanelContainer.new()
-	avatar.add_theme_stylebox_override("panel",
-		UITheme.box(UITheme.NIGHT_SOFT, Color(0.898, 0.702, 0.106, 0.45), 1, 44))
-	avatar.custom_minimum_size = Vector2(112, 112)
-	avatar_row.add_child(avatar)
-	var cat: Control = Cat.new()
-	cat.custom_minimum_size = Vector2(108, 108)
-	avatar.add_child(cat)
+	var art := TextureRect.new()
+	art.texture = SPRITE
+	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	art.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	art.custom_minimum_size = Vector2(150, 150)
+	avatar_row.add_child(art)
 
 	var title := UITheme.pixel("Your Encounter is Ready", 17, Color.WHITE)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(title)
+	_headline = title
 
 	var sub := UITheme.small("Questions are checked and saved for offline play", 12, Color(0.62, 0.66, 0.72))
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -148,6 +153,14 @@ func _ready() -> void:
 	_retry.pressed.connect(_retry_generation)
 	_actions.add_child(_retry)
 
+	# The old silent fallback, now something the student has to ask for.
+	_sample = UITheme.button("Use sample questions (demo)", "cream", 36)
+	_sample.custom_minimum_size = Vector2(280, 36)
+	_sample.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_sample.visible = false
+	_sample.pressed.connect(_on_use_sample)
+	_actions.add_child(_sample)
+
 	var back := UITheme.script_button("← Main menu", 19)
 	back.add_theme_color_override("font_color", Color(0.72, 0.76, 0.82))
 	back.add_theme_color_override("font_hover_color", UITheme.YELLOW)
@@ -157,6 +170,8 @@ func _ready() -> void:
 	_actions.add_child(back)
 
 	_apply_stage(0)
+	if Dev.overlay_on():
+		_build_debug_panel()
 	_start_generation()
 
 
@@ -232,13 +247,51 @@ func _finish() -> void:
 	Nav.encounter_title = _title_text()
 	Nav.save_profile()
 
-	_retry.visible = _failure != ""
+	_retry.visible = false
+	_sample.visible = false
+	_review.visible = true
+	_dbg("finished — %s, %d questions" % [
+		"sample" if _using_sample else "server/review",
+		int(_payload.get("questions", []).size())])
 
 	var tween := create_tween()
 	tween.tween_property(_actions, "modulate:a", 1.0, 0.4)
 
 
 # --------------------------------------------------------------- generation
+
+## TEMPORARY diagnostics: printed to the console and drawn over the screen.
+func _dbg(line: String) -> void:
+	print("[quizgen] ", line)
+	_debug_lines.append(line)
+	while _debug_lines.size() > 7:
+		_debug_lines.pop_front()
+	if _debug_label != null:
+		_debug_label.text = "\n".join(_debug_lines)
+
+
+func _build_debug_panel() -> void:
+	var panel := PanelContainer.new()
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# top-left, where it does not cover the action buttons
+	panel.anchor_left = 0.0
+	panel.anchor_right = 0.0
+	panel.anchor_top = 0.0
+	panel.anchor_bottom = 0.0
+	panel.offset_left = 12.0
+	panel.offset_right = 620.0
+	panel.offset_top = 8.0
+	panel.offset_bottom = 118.0
+	panel.add_theme_stylebox_override("panel",
+		UITheme.padded(UITheme.box(Color(0, 0, 0, 0.78),
+			Color(0.45, 0.95, 0.45, 0.4), 1, 6), 8, 5))
+	add_child(panel)
+
+	_debug_label = UITheme.small("", 9, Color(0.72, 1.0, 0.72))
+	_debug_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_debug_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	panel.add_child(_debug_label)
+
 
 func _start_generation() -> void:
 	if _client == null:
@@ -248,37 +301,106 @@ func _start_generation() -> void:
 		_client.failed.connect(_on_failed)
 
 	var path := str(Nav.user.get("reviewer_file", "")).strip_edges()
-	if path == "" or not FileAccess.file_exists(path):
-		_use_sample("No reviewer file was found, so a sample set is shown.")
+	var exists := FileAccess.file_exists(path)
+	var size := FileAccess.get_file_as_bytes(path).size() if exists else -1
+	var page_range := str(Nav.user.get("page_range", "")).strip_edges()
+	_dbg("file: " + path)
+	_dbg("exists: %s  bytes: %d" % [exists, size])
+	_dbg("server: " + QuizClient.base_url())
+	_dbg("PDF pages: " + (page_range if page_range != "" else "(whole file, sampled)"))
+
+	if path == "" or not exists:
+		_fail("No reviewer file found. Pick the file again.")
 		return
 
-	_sub.text = "Sending your reviewer to the question server…"
+	_sub.text = "Building your questions…"
 	_sub.add_theme_color_override("font_color", Color(0.62, 0.66, 0.72))
-	_client.generate_file(path, 10)
+	_client.generate_file(path, 10, page_range, Time.get_ticks_msec())
 
 
 func _on_generated(data: Dictionary) -> void:
+	var questions: Array = data.get("questions", [])
+	var pages: Array = data.get("pages", [])
+	var source: Dictionary = data.get("source", {})
+	var provider := str(source.get("provider", data.get("provider", "ai")))
+	var used: Array = source.get("used_pages", [])
+	var skipped: Array = source.get("skipped_front_matter", [])
+	_dbg("HTTP 200 — provider: %s  pages: %d  questions: %d" % [
+		provider, pages.size(), questions.size()])
+	_dbg("PDF pages used: %s" % _page_span(used))
+	if not skipped.is_empty():
+		_dbg("skipped front matter: " + _page_span(skipped))
+
+	if questions.is_empty():
+		_fail("We couldn't make questions from that file. Try again, or pick a different file.")
+		return
+
 	_payload = data
 	_server_done = true
 	_using_sample = false
 	_failure = ""
 	_progress = maxf(_progress, HOLD_AT)
+	_review.visible = true
+	_sample.visible = false
+	_retry.visible = false
 
-	var provider := str(data.get("source", {}).get("provider", data.get("provider", "ai")))
 	var wording := "written offline from the text" if provider == "offline" else "written by " + provider
-	_sub.text = "Questions %s — review them before playing." % wording
+	_sub.text = "Questions %s — PDF pages %s. Review them before playing." % [
+		wording, _page_span(used)]
 	_sub.add_theme_color_override("font_color", Color(0.74, 0.78, 0.84))
 
 
+## 40, 41, 42, 50 -> "40-42, 50"
+func _page_span(pages: Array) -> String:
+	if pages.is_empty():
+		return "none"
+	var nums: Array[int] = []
+	for p in pages:
+		nums.append(int(p))
+	nums.sort()
+	var parts: Array[String] = []
+	var start := nums[0]
+	var prev := nums[0]
+	for i in range(1, nums.size()):
+		if nums[i] == prev + 1:
+			prev = nums[i]
+			continue
+		parts.append("%d" % start if start == prev else "%d-%d" % [start, prev])
+		start = nums[i]
+		prev = nums[i]
+	parts.append("%d" % start if start == prev else "%d-%d" % [start, prev])
+	return ", ".join(parts)
+
+
 func _on_failed(message: String) -> void:
-	# Degrade rather than dead-end: a demo that dies because wifi dropped is
-	# worse than a clearly-labelled sample set the student can edit.
+	# No silent substitution: say what happened and let the student choose.
+	_fail(message)
+
+
+## Stops the pipeline and surfaces the reason. Nothing is saved or playable
+## from here until the student retries or explicitly asks for the sample set.
+func _fail(message: String) -> void:
 	_failure = message
-	_use_sample("%s Showing a sample set so you can keep going." % message)
+	_using_sample = false
+	_payload = {}
+	_server_done = false
+	_finished = true
+	_headline.text = "Generation failed"
+	_stage_label.text = "Generation failed"
+	_sub.text = message
+	_sub.add_theme_color_override("font_color", Color(1.0, 0.55, 0.45))
+	_review.visible = false
+	_retry.visible = true
+	# the demo set is a developer aid: students only ever see Try again
+	_sample.visible = Dev.overlay_on()
+	_actions.modulate.a = 1.0
+	_dbg("FAILED: " + message)
 
 
-func _use_sample(note: String) -> void:
+## Explicit, labelled demo fallback. Never automatic.
+func _on_use_sample() -> void:
 	_using_sample = true
+	_failure = ""
 	_payload = {
 		"title": str(Nav.user.get("reviewer_file", "")).get_file().get_basename(),
 		"pages": [],
@@ -286,10 +408,17 @@ func _use_sample(note: String) -> void:
 		"source": {"provider": "sample"},
 	}
 	_server_done = true
+	_finished = false
+	_review.visible = true
+	_retry.visible = false
+	_sample.visible = false
+	_actions.modulate.a = 0.0
 	_progress = maxf(_progress, HOLD_AT)
-	if _sub != null:
-		_sub.text = note
-		_sub.add_theme_color_override("font_color", Color(0.95, 0.75, 0.32))
+	_headline.text = "Sample questions"
+	_stage_label.text = "Using sample questions"
+	_sub.text = "Sample questions: these are NOT from your file."
+	_sub.add_theme_color_override("font_color", Color(0.95, 0.75, 0.32))
+	_dbg("PATH: SAMPLE SET (%d questions, demo only)" % QuizData.sample().size())
 
 
 func _retry_generation() -> void:
@@ -303,7 +432,11 @@ func _retry_generation() -> void:
 	_bar.value = 0.0
 	_pct.text = "0%"
 	_retry.visible = false
+	_sample.visible = false
+	_review.visible = true
 	_actions.modulate.a = 0.0
+	_headline.text = "Your Encounter is Ready"
+	_dbg("retrying…")
 	_start_generation()
 
 

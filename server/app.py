@@ -52,10 +52,27 @@ def _generate(fn, provider: str, fallback_pages: list[dict], count: int) -> tupl
     if provider != "offline" and _provider_ready(provider):
         try:
             return fn(), provider
+        except qfgen.QualityError:
+            raise  # the AI answered, it just answered about the document
         except qfgen.ProviderError as e:
             app.logger.warning("provider %s failed: %s", provider, e)
-    questions = qfgen.offline_questions(fallback_pages, count=count)
+    questions = qfgen.filter_document_questions(
+        qfgen.offline_questions(fallback_pages, count=count)
+    )
     return {"title": "", "questions": questions}, "offline"
+
+
+def _source_payload(extracted: dict, used_pages: list[int]) -> dict:
+    wanted = set(used_pages)
+    used = [p for p in extracted["pages"] if int(p.get("page", 0)) in wanted]
+    return {
+        "file": extracted["file"],
+        "pages": len(extracted["pages"]),
+        "used_pages": used_pages,
+        "chars": sum(len(p["text"]) for p in used),
+        "method": extracted["method"],
+        "pending_images": extracted["pending_images"],
+    }
 
 
 @app.get("/health")
@@ -77,38 +94,73 @@ def generate():
 
     count = min(int(request.form.get("count", DEFAULT_COUNT)), MAX_COUNT)
     provider = request.form.get("provider", DEFAULT_PROVIDER)
+    seed = int(request.form.get("seed", 0) or 0)
 
     suffix = os.path.splitext(upload.filename)[1] or ".bin"
     handle, temp_path = tempfile.mkstemp(suffix=suffix)
     os.close(handle)
     try:
         upload.save(temp_path)
-        extracted = qfgen.extract(temp_path)
+        try:
+            extracted = qfgen.extract(temp_path)
+        except qfgen.ExtractError as e:
+            return jsonify({"error": str(e), "code": "unreadable"}), 422
+        except Exception as e:
+            # a corrupt or mislabelled file: the parser threw something generic,
+            # but from the student's side this is still "we couldn't read it"
+            app.logger.warning("extract failed: %s", e)
+            return jsonify({"error": "could not read that file", "code": "unreadable"}), 422
+
+        try:
+            page_range = qfgen.parse_page_range(
+                request.form.get("pages", ""), len(extracted["pages"])
+            )
+        except qfgen.ExtractError as e:
+            # "code" lets the app say "that page range isn't in this file"
+            # instead of falling back to the generic unreadable-file message.
+            return jsonify({"error": str(e), "code": "page_range"}), 422
+
+        try:
+            selection = qfgen.select_pages(extracted["pages"], page_range, seed=seed)
+        except qfgen.ExtractError as e:
+            return jsonify({"error": str(e), "code": "page_range"}), 422
 
         def ai():
-            return qfgen.ai_questions(extracted, temp_path, count=count, provider=provider)
+            return qfgen.ai_generate(
+                extracted, temp_path, count=count, provider=provider,
+                page_range=page_range, seed=seed,
+            )
 
-        result, used = _generate(ai, provider, extracted["pages"], count)
+        try:
+            result, used = _generate(ai, provider, selection["pages"], count)
+        except qfgen.QualityError as e:
+            return jsonify({"error": str(e), "code": "quality"}), 422
 
+        used_pages = result.get("used_pages", selection["used_pages"]) if used != "offline" \
+            else selection["used_pages"]
+
+        source = _source_payload(extracted, used_pages)
+        source.update({
+            "provider": used,
+            "page_range": selection["requested"],
+            "skipped_front_matter": result.get(
+                "skipped_front_matter", selection["skipped_front_matter"]
+            ),
+        })
+        used_set = set(used_pages)
         return jsonify({
-            "source": {
-                "file": upload.filename,
-                "pages": len(extracted["pages"]),
-                "chars": len(qfgen.all_text(extracted)),
-                "method": extracted["method"],
-                "pending_images": extracted["pending_images"],
-                "provider": used,
-            },
+            "source": source,
             "title": result.get("title") or os.path.splitext(upload.filename)[0][:60],
-            "pages": extracted["pages"],
+            "pages": [p for p in extracted["pages"]
+                      if int(p.get("page", 0)) in used_set],
             "questions": qfgen._clean_questions(result) if used != "offline"
                          else result["questions"],
         })
     except qfgen.ExtractError as e:
-        return jsonify({"error": f"could not read that file: {e}"}), 422
+        return jsonify({"error": f"could not read that file: {e}", "code": "unreadable"}), 422
     except Exception:
         app.logger.error(traceback.format_exc())
-        return jsonify({"error": "generation failed"}), 500
+        return jsonify({"error": "generation failed", "code": "server"}), 500
     finally:
         try:
             os.unlink(temp_path)
@@ -132,15 +184,40 @@ def regenerate():
 
     count = min(int(payload.get("count", DEFAULT_COUNT)), MAX_COUNT)
     provider = payload.get("provider", DEFAULT_PROVIDER)
+    seed = int(payload.get("seed", 0) or 0)
+    avoid = [int(p) for p in payload.get("avoid_pages", []) if str(p).isdigit()]
 
-    def ai():
-        return qfgen.ai_questions({"pages": pages, "pending_images": []},
-                                  "", count=count, provider=provider)
+    try:
+        if provider != "offline" and _provider_ready(provider):
+            try:
+                result = qfgen.regenerate_questions(
+                    pages, count=count, provider=provider, seed=seed, avoid=avoid
+                )
+            except qfgen.QualityError:
+                raise
+            except qfgen.ProviderError as e:
+                app.logger.warning("provider %s failed on regenerate: %s", provider, e)
+                result = qfgen.regenerate_questions(
+                    pages, count=count, provider="offline", seed=seed, avoid=avoid
+                )
+        else:
+            result = qfgen.regenerate_questions(
+                pages, count=count, provider="offline", seed=seed, avoid=avoid
+            )
+    except qfgen.QualityError as e:
+        return jsonify({"error": str(e), "code": "quality"}), 422
+    except qfgen.ExtractError as e:
+        return jsonify({"error": str(e), "code": "unreadable"}), 422
 
-    result, used = _generate(ai, provider, pages, count)
-    questions = qfgen._clean_questions(result) if used != "offline" else result["questions"]
-    return jsonify({"provider": used, "title": result.get("title", ""),
-                    "questions": questions})
+    questions = (qfgen._clean_questions(result) if result["provider"] != "offline"
+                 else result["questions"])
+    return jsonify({
+        "provider": result["provider"],
+        "title": result.get("title", ""),
+        "questions": questions,
+        "used_pages": result.get("used_pages", []),
+    })
+
 
 
 if __name__ == "__main__":
