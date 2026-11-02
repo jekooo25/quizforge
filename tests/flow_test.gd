@@ -102,6 +102,21 @@ func _run() -> void:
 	_press(_screen(), "Settings")
 	await get_tree().process_frame
 	_check(_screen().get_script().resource_path.ends_with("settings_screen.gd"), "settings opens")
+
+	var settings := _screen()
+	settings._server_field.text = "192.168.1.60:8765"
+	settings._save_server(settings._server_field)
+	_check(Nav.user["server_url"] == "http://192.168.1.60:8765", "settings saves the server address")
+	_check(settings._server_field.text == "http://192.168.1.60:8765", "a bare address gains http://")
+
+	Nav.user["server_url"] = ""
+	Nav.load_profile()
+	_check(Nav.user["server_url"] == "http://192.168.1.60:8765", "the address is read back from disk")
+	_check(QuizClient.base_url() == "http://192.168.1.60:8765", "the client uses the saved address")
+	var saved_profile = JSON.parse_string(FileAccess.get_file_as_string(Nav.SAVE_PATH))
+	_check(typeof(saved_profile) == TYPE_DICTIONARY and not saved_profile["user"].has("password"),
+		"the password is not written to disk")
+
 	_press(_screen(), "Main Menu")
 	await get_tree().process_frame
 	_check(_screen().get_script().resource_path.ends_with("menu_screen.gd"), "settings returns to menu")
@@ -165,6 +180,10 @@ func _run() -> void:
 	await get_tree().process_frame
 	_check(_screen().get_script().resource_path.ends_with("battle.gd"), "saving starts the encounter")
 	_check(Nav.encounter_ready == true, "encounter marked ready after saving")
+
+	# leave no test address behind for the next manual run
+	Nav.user["server_url"] = ""
+	Nav.save_profile()
 
 	print("")
 	if failures == 0:

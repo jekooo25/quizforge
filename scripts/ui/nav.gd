@@ -15,6 +15,7 @@ var user := {
 	"email": "",
 	"school": "",
 	"password": "",
+	"server_url": "",
 }
 
 var encounter_ready := false
@@ -26,10 +27,34 @@ var _current: Control
 
 
 func _ready() -> void:
+	load_profile()
 	layer = 0
 	_host = Control.new()
 	_host.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(_host)
+
+
+func load_profile() -> void:
+	## Reads what save_profile() wrote, so a server address or a finished
+	## account survives a restart. Missing or corrupt files are ignored.
+	if not FileAccess.file_exists(SAVE_PATH):
+		return
+	var f := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	if f == null:
+		return
+	var parsed = JSON.parse_string(f.get_as_text())
+	f.close()
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return
+
+	var saved = parsed.get("user", {})
+	if typeof(saved) == TYPE_DICTIONARY:
+		for key in saved:
+			# never restore a password from disk, even an old save that had one
+			if key != "password":
+				user[key] = saved[key]
+	encounter_ready = bool(parsed.get("encounter_ready", false))
+	encounter_title = str(parsed.get("encounter_title", ""))
 
 
 func start() -> void:
@@ -64,8 +89,11 @@ func display_name() -> String:
 
 
 func save_profile() -> void:
+	# The password stays in memory only; a profile file is not a safe place for it.
+	var safe_user := user.duplicate()
+	safe_user.erase("password")
 	var data := {
-		"user": user,
+		"user": safe_user,
 		"encounter_ready": encounter_ready,
 		"encounter_title": encounter_title,
 		"saved_at": Time.get_datetime_string_from_system(),

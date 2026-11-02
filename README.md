@@ -102,6 +102,17 @@ exists. `QF_GEMINI_MODEL` / `QF_OPENAI_MODEL` override the model name.
 distractors, so it cannot tell what matters in a document — without noise
 filters it happily writes questions about bibliography entries.
 
+## Pointing the app at the server
+
+Settings → **Server** holds the question-server address. It is saved with the
+profile and read back on launch, so a phone can be pointed at a laptop or a
+deployed server without rebuilding. Enter `192.168.x.x:8765` for a LAN demo
+(`http://` is added for you) or the HTTPS URL for a deployment.
+
+The build-wide default lives in `scripts/quiz/server_config.gd`
+(`DEFAULT_URL`), which ships empty on purpose: an address saved in Settings
+wins, and the app never silently assumes the phone's own `127.0.0.1`.
+
 ## Test
 
 ```powershell

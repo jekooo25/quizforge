@@ -9,18 +9,18 @@ signal generated(result: Dictionary)
 signal regenerated(result: Dictionary)
 signal failed(message: String)
 
-const DEFAULT_BASE_URL := "http://127.0.0.1:8765"
 const TIMEOUT_SECONDS := 75.0
 const BOUNDARY := "----QuizforgeFormBoundary"
 
 
-## Where the server lives. Set Nav.user["server_url"] to a LAN address when
-## testing on a phone, e.g. "http://192.168.1.20:8765".
+## The saved address wins; otherwise the build-time default in ServerConfig.
+## Returns "" when neither is set, which the caller must report rather than
+## quietly trying the phone's own loopback.
 static func base_url() -> String:
 	var configured := str(Nav.user.get("server_url", "")).strip_edges()
-	if configured != "":
-		return configured.trim_suffix("/")
-	return DEFAULT_BASE_URL
+	if configured == "":
+		configured = ServerConfig.DEFAULT_URL.strip_edges()
+	return configured.trim_suffix("/")
 
 
 ## Uploads the chosen reviewer and asks for questions.
@@ -61,6 +61,11 @@ func regenerate(pages: Array, count := 10) -> bool:
 
 
 func _post(path: String, body: PackedByteArray, content_type: String, is_generate: bool) -> bool:
+	var base := base_url()
+	if base == "":
+		failed.emit("No question server is set. Open Settings and enter its address.")
+		return false
+
 	var http := HTTPRequest.new()
 	http.timeout = TIMEOUT_SECONDS
 	add_child(http)
@@ -71,7 +76,7 @@ func _post(path: String, body: PackedByteArray, content_type: String, is_generat
 			http.queue_free(),
 		CONNECT_ONE_SHOT)
 
-	var err := http.request_raw(base_url() + path, ["Content-Type: " + content_type], HTTPClient.METHOD_POST, body)
+	var err := http.request_raw(base + path, ["Content-Type: " + content_type], HTTPClient.METHOD_POST, body)
 	if err != OK:
 		http.queue_free()
 		failed.emit("Could not reach the question server at %s." % base_url())

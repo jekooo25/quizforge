@@ -1,5 +1,9 @@
 extends Control
-## Settings: music and SFX sliders on the yellow panel from the design.
+## Settings: music and SFX sliders on the yellow panel from the design, plus
+## the question-server address.
+
+var _server_field: LineEdit
+var _server_hint: Label
 
 
 func _ready() -> void:
@@ -36,6 +40,7 @@ func _ready() -> void:
 
 	rows.add_child(_slider_row("Music", 70))
 	rows.add_child(_slider_row("SFX", 70))
+	rows.add_child(_server_row())
 
 	var back := UITheme.button("←  Main Menu", "cream", 40)
 	back.custom_minimum_size = Vector2(200, 40)
@@ -49,6 +54,8 @@ func _ready() -> void:
 	back.offset_bottom = -26.0
 	add_child(back)
 	back.pressed.connect(func() -> void:
+		if _server_field != null:
+			_save_server(_server_field)
 		Nav.show_screen(load("res://scripts/screens/menu_screen.gd").new()))
 
 
@@ -95,3 +102,56 @@ func _slider_row(label_text: String, initial: float) -> HBoxContainer:
 			AudioServer.set_bus_volume_db(0, linear_to_db(maxf(v / 100.0, 0.0001))))
 
 	return row
+
+
+## The question-server address, saved with the profile so one phone can be
+## pointed at a LAN laptop or a deployed server without a rebuild.
+func _server_row() -> VBoxContainer:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 4)
+
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 24)
+
+	var label := UITheme.sans("Server", 18, UITheme.INK)
+	label.custom_minimum_size = Vector2(96, 0)
+	label.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row.add_child(label)
+
+	var field := UITheme.field("http://192.168.1.20:8765")
+	field.text = QuizClient.base_url()
+	field.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	field.text_submitted.connect(func(_t: String) -> void: _save_server(field))
+	field.focus_exited.connect(func() -> void: _save_server(field))
+	row.add_child(field)
+	_server_field = field
+
+	box.add_child(row)
+
+	_server_hint = UITheme.sans(
+		"Your laptop's LAN address for a demo, or the deployed HTTPS address.",
+		12, UITheme.MUTED)
+	_server_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(_server_hint)
+	return box
+
+
+func _save_server(field: LineEdit) -> void:
+	var url := field.text.strip_edges().trim_suffix("/")
+	# typing "192.168.1.20:8765" should just work
+	if url != "" and not url.contains("://"):
+		url = "http://" + url
+	field.text = url
+
+	Nav.user["server_url"] = url
+	Nav.save_profile()
+
+	var effective := QuizClient.base_url()
+	if effective == "":
+		_server_hint.text = "No server set yet — generation will ask for one."
+		_server_hint.add_theme_color_override("font_color", UITheme.RED)
+	else:
+		_server_hint.text = "Saved. Questions go to " + effective
+		_server_hint.add_theme_color_override("font_color", UITheme.MUTED)
