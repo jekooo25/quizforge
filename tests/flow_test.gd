@@ -44,6 +44,10 @@ func _run() -> void:
 	# Start from a clean slate so a previous run's quiz doesn't leak in.
 	if FileAccess.file_exists(QuizData.SAVE_PATH):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(QuizData.SAVE_PATH))
+	if DirAccess.dir_exists_absolute(QuizLibrary.DIR):
+		for file in DirAccess.get_files_at(QuizLibrary.DIR):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(
+				"%s/%s" % [QuizLibrary.DIR, file]))
 	await get_tree().process_frame
 	var main_scene: Node = load("res://scenes/main.tscn").instantiate()
 	get_tree().root.add_child(main_scene)
@@ -99,20 +103,41 @@ func _run() -> void:
 	_check(_screen().get_script().resource_path.ends_with("menu_screen.gd"), "loader lands on the main menu")
 
 	print("-- menu navigation --")
-	_press(_screen(), "Settings")
+	_screen().open_settings()
 	await get_tree().process_frame
 	_check(_screen().get_script().resource_path.ends_with("settings_screen.gd"), "settings opens")
 
 	var settings := _screen()
-	settings._server_field.text = "192.168.1.60:8765"
-	settings._save_server(settings._server_field)
-	_check(Nav.user["server_url"] == "http://192.168.1.60:8765", "settings saves the server address")
-	_check(settings._server_field.text == "http://192.168.1.60:8765", "a bare address gains http://")
+	_check(settings._version_label != null and settings._version_label.text.begins_with("v"),
+		"settings shows a version label to tap")
+	_check(settings._dev_field == null, "the developer menu starts hidden")
+
+	# seven taps is the only way in, so a student tapping around finds nothing
+	for i in 6:
+		settings._on_version_press()
+	await get_tree().process_frame
+	_check(settings._dev_field == null, "six taps is not enough")
+	settings._on_version_press()
+	await get_tree().process_frame
+	_check(settings._dev_field != null, "seven taps open the developer menu")
+
+	settings._dev_field.text = "192.168.1.60:8765"
+	settings._dev_save(settings._dev_field)
+	_check(Nav.user["server_url"] == "http://192.168.1.60:8765", "the developer menu saves an address")
+	_check(settings._dev_field.text == "http://192.168.1.60:8765", "a bare address gains http://")
+	_check(settings._dev_using.text.contains("192.168.1.60"),
+		"the menu shows which address is in use")
 
 	Nav.user["server_url"] = ""
 	Nav.load_profile()
 	_check(Nav.user["server_url"] == "http://192.168.1.60:8765", "the address is read back from disk")
 	_check(QuizClient.base_url() == "http://192.168.1.60:8765", "the client uses the saved address")
+
+	settings._dev_reset()
+	_check(Nav.user["server_url"] == "", "reset to default clears the address")
+	_check(settings._dev_using.text.contains(ServerConfig.DEFAULT_URL),
+		"after reset the menu shows the build default in use")
+	_check(QuizClient.base_url() == ServerConfig.DEFAULT_URL, "the client falls back to the build default")
 	var saved_profile = JSON.parse_string(FileAccess.get_file_as_string(Nav.SAVE_PATH))
 	_check(typeof(saved_profile) == TYPE_DICTIONARY and not saved_profile["user"].has("password"),
 		"the password is not written to disk")
@@ -121,14 +146,14 @@ func _run() -> void:
 	await get_tree().process_frame
 	_check(_screen().get_script().resource_path.ends_with("menu_screen.gd"), "settings returns to menu")
 
-	_press(_screen(), "View progress")
+	_screen().open_progress()
 	await get_tree().process_frame
 	_check(_screen().get_script().resource_path.ends_with("progress_screen.gd"), "progress opens")
 	_press(_screen(), "back to menu")
 	await get_tree().process_frame
 
 	print("-- upload -> consent -> generation --")
-	_press(_screen(), "Upload your reviewer")
+	_screen().open_upload()
 	await get_tree().process_frame
 	_check(_screen().get_script().resource_path.ends_with("upload_screen.gd"), "upload opens")
 
@@ -149,11 +174,24 @@ func _run() -> void:
 	await get_tree().process_frame
 	_check(_screen().get_script().resource_path.ends_with("generation_screen.gd"), "generation starts")
 
-	print("-- generation completes --")
-	await get_tree().create_timer(5.0).timeout
-	_check(_screen()._finished == true, "generation finished")
+	print("-- generation fails clearly --")
+	await get_tree().create_timer(1.5).timeout
+	_check(_screen()._finished == true, "generation stops on failure")
+	_check(_screen()._failure != "", "the failure is reported")
+	_check(_screen()._using_sample == false, "no silent fallback")
+	_check(_screen()._review.visible == false, "review is blocked after a failure")
+	_check(_screen()._retry.visible == true, "retry is offered")
+	_check(_screen()._sample.visible == false, "the demo sample button is hidden from students")
+	_check(_screen()._failure.contains("Pick the file again"),
+		"the failure text is aimed at a student")
+
+	print("-- explicit sample fallback (developer path) --")
+	# students cannot reach this; the developer switch is what reveals the button
+	_screen()._on_use_sample()
+	await get_tree().create_timer(1.2).timeout
+	_check(_screen()._finished == true, "the explicit sample set finishes")
+	_check(_screen()._using_sample == true, "the sample set is used on purpose")
 	_check(_screen()._pct.text == "100%", "progress reaches 100%")
-	_check(_screen()._using_sample == true, "unreachable file falls back to the sample set")
 
 	print("-- review and edit --")
 	_press(_screen(), "Review questions")
@@ -180,6 +218,35 @@ func _run() -> void:
 	await get_tree().process_frame
 	_check(_screen().get_script().resource_path.ends_with("battle.gd"), "saving starts the encounter")
 	_check(Nav.encounter_ready == true, "encounter marked ready after saving")
+
+	print("-- quiz library --")
+	var shelf := QuizLibrary.all()
+	_check(shelf.size() == 1, "the saved quiz is filed exactly once")
+	if shelf.size() == 1:
+		var entry: Dictionary = shelf[0]
+		_check(int(entry.get("count", 0)) > 0, "the library row knows how many questions")
+		_check(not QuizLibrary.get_quiz(str(entry.get("id", ""))).is_empty(),
+			"the quiz body loads back off disk")
+
+		Nav.show_screen(load("res://scripts/screens/my_quizzes_screen.gd").new())
+		await get_tree().process_frame
+		_check(_screen().get_script().resource_path.ends_with("my_quizzes_screen.gd"),
+			"my quizzes opens")
+
+		_check(QuizLibrary.play(str(entry.get("id", ""))), "a library quiz hands itself to the battle")
+		_check(QuizData.load_saved().get("questions", []).size() > 0,
+			"playing rewrites the battle's quiz file")
+
+	print("-- legacy profile --")
+	# a v1 profile that still carries a typed address must lose it on load
+	var legacy := FileAccess.open(Nav.SAVE_PATH, FileAccess.WRITE)
+	legacy.store_string(JSON.stringify({
+		"user": {"username": "old", "server_url": "http://10.0.0.9:9999"},
+	}))
+	legacy.close()
+	Nav.user["server_url"] = "http://10.0.0.9:9999"
+	Nav.load_profile()
+	_check(Nav.user["server_url"] == "", "an address typed under v1 is discarded on load")
 
 	# leave no test address behind for the next manual run
 	Nav.user["server_url"] = ""
