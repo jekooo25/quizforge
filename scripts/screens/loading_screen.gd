@@ -1,32 +1,11 @@
 extends Control
 ## The branded wait screen shown after login / sign up.
 
-const Cat := preload("res://scripts/ui/cat_mascot.gd")
+const SPRITE := preload("res://assets/sprites/cat_on_books.png")
 
-const BLUE := Color(0.208, 0.463, 0.706)
+const BLUE := Color(0.129, 0.216, 0.376)
 
 var _mode: String = "login"
-
-
-class Books extends Control:
-	func _ready() -> void:
-		mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-	func _draw() -> void:
-		var w := size.x
-		var base := size.y
-		var specs := [
-			{"c": Color(0.878, 0.290, 0.267), "y": 0.0, "w": 0.86},
-			{"c": Color(0.976, 0.776, 0.259), "y": 26.0, "w": 0.74},
-			{"c": Color(0.545, 0.365, 0.749), "y": 52.0, "w": 0.94},
-			{"c": Color(0.949, 0.937, 0.898), "y": 78.0, "w": 0.80},
-		]
-		for s in specs:
-			var bw: float = w * float(s["w"])
-			var r := Rect2((w - bw) * 0.5, base - 104.0 + float(s["y"]), bw, 24.0)
-			draw_rect(r, s["c"])
-			draw_rect(Rect2(r.position.x, r.position.y, 7.0, r.size.y), Color(0, 0, 0, 0.16))
-			draw_rect(Rect2(r.position.x + r.size.x - 7.0, r.position.y, 7.0, r.size.y), Color(1, 1, 1, 0.18))
 
 
 class Spinner extends Control:
@@ -67,31 +46,22 @@ func _ready() -> void:
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
 	center.add_child(box)
 
-	var stack := Control.new()
-	stack.custom_minimum_size = Vector2(210, 190)
-	stack.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	box.add_child(stack)
+	var art := TextureRect.new()
+	art.texture = SPRITE
+	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	art.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	art.custom_minimum_size = Vector2(200, 200)
+	art.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	box.add_child(art)
 
-	var books := Books.new()
-	stack.add_child(books)
-	books.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-
-	var cat: Control = Cat.new()
-	cat.anchor_left = 0.0
-	cat.anchor_right = 1.0
-	cat.anchor_top = 0.0
-	cat.anchor_bottom = 0.0
-	cat.offset_left = 24.0
-	cat.offset_right = -24.0
-	cat.offset_top = 0.0
-	cat.offset_bottom = 132.0
-	stack.add_child(cat)
-
-	var heading := UITheme.pixel("Sign up complete!" if _mode == "signup" else "Login successful!", 17, Color.WHITE)
+	var heading := UITheme.sans("Sign up complete!" if _mode == "signup" else "Login successful!",
+		30, Color.WHITE)
 	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(heading)
 
-	var sub := UITheme.small("Please wait while we prepare your experience.", 14, Color(1, 1, 1, 0.62))
+	var sub := UITheme.sans("Please wait while we prepare your experience.",
+		15, Color(1, 1, 1, 0.62))
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(sub)
 
