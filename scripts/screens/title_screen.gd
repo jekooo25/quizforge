@@ -1,6 +1,8 @@
 extends Control
 ## Splash: the campus photo, the mascot, the logo, "tap anywhere".
 
+const Cat := preload("res://scripts/ui/cat_mascot.gd")
+
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -10,7 +12,7 @@ func _ready() -> void:
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 	# mascot standing in front of the brick, where a cream sprite actually reads
-	var cat: Control = Mascot.create()
+	var cat: Control = Cat.new()
 	cat.anchor_left = 0.30
 	cat.anchor_right = 0.30
 	cat.anchor_top = 0.30
