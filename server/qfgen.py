@@ -31,6 +31,13 @@ import urllib.request
 # page is almost certainly a scan, and has to go to a vision model instead.
 TEXT_LAYER_MIN_CHARS = 60
 
+# How much source text the model sees per request. The app is played on small,
+# old phones, so the reply must stay small too: whole pages are added until the
+# budget is spent, never a mid-sentence cut.
+SOURCE_BUDGET_CHARS = 24000
+SOURCE_CHUNKS = 6          # pieces of the content spread across the file
+FRONT_MATTER_SCAN_PAGES = 12  # only the start of a file can be front matter
+
 IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".gif"}
 TEXT_EXTS = {".txt", ".md", ".csv", ".json"}
 
@@ -44,6 +51,10 @@ class ExtractError(Exception):
 
 class ProviderError(Exception):
     """The AI call failed, or no key is configured."""
+
+
+class QualityError(ProviderError):
+    """The AI answered, but kept asking about the document instead of its subject."""
 
 
 # ------------------------------------------------------------------ extraction
@@ -146,6 +157,262 @@ def read_image_png(path: str, max_side: int = 1600) -> bytes:
 
 def all_text(extracted: dict) -> str:
     return "\n\n".join(p["text"] for p in extracted["pages"] if p["text"])
+
+
+# --------------------------------------------------------------- page selection
+
+_RANGE_RE = re.compile(
+    r"^(?:pdf\s+)?(?:pages?|pp?\.?)?\s*(\d+)\s*(?:(?:-|\.\.|to)\s*(\d+))?\s*$",
+    re.IGNORECASE,
+)
+
+# Signals that a page belongs to the front of a book rather than to its subject.
+# Deliberately generic: no publisher names, no titles. A single hit is not
+# enough; a page must look like *more than one* kind of front matter.
+_FRONT_MATTER_SIGNALS = [
+    r"all rights reserved",
+    r"\bcopyright\b",
+    r"\b(?:isbn|issn)\b",
+    r"creative commons",
+    r"licensed under",
+    r"no part of this (?:book|publication|work)",
+    r"printed in the (?:united states|u\.s\.a)",
+    r"senior contributing authors?",
+    r"contributing authors?",
+    r"about the authors?",
+    r"\backnowledg(?:e)?ments?\b",
+    r"list of (?:reviewers|contributors)",
+    r"table of contents",
+    r"\bpreface\b",
+    r"\bforeword\b",
+    r"how to use this (?:book|textbook)",
+    r"access for free",
+    r"openly licensed",
+    r"peer-reviewed",
+    r"\byour (?:book|textbook)\b",
+    r"\bour books?\b",
+    r"\bthis (?:book|textbook|volume)\b",
+    r"\bthis edition\b",
+    r"instructor resources",
+    r"ancillary",
+]
+
+
+def parse_page_range(text: str, total_pages: int) -> tuple[int, int] | None:
+    """'pages 40-65' -> (40, 65). Empty -> None. Bad input -> ExtractError."""
+    raw = (text or "").strip()
+    if raw == "":
+        return None
+    cleaned = raw.lower().replace("\u2013", "-").replace("\u2014", "-").replace(",", "")
+    match = _RANGE_RE.match(cleaned)
+    if not match:
+        raise ExtractError(f"could not read the page range {raw!r}; try something like 40-65")
+    low = int(match.group(1))
+    high = int(match.group(2) or low)
+    if low < 1:
+        raise ExtractError("page numbers start at 1")
+    if high < low:
+        low, high = high, low
+    if total_pages and low > total_pages:
+        raise ExtractError(f"this file only has {total_pages} PDF pages, so page {low} does not exist")
+    if total_pages:
+        high = min(high, total_pages)
+    return low, high
+
+
+def _looks_like_toc(text: str) -> bool:
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    low = text.lower()
+    if "table of contents" in low or low.lstrip().startswith("contents"):
+        return True
+    if len(lines) < 8:
+        return False
+    number_ended = sum(
+        1 for line in lines
+        if re.search(r"(?:\.{3,}|\s)\s*\d{1,4}\s*$", line)
+    )
+    dotted = sum(1 for line in lines if "..." in line)
+    if dotted >= 3 and number_ended / len(lines) >= 0.4:
+        return True
+    # chapter/section lists: "5.2 The Definite Integral 456" on most lines
+    if number_ended >= 6 and number_ended / len(lines) >= 0.6:
+        return True
+    return False
+
+
+def _front_matter_score(text: str) -> int:
+    """How much a page looks like publication boilerplate. 0 = ordinary content."""
+    if len(text.strip()) < TEXT_LAYER_MIN_CHARS:
+        return 0  # handled separately: blank pages are not "front matter"
+    low = text.lower()
+    return sum(1 for pattern in _FRONT_MATTER_SIGNALS if re.search(pattern, low))
+
+
+def strip_front_matter(pages: list[dict]) -> tuple[list[dict], list[int]]:
+    """Split off the opening pages that describe the document, not its subject.
+
+    Only the first `FRONT_MATTER_SCAN_PAGES` (or the first tenth of the file,
+    whichever is larger) are candidates, so a real content page later can never
+    be mistaken for a copyright page. If everything is filtered out we keep the
+    file as it was: a one-page handout must never vanish.
+    """
+    if not pages:
+        return [], []
+    # Front matter lives at the very start: up to a dozen pages is enough for a
+    # title, copyright, contents, preface, and the odd marketing page.
+    scan = min(len(pages), FRONT_MATTER_SCAN_PAGES)
+    kept: list[dict] = []
+    skipped: list[int] = []
+    for i, page in enumerate(pages):
+        text = str(page.get("text", "")).strip()
+        if i >= scan:
+            kept.append(page)
+            continue
+        blank = len(text) < TEXT_LAYER_MIN_CHARS
+        toc = _looks_like_toc(text)
+        boilerplate = _front_matter_score(text) >= 2
+        if blank or toc or boilerplate:
+            skipped.append(int(page.get("page", i + 1)))
+        else:
+            kept.append(page)
+    if not kept:
+        return list(pages), []
+    return kept, skipped
+
+
+def _sample_pages(
+    pages: list[dict],
+    budget: int = SOURCE_BUDGET_CHARS,
+    chunks: int = SOURCE_CHUNKS,
+    rng: random.Random | None = None,
+) -> list[dict]:
+    """Whole pages from several places in the file, up to the character budget.
+
+    Taking the first `budget` characters is what used to send fifteen pages of
+    copyright and table of contents to the model. Spreading chunks across the
+    content instead keeps the quiz about the subject even without a page range.
+    """
+    if not pages:
+        return []
+    total = sum(len(str(p.get("text", ""))) for p in pages)
+    if total <= budget:
+        return list(pages)
+
+    count = max(1, min(chunks, len(pages)))
+    per_chunk = max(1, budget // count)
+    picked: dict[int, dict] = {}
+
+    for chunk in range(count):
+        low = round(chunk * len(pages) / count)
+        high = max(low + 1, round((chunk + 1) * len(pages) / count))
+        segment = pages[low:high]
+        if rng is not None and len(segment) > 1:
+            # a regenerated set should start somewhere else in the same region
+            shift = rng.randrange(len(segment))
+            segment = segment[shift:] + segment[:shift]
+        taken = 0
+        for page in segment:
+            size = len(str(page.get("text", "")))
+            if taken and taken + size > per_chunk:
+                break
+            picked[int(page.get("page", 0))] = page
+            taken += size
+
+    if not picked:
+        return [pages[0]]
+    return [page for _, page in sorted(picked.items()) if str(page.get("text", "")).strip()]
+
+
+def select_pages(
+    pages: list[dict],
+    page_range: tuple[int, int] | None = None,
+    seed: int | None = None,
+    budget: int = SOURCE_BUDGET_CHARS,
+) -> dict:
+    """Choose the pages that will be sent, and say which they were.
+
+    Returns {"pages", "used_pages", "skipped_front_matter", "requested"}.
+    """
+    rng = random.Random(seed) if seed is not None else None
+    working = list(pages)
+    if page_range is not None:
+        low, high = page_range
+        working = [p for p in working if low <= int(p.get("page", 0)) <= high]
+        if not working:
+            raise ExtractError(f"no text found on PDF pages {low}-{high}")
+
+    content, skipped = strip_front_matter(working)
+    used = _sample_pages(content, budget=budget, rng=rng)
+    return {
+        "pages": used,
+        "used_pages": [int(p.get("page", 0)) for p in used],
+        "skipped_front_matter": skipped,
+        "requested": f"{page_range[0]}-{page_range[1]}" if page_range else "",
+    }
+
+
+# -------------------------------------------------------- document-question filter
+
+# A question is about the document, not the subject, when it points at the
+# document itself ("this textbook", "the preface", "who are the authors") or at
+# publication paperwork ("all rights reserved", "ISBN"). Bare topic words are
+# deliberately not enough: a law quiz may ask about a licence, a literature quiz
+# about the author, an IT quiz about an edition.
+_DOC_NOUN = (
+    r"(?:book|textbook|text\s*book|document|pdf|file|handout|worksheet|"
+    r"reader|manual|edition|volume|presentation|slide\s*deck)"
+)
+
+_DOCUMENT_QUESTION_PATTERNS = [
+    re.compile(r"\b(?:this|the)\s+" + _DOC_NOUN + r"\b", re.IGNORECASE),
+    re.compile(r"\b(?:table of contents|preface|foreword|front matter|"
+               r"copyright page|title page|cover page|back cover)\b", re.IGNORECASE),
+    re.compile(r"\bwho\s+(?:wrote|authored|is the author|are the authors|"
+               r"are the contributors)\b", re.IGNORECASE),
+    re.compile(r"\bsenior\s+contributing\s+authors?\b", re.IGNORECASE),
+    re.compile(r"\bcontributing\s+authors?\b", re.IGNORECASE),
+    re.compile(r"\b(?:isbn|issn)\b", re.IGNORECASE),
+    re.compile(r"\ball rights reserved\b", re.IGNORECASE),
+    re.compile(r"\bcopyright\s*(?:©|\(c\)|\d{4})\b", re.IGNORECASE),
+    re.compile(r"\b(?:licensed|released|distributed)\s+under\b", re.IGNORECASE),
+    re.compile(r"\bunder\s+(?:what|which)\b[^.?]{0,40}\blicen[cs]e\b", re.IGNORECASE),
+    re.compile(r"\blicen[cs]e\b[^.?]{0,30}\b(?:this|the)\s+" + _DOC_NOUN + r"\b",
+               re.IGNORECASE),
+    re.compile(r"\b(?:who|which)\b[^.?]{0,30}\bpublish(?:ed|er)\b[^.?]{0,20}"
+               r"\b(?:this|the)\s+" + _DOC_NOUN + r"\b", re.IGNORECASE),
+    re.compile(r"\b(?:this|the)\s+" + _DOC_NOUN + r"\b[^.?]{0,30}\bpublish(?:ed|er)\b",
+               re.IGNORECASE),
+    re.compile(r"\bedition\s+of\s+(?:this|the)\s+" + _DOC_NOUN + r"\b", re.IGNORECASE),
+    re.compile(r"\b(?:which|what)\s+edition\s+is\s+this\b", re.IGNORECASE),
+    re.compile(r"\btitle\s+of\s+(?:this|the)\s+(?:book|textbook|document|chapter|section)\b",
+               re.IGNORECASE),
+    re.compile(r"\bhow many\s+(?:pages|chapters|sections|volumes)\b", re.IGNORECASE),
+    re.compile(r"\baccording to the\s+(?:preface|foreword|table of contents|"
+               r"copyright page)\b", re.IGNORECASE),
+    re.compile(r"\baccess for free\b", re.IGNORECASE),
+    re.compile(r"\b(?:front|back)\s+cover\b", re.IGNORECASE),
+    re.compile(r"\bcitation format\b", re.IGNORECASE),
+]
+
+
+def is_document_question(question: dict) -> bool:
+    """True when the question is about the file rather than what it teaches."""
+    # Choices are excluded on purpose: an option may legitimately be the word
+    # "author" or "licence" without the question being about the document.
+    text = " ".join([
+        str(question.get("question", "")),
+        str(question.get("explanation", "")),
+    ])
+    return any(pattern.search(text) for pattern in _DOCUMENT_QUESTION_PATTERNS)
+
+
+def filter_document_questions(questions: list[dict]) -> list[dict]:
+    return [q for q in questions if not is_document_question(q)]
+
+
+def _enough(questions: list[dict], count: int, final: bool = False) -> bool:
+    need = max(3, count // 2) if final else max(5, int(count * 0.6 + 0.999))
+    return len(questions) >= need
 
 
 # ------------------------------------------------------------ offline questions
@@ -311,27 +578,66 @@ QUESTION_SCHEMA_HINT = """Return ONLY JSON, no prose, no code fences, in exactly
       "choices": ["first", "second", "third", "fourth"],
       "answer": 0,
       "explanation": "one sentence on why this is correct",
-      "source_quote": "the sentence from the source this came from"
+      "source_quote": "the sentence from the source this came from",
+      "page": 40
     }
   ]
 }
 Rules:
 - exactly 4 choices per question, exactly one correct.
 - "answer" is the 0-based index of the correct choice.
+- "page" is the PDF page number shown in the [[page N]] marker where the answer appears.
 - questions must be answerable ONLY from the source text.
 - no duplicate questions, no "all of the above", no trick wording.
 - use the source's own terminology.
 """
 
+TEACHING_RULES = """What to test:
+- the subject being taught: concepts, definitions, formulas, procedures, and worked examples.
+- understanding, not recall of wording: apply a rule, predict a result, choose the correct
+  definition, or identify the next step in a procedure.
+- prefer questions a student who understood the material could answer without having
+  memorised the page.
+What NOT to test (these are about the document, never the subject):
+- the title, authors, contributors, publisher, licence, copyright, ISBN, or edition;
+- the preface, foreword, table of contents, chapter list, or page layout;
+- how to access, buy, cite, or use the book;
+- anything whose answer is a fact about the file rather than about the subject.
+"""
 
-def build_prompt(text: str, count: int) -> str:
-    trimmed = text[:24000]
-    return (
-        f"You are writing a quiz for a student revising from their own notes.\n"
-        f"Write {count} multiple-choice questions from the source material below.\n"
-        f"{QUESTION_SCHEMA_HINT}\n"
-        f"--- SOURCE MATERIAL ---\n{trimmed}\n--- END SOURCE ---"
+STRONG_RULES = """IMPORTANT: earlier questions were about the document instead of its subject.
+Ignore every page that describes the book itself. Write only questions whose answer
+is a fact about the subject being taught. If the supplied text is publication
+boilerplate, write nothing rather than asking about it.
+"""
+
+
+def build_prompt(pages: list[dict], count: int, strong: bool = False) -> str:
+    """Build the prompt from whole pages, each tagged with its PDF page number."""
+    blocks = []
+    for page in pages:
+        text = str(page.get("text", "")).strip()
+        if not text:
+            continue
+        blocks.append(f"[[page {int(page.get('page', 0))}]]\n{text}")
+    source = "\n\n".join(blocks)[:SOURCE_BUDGET_CHARS + 2000]
+    if not source:
+        source = "(This file has no text layer. Read the attached page images.)"
+
+    prompt = (
+        "You are writing a quiz for a student revising from their own course material.\n"
+        f"Write {count} multiple-choice questions about the subject taught in the source below.\n"
+        f"{TEACHING_RULES}\n"
     )
+    if strong:
+        prompt += STRONG_RULES + "\n"
+    prompt += (
+        f"{QUESTION_SCHEMA_HINT}\n"
+        f"--- SOURCE MATERIAL (page markers are PDF page numbers) ---\n{source}\n"
+        "--- END SOURCE ---"
+    )
+    return prompt
+
 
 
 # -------------------------------------------------------------- ai: gemini/openai
@@ -359,7 +665,20 @@ def _parse_questions(raw: str) -> dict:
     start, end = cleaned.find("{"), cleaned.rfind("}")
     if start == -1 or end == -1:
         raise ProviderError("model returned no JSON object")
-    data = json.loads(cleaned[start:end + 1])
+    text = cleaned[start:end + 1]
+
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        # Models occasionally emit a bare "\u" or a raw control character.
+        # Repair those two shapes before giving up on an otherwise good reply.
+        repaired = re.sub(r"\\u(?![0-9a-fA-F]{4})", r"\\\\u", text)
+        repaired = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", repaired)
+        try:
+            data = json.loads(repaired)
+        except json.JSONDecodeError as e:
+            raise ProviderError(f"model returned unreadable JSON: {e}") from e
+
     questions = data.get("questions")
     if not isinstance(questions, list) or not questions:
         raise ProviderError("model returned no questions")
@@ -386,6 +705,10 @@ def _clean_questions(data: dict) -> list[dict]:
         if key in seen:
             continue
         seen.add(key)
+        try:
+            page = int(item.get("page"))
+        except (TypeError, ValueError):
+            page = None
         out.append({
             "id": f"q{len(out) + 1}",
             "question": q,
@@ -393,11 +716,17 @@ def _clean_questions(data: dict) -> list[dict]:
             "answer": answer,
             "explanation": str(item.get("explanation", "")).strip(),
             "source_quote": str(item.get("source_quote", "")).strip(),
+            "page": page,
         })
     return out
 
 
-def gemini_questions(pages: list[dict], count: int = 10, images: list[bytes] | None = None) -> dict:
+def gemini_questions(
+    pages: list[dict],
+    count: int = 10,
+    images: list[bytes] | None = None,
+    strong: bool = False,
+) -> dict:
     key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
     if not key:
         raise ProviderError("GEMINI_API_KEY is not set")
@@ -407,7 +736,7 @@ def gemini_questions(pages: list[dict], count: int = 10, images: list[bytes] | N
         f"{model}:generateContent?key={key}"
     )
 
-    parts = [{"text": build_prompt(all_text({"pages": pages}), count)}]
+    parts = [{"text": build_prompt(pages, count, strong=strong)}]
     for png in images or []:
         parts.append({
             "inline_data": {
@@ -428,14 +757,19 @@ def gemini_questions(pages: list[dict], count: int = 10, images: list[bytes] | N
     return {"title": data.get("title", ""), "questions": _clean_questions(data)}
 
 
-def openai_questions(pages: list[dict], count: int = 10, images: list[bytes] | None = None) -> dict:
+def openai_questions(
+    pages: list[dict],
+    count: int = 10,
+    images: list[bytes] | None = None,
+    strong: bool = False,
+) -> dict:
     key = os.environ.get("OPENAI_API_KEY")
     if not key:
         raise ProviderError("OPENAI_API_KEY is not set")
     model = os.environ.get("QF_OPENAI_MODEL", "gpt-4o-mini")
     url = "https://api.openai.com/v1/chat/completions"
 
-    content = [{"type": "text", "text": build_prompt(all_text({"pages": pages}), count)}]
+    content = [{"type": "text", "text": build_prompt(pages, count, strong=strong)}]
     for png in images or []:
         b64 = base64.b64encode(png).decode("ascii")
         content.append({
@@ -466,7 +800,13 @@ PROVIDERS = {
 }
 
 
-def ai_questions(extracted: dict, path: str, count: int = 10, provider: str = "gemini") -> dict:
+def ai_questions(
+    extracted: dict,
+    path: str,
+    count: int = 10,
+    provider: str = "gemini",
+    strong: bool = False,
+) -> dict:
     """Vision-aware AI generation: text goes up as text, scans go up as images."""
     if provider not in PROVIDERS:
         raise ProviderError(f"unknown provider: {provider}")
@@ -481,41 +821,201 @@ def ai_questions(extracted: dict, path: str, count: int = 10, provider: str = "g
         except Exception:
             continue  # a page we cannot render is a page we skip, not a crash
 
-    return PROVIDERS[provider](extracted["pages"], count=count, images=images)
+    return PROVIDERS[provider](
+        extracted["pages"], count=count, images=images, strong=strong
+    )
+
+
+def _used_or_all(selection: dict, extracted: dict) -> list[dict]:
+    """Scanned files have no text to sample, so the pages stay as they are."""
+    used = selection["pages"]
+    if extracted["method"] == "vision" and not any(p["text"] for p in used):
+        return extracted["pages"]
+    return used
+
+
+def ai_generate(
+    extracted: dict,
+    path: str,
+    count: int = 10,
+    provider: str = "gemini",
+    page_range: tuple[int, int] | None = None,
+    seed: int = 0,
+) -> dict:
+    """Select content, ask the AI, drop document questions, retry once stronger."""
+    if provider not in PROVIDERS:
+        raise ProviderError(f"unknown provider: {provider}")
+
+    selection = select_pages(extracted["pages"], page_range, seed=seed)
+    used = _used_or_all(selection, extracted)
+
+    result = ai_questions(
+        {"pages": used, "pending_images": extracted["pending_images"]},
+        path, count=count, provider=provider,
+    )
+    questions = filter_document_questions(result["questions"])
+
+    if not _enough(questions, count):
+        # Different pages, stricter instructions: the first pass read something
+        # that looked like front matter or drifted into document trivia.
+        retry = select_pages(extracted["pages"], page_range, seed=seed + 7919)
+        retry_used = _used_or_all(retry, extracted)
+        retry_result = ai_questions(
+            {"pages": retry_used, "pending_images": extracted["pending_images"]},
+            path, count=count, provider=provider, strong=True,
+        )
+        retry_questions = filter_document_questions(retry_result["questions"])
+        if len(retry_questions) >= len(questions):
+            selection, used = retry, retry_used
+            result, questions = retry_result, retry_questions
+
+    if not _enough(questions, count, final=True):
+        raise QualityError(
+            "The AI kept asking about the document itself instead of the subject. "
+            "Try again, or enter a PDF page range so it reads course content."
+        )
+
+    return {
+        "title": result.get("title", ""),
+        "questions": questions,
+        "used_pages": [int(p.get("page", 0)) for p in used],
+        "skipped_front_matter": selection["skipped_front_matter"],
+        "requested": selection["requested"],
+    }
+
+
+def offline_generate(
+    extracted: dict,
+    count: int = 10,
+    page_range: tuple[int, int] | None = None,
+    seed: int = 0,
+) -> dict:
+    selection = select_pages(extracted["pages"], page_range, seed=seed)
+    used = _used_or_all(selection, extracted)
+    questions = filter_document_questions(
+        offline_questions(used, count=count, seed=seed)
+    )
+    return {
+        "title": "",
+        "questions": questions,
+        "used_pages": [int(p.get("page", 0)) for p in used],
+        "skipped_front_matter": selection["skipped_front_matter"],
+        "requested": selection["requested"],
+    }
+
+
+def _resample(pages: list[dict], rng: random.Random, avoid: set[int]) -> list[dict]:
+    """A different slice of the same reviewer, for Regenerate."""
+    candidates = [p for p in pages if str(p.get("text", "")).strip()]
+    if not candidates:
+        return []
+    fresh = [p for p in candidates if int(p.get("page", 0)) not in avoid]
+    pool = fresh if len(fresh) >= 3 else candidates
+
+    take = max(1, int(len(pool) * 0.65 + 0.999))
+    if take >= len(candidates) and len(candidates) > 3:
+        take = max(1, len(candidates) - 1)
+    chosen = rng.sample(pool, min(take, len(pool)))
+    return sorted(chosen, key=lambda p: int(p.get("page", 0)))
+
+
+def regenerate_questions(
+    pages: list[dict],
+    count: int = 10,
+    provider: str = "gemini",
+    seed: int = 0,
+    avoid: list[int] | None = None,
+) -> dict:
+    """Write a fresh set from a different part of the same extracted text."""
+    avoid_set = set(avoid or [])
+    rng = random.Random(seed)
+    subset = _resample(pages, rng, avoid_set)
+    if not subset:
+        raise ExtractError("no text left to regenerate from")
+
+    if provider == "offline":
+        questions = filter_document_questions(
+            offline_questions(subset, count=count, seed=seed)
+        )
+        return {
+            "title": "", "provider": "offline", "questions": questions,
+            "used_pages": [int(p.get("page", 0)) for p in subset],
+        }
+
+    result = ai_questions({"pages": subset, "pending_images": []},
+                          "", count=count, provider=provider)
+    questions = filter_document_questions(result["questions"])
+
+    if not _enough(questions, count):
+        retry_avoid = avoid_set | {int(p.get("page", 0)) for p in subset}
+        retry_subset = _resample(pages, random.Random(seed + 7919), retry_avoid)
+        if retry_subset:
+            retry_result = ai_questions({"pages": retry_subset, "pending_images": []},
+                                        "", count=count, provider=provider, strong=True)
+            retry_questions = filter_document_questions(retry_result["questions"])
+            if len(retry_questions) >= len(questions):
+                subset, result, questions = retry_subset, retry_result, retry_questions
+
+    if not _enough(questions, count, final=True):
+        raise QualityError(
+            "The AI kept asking about the document itself instead of the subject. "
+            "Try Regenerate again, or upload the file with a page range."
+        )
+
+    return {
+        "title": result.get("title", ""),
+        "provider": provider,
+        "questions": questions,
+        "used_pages": [int(p.get("page", 0)) for p in subset],
+    }
 
 
 # ----------------------------------------------------------------------- facade
 
 
-def build(path: str, count: int = 10, provider: str = "offline", seed: int = 0) -> dict:
+def build(
+    path: str,
+    count: int = 10,
+    provider: str = "offline",
+    seed: int = 0,
+    page_range: tuple[int, int] | None = None,
+) -> dict:
     """The one function the server and the CLI both call."""
     extracted = extract(path)
 
     notes = []
     if provider == "offline":
-        questions = offline_questions(extracted["pages"], count=count, seed=seed)
+        result = offline_generate(extracted, count=count, page_range=page_range, seed=seed)
         if extracted["pending_images"]:
             notes.append(
                 f"pages {extracted['pending_images']} have no text layer; "
                 "they need an AI provider to be read"
             )
-        title = os.path.splitext(extracted["file"])[0][:60]
     else:
-        result = ai_questions(extracted, path, count=count, provider=provider)
-        questions = result["questions"]
-        title = result.get("title") or os.path.splitext(extracted["file"])[0][:60]
+        result = ai_generate(extracted, path, count=count, provider=provider,
+                             page_range=page_range, seed=seed)
+
+    used_pages = result.get("used_pages", [])
+    used_text = [
+        p for p in extracted["pages"] if int(p.get("page", 0)) in set(used_pages)
+    ]
+    title = result.get("title") or os.path.splitext(extracted["file"])[0][:60]
 
     return {
         "source": {
             "file": extracted["file"],
             "pages": len(extracted["pages"]),
-            "chars": len(all_text(extracted)),
+            "used_pages": used_pages,
+            "page_range": result.get("requested", ""),
+            "skipped_front_matter": result.get("skipped_front_matter", []),
+            "chars": sum(len(p["text"]) for p in used_text),
             "method": extracted["method"],
             "pending_images": extracted["pending_images"],
             "provider": provider,
         },
         "title": title,
-        "pages": extracted["pages"],
-        "questions": questions,
+        "pages": used_text,
+        "questions": result["questions"],
         "notes": notes,
     }
+
