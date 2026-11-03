@@ -1,62 +1,108 @@
 extends Control
-## Splash: the campus photo, the mascot, the logo, "tap anywhere".
+## Splash: the OMSU crest, the portal name, the QuizForge credit, and a way in.
+##
+## Laid out to the start-screen frame: flat navy, crest on the left, name and
+## credit in the right-hand column, mascot top right, pill button at the bottom
+## of the same column. Everything is measured against the 1280 x 562 design
+## frame, so it scales with the project's canvas_items stretch.
 
 const Cat := preload("res://scripts/ui/cat_mascot.gd")
+const CREST := preload("res://assets/sprites/omsu_logo.png")
+const FACE_TITLE := preload("res://assets/fonts/Montserrat-ExtraBold.ttf")
+const FACE_CREDIT := preload("res://assets/fonts/Montserrat-SemiBold.ttf")
+const FACE_BUTTON := preload("res://assets/fonts/Montserrat-Bold.ttf")
+
+const BG := Color(0.122, 0.239, 0.420)          # #1F3D6B
+const TITLE_YELLOW := Color(0.945, 0.737, 0.043) # #F1BC0B
+const BUTTON_YELLOW := Color(1.0, 0.773, 0.020)  # #FFC505
+const WARM_WHITE := Color(0.961, 0.949, 0.914)   # #F5F2E9
+const BUTTON_EDGE := Color(0.016, 0.027, 0.051)
+
+const CREST_RECT := Rect2(66.0, 54.0, 450.0, 450.0)
+const CAT_RECT := Rect2(1085.0, 60.0, 140.0, 140.0)
+const COLUMN := Rect2(520.0, 106.0, 650.0, 0.0)
+const BUTTON_RECT := Rect2(545.0, 443.0, 610.0, 103.0)
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 
-	var bg: Control = PhotoBackdrop.create()
-	add_child(bg)
+	var bg := ColorRect.new()
+	bg.color = BG
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(bg)
 
-	# mascot standing in front of the brick, where a cream sprite actually reads
+	# --- crest, left
+	var crest := TextureRect.new()
+	crest.texture = CREST
+	crest.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	crest.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	crest.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	crest.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	crest.offset_left = CREST_RECT.position.x
+	crest.offset_top = CREST_RECT.position.y
+	crest.offset_right = CREST_RECT.end.x
+	crest.offset_bottom = CREST_RECT.end.y
+	add_child(crest)
+
+	# --- mascot, top right
 	var cat: Control = Cat.new()
-	cat.anchor_left = 0.30
-	cat.anchor_right = 0.30
-	cat.anchor_top = 0.30
-	cat.anchor_bottom = 0.30
-	cat.offset_left = -125.0
-	cat.offset_right = 125.0
-	cat.offset_top = 0.0
-	cat.offset_bottom = 250.0
+	cat.offset_left = CAT_RECT.position.x
+	cat.offset_top = CAT_RECT.position.y
+	cat.offset_right = CAT_RECT.end.x
+	cat.offset_bottom = CAT_RECT.end.y
 	add_child(cat)
 
-	var title := UITheme.logo(46)
-	title.anchor_left = 0.5
-	title.anchor_right = 0.5
-	title.anchor_top = 0.0
-	title.anchor_bottom = 0.0
-	title.offset_left = -420.0
-	title.offset_right = 420.0
-	title.offset_top = 16.0
-	title.offset_bottom = 112.0
-	add_child(title)
+	# --- name and credit, right column
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 44)
+	column.offset_left = COLUMN.position.x
+	column.offset_right = COLUMN.end.x
+	column.offset_top = COLUMN.position.y
+	column.offset_bottom = COLUMN.position.y + 160.0
+	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(column)
 
-	# the hint sits on a plaque so it stays readable over grass or pavement
+	var title := _text("OMSU Review Portal", FACE_TITLE, 48, TITLE_YELLOW)
+	column.add_child(title)
+
+	var credit := _text("powered by QuizForge", FACE_CREDIT, 30, WARM_WHITE)
+	column.add_child(credit)
+
+	# --- the way in
 	var plaque := PanelContainer.new()
-	plaque.add_theme_stylebox_override("panel",
-		UITheme.padded(UITheme.box(Color(0.988, 0.969, 0.914, 0.97),
-			Color(0.42, 0.26, 0.03, 0.55), 2, 22), 24, 8))
-	plaque.anchor_left = 0.5
-	plaque.anchor_right = 0.5
-	plaque.anchor_top = 1.0
-	plaque.anchor_bottom = 1.0
-	plaque.offset_left = -205.0
-	plaque.offset_right = 205.0
-	plaque.offset_top = -84.0
-	plaque.offset_bottom = -34.0
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(BG.r, BG.g, BG.b, 0.0)
+	style.border_color = BUTTON_EDGE
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(30)
+	style.content_margin_left = 28.0
+	style.content_margin_right = 28.0
+	style.content_margin_top = 10.0
+	style.content_margin_bottom = 10.0
+	plaque.add_theme_stylebox_override("panel", style)
+	plaque.offset_left = BUTTON_RECT.position.x
+	plaque.offset_top = BUTTON_RECT.position.y
+	plaque.offset_right = BUTTON_RECT.end.x
+	plaque.offset_bottom = BUTTON_RECT.end.y
 	add_child(plaque)
 
-	var hint := UITheme.pixel("Tap anywhere to start...", 14, UITheme.NAVY)
+	var hint := _text("Tap anywhere to start...", FACE_BUTTON, 38, BUTTON_YELLOW)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	plaque.add_child(hint)
 
-	var pulse := create_tween().set_loops()
-	pulse.tween_property(plaque, "modulate:a", 0.62, 0.9).set_ease(Tween.EASE_IN_OUT)
-	pulse.tween_property(plaque, "modulate:a", 1.0, 0.9).set_ease(Tween.EASE_IN_OUT)
+
+func _text(body: String, font: Font, size: int, color: Color) -> Label:
+	var label := Label.new()
+	label.text = body
+	label.add_theme_font_override("font", font)
+	label.add_theme_font_size_override("font_size", size)
+	label.add_theme_color_override("font_color", color)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return label
 
 
 func _gui_input(event: InputEvent) -> void:
