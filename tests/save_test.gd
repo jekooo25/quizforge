@@ -1,0 +1,272 @@
+extends Node
+## Save-layer tests. Run with:
+##   godot --headless --path . res://tests/save.tscn
+##
+## Covers what the old code got wrong: a write that lands half-finished, a file
+## repaired from its backup, two damaged files at once, version migration, and
+## re-saving the same reviewer.
+
+const TMP := "user://_save_tests"
+
+var failures: int = 0
+
+
+func _ready() -> void:
+	_run()
+
+
+func _check(condition: bool, message: String) -> void:
+	if condition:
+		print("  ok   ", message)
+	else:
+		failures += 1
+		printerr("  FAIL ", message)
+
+
+func _run() -> void:
+	# A broken autoload makes every check below error out without counting as a
+	# failure, which reads as a pass. Assert it loaded before trusting anything.
+	if SaveManager == null:
+		printerr("  FAIL the SaveManager autoload did not load")
+		printerr("SAVE CHECKS FAILED")
+		get_tree().quit(1)
+		return
+
+	_wipe(TMP)
+	DirAccess.make_dir_recursive_absolute(TMP)
+
+	var profile_snapshot := _snapshot_file(Nav.SAVE_PATH)
+
+	_test_atomic_roundtrip()
+	_test_corrupt_main_recovers()
+	_test_both_corrupt()
+	_test_migration()
+	_test_quiz_status()
+	_test_library_dedupe()
+	_test_index_legacy_array()
+
+	_restore_file(Nav.SAVE_PATH, profile_snapshot)
+	_wipe(TMP)
+
+	print("")
+	if failures == 0:
+		print("ALL SAVE CHECKS PASSED")
+		get_tree().quit(0)
+	else:
+		printerr("%d SAVE CHECK(S) FAILED" % failures)
+		get_tree().quit(1)
+
+
+# ------------------------------------------------------------------- cases
+
+func _test_atomic_roundtrip() -> void:
+	print("-- a write survives being read back from disk --")
+	var p := _path("roundtrip.json")
+	SaveManager.forget(p)
+
+	var data := {"version": 1, "value": 41, "nested": {"name": "quiz"}}
+	_check(SaveManager.write_json(p, data, "quiz"), "write_json reports success")
+	_check(FileAccess.file_exists(p), "the real file is on disk")
+	_check(not FileAccess.file_exists(p + SaveManager.TEMP_SUFFIX),
+		"the temp file is gone, not left beside it")
+
+	# A fresh read is exactly what a restart does.
+	var back := SaveManager.read_json(p, "quiz")
+	_check(back["ok"], "the file reads back")
+	_check(int(back["data"]["value"]) == 41, "the stored value survived")
+	_check(str(back["data"]["nested"]["name"]) == "quiz", "nested data survived")
+	_check(back["status"] == SaveManager.STATUS_OK, "a clean read reports OK")
+
+
+func _test_corrupt_main_recovers() -> void:
+	print("-- a damaged main file falls back to its backup --")
+	var p := _path("recover.json")
+	SaveManager.forget(p)
+
+	SaveManager.write_json(p, {"version": 1, "value": 1}, "quiz")
+	# a second write pushes the first one into the .bak slot
+	SaveManager.write_json(p, {"version": 1, "value": 2}, "quiz")
+	_check(SaveManager.has_backup(p), "a backup is kept beside the file")
+
+	_write_raw(p, "{ this is not json at all")
+	var r := SaveManager.read_json(p, "quiz")
+	_check(r["ok"], "the read still succeeds")
+	_check(r["status"] == SaveManager.STATUS_RECOVERED, "it reports that it used the backup")
+	_check(int(r["data"]["value"]) == 1, "the backup's value is the one handed back")
+
+	var repaired := SaveManager.read_json(p, "quiz")
+	_check(repaired["status"] == SaveManager.STATUS_OK, "the main file was repaired from the backup")
+	_check(int(repaired["data"]["value"]) == 1, "the repaired file holds the backup's value")
+
+
+func _test_both_corrupt() -> void:
+	print("-- both the file and its backup damaged --")
+	var p := _path("hopeless.json")
+	SaveManager.forget(p)
+
+	SaveManager.write_json(p, {"version": 1, "value": 1}, "quiz")
+	SaveManager.write_json(p, {"version": 1, "value": 2}, "quiz")
+	_write_raw(p, "garbage")
+	_write_raw(p + SaveManager.BACKUP_SUFFIX, "also garbage")
+
+	var r := SaveManager.read_json(p, "quiz")
+	_check(not r["ok"], "the read reports failure instead of crashing")
+	_check(r["status"] == SaveManager.STATUS_CORRUPT, "status is CORRUPT")
+	_check(r["data"] == null, "no data is invented")
+
+
+func _test_migration() -> void:
+	print("-- version is read and migrated --")
+
+	var q := _path("legacy_quiz.json")
+	SaveManager.forget(q)
+	_write_raw(q, JSON.stringify({
+		"title": "old",
+		"questions": [{"q": "a", "choices": ["1", "2", "3", "4"], "correct": 0}],
+	}))
+	var r := SaveManager.read_json(q, "quiz")
+	_check(r["ok"], "an unversioned quiz loads")
+	_check(r["migrated"], "the load reports that it migrated")
+	_check(int(r["version"]) == int(SaveManager.VERSIONS["quiz"]),
+		"it is stamped with the current quiz version")
+
+	var again := SaveManager.read_json(q, "quiz")
+	_check(not again["migrated"], "the migrated shape is written back, so it runs once")
+
+	var prof := _path("legacy_profile.json")
+	SaveManager.forget(prof)
+	_write_raw(prof, JSON.stringify({"user": {"username": "old"}}))
+	var pr := SaveManager.read_json(prof, "profile")
+	_check(pr["ok"] and int(pr["version"]) == int(SaveManager.VERSIONS["profile"]),
+		"an unversioned profile comes up to the current profile version")
+
+
+func _test_quiz_status() -> void:
+	print("-- a damaged current quiz is reported, not replaced --")
+	var saved := _snapshot_file(QuizData.SAVE_PATH)
+	SaveManager.forget(QuizData.SAVE_PATH)
+
+	var missing := QuizData.load_saved()
+	_check(missing["status"] == SaveManager.STATUS_MISSING, "no quiz reports MISSING")
+	_check(missing["questions"].is_empty(), "and hands back no questions")
+
+	_check(QuizData.save("reviewer", QuizData.sample()), "a quiz saves")
+	var good := QuizData.load_saved()
+	_check(good["status"] == SaveManager.STATUS_OK, "a healthy quiz reports OK")
+	_check(good["questions"].size() == QuizData.sample().size(), "all questions read back")
+
+	_write_raw(QuizData.SAVE_PATH, "broken beyond repair")
+	var bad := QuizData.load_saved()
+	_check(bad["status"] == SaveManager.STATUS_CORRUPT, "a damaged quiz reports CORRUPT")
+	_check(bad["questions"].is_empty(), "it does not hand back sample questions")
+	_check(str(bad["title"]) == "", "it does not claim a title")
+
+	_restore_file(QuizData.SAVE_PATH, saved)
+
+
+func _test_library_dedupe() -> void:
+	print("-- re-saving the same reviewer updates one entry --")
+	var saved := _snapshot_library()
+	_clear_library()
+
+	var questions := QuizData.sample()
+	var first := QuizLibrary.add("reviewer", questions, "generated", "C:/x/UPPER_20LIMB.pdf")
+	_check(first != "", "the first save gets an id")
+	_check(QuizLibrary.all().size() == 1, "one entry on the shelf")
+
+	var second := QuizLibrary.add("reviewer", questions.slice(0, 3), "generated", "C:/x/UPPER_20LIMB.pdf")
+	_check(second == first, "re-saving reuses the same id")
+	_check(QuizLibrary.all().size() == 1, "still one entry, not a duplicate")
+
+	var entry: Dictionary = QuizLibrary.all()[0]
+	_check(int(entry.get("count", 0)) == 3, "the entry knows the new question count")
+	_check(QuizLibrary.get_quiz(first).get("questions", []).size() == 3,
+		"the quiz body was rewritten in place")
+
+	var other := QuizLibrary.add("another", questions, "generated", "C:/x/OTHER.pdf")
+	_check(other != first, "a different reviewer gets its own entry")
+	_check(QuizLibrary.all().size() == 2, "two reviewers, two entries")
+
+	_restore_library(saved)
+
+
+func _test_index_legacy_array() -> void:
+	print("-- an old bare-array index still loads --")
+	var saved := _snapshot_library()
+	_clear_library()
+	DirAccess.make_dir_recursive_absolute(QuizLibrary.DIR)
+
+	_write_raw(QuizLibrary.INDEX_PATH, JSON.stringify([
+		{"id": "q1", "title": "old", "count": 2, "created_at": "2020-01-01T00:00:00"},
+	]))
+	var entries := QuizLibrary.all()
+	_check(entries.size() == 1, "the legacy entry is read")
+	_check(str(entries[0].get("title", "")) == "old", "its fields survive")
+	_check(int(entries[0].get("count", 0)) == 2, "its count survives")
+
+	_restore_library(saved)
+
+
+# ---------------------------------------------------------------- helpers
+
+func _path(name: String) -> String:
+	return "%s/%s" % [TMP, name]
+
+
+func _write_raw(path: String, text: String) -> void:
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	if f == null:
+		printerr("  FAIL could not open %s for writing" % path)
+		return
+	f.store_string(text)
+	f.close()
+
+
+func _wipe(dir: String) -> void:
+	if not DirAccess.dir_exists_absolute(dir):
+		return
+	for f in DirAccess.get_files_at(dir):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path("%s/%s" % [dir, f]))
+	var sub := DirAccess.open(dir)
+	if sub != null:
+		for d in sub.get_directories():
+			_wipe("%s/%s" % [dir, d])
+
+
+func _snapshot_file(path: String) -> String:
+	if not FileAccess.file_exists(path):
+		return ""
+	return FileAccess.get_file_as_string(path)
+
+
+func _restore_file(path: String, text: String) -> void:
+	if text == "":
+		SaveManager.forget(path)
+		return
+	_write_raw(path, text)
+
+
+func _snapshot_library() -> Array:
+	var saved: Array = []
+	if not DirAccess.dir_exists_absolute(QuizLibrary.DIR):
+		return saved
+	for f in DirAccess.get_files_at(QuizLibrary.DIR):
+		saved.append({
+			"name": f,
+			"text": FileAccess.get_file_as_string("%s/%s" % [QuizLibrary.DIR, f]),
+		})
+	return saved
+
+
+func _restore_library(saved: Array) -> void:
+	_clear_library()
+	DirAccess.make_dir_recursive_absolute(QuizLibrary.DIR)
+	for item in saved:
+		_write_raw("%s/%s" % [QuizLibrary.DIR, item["name"]], item["text"])
+
+
+func _clear_library() -> void:
+	if not DirAccess.dir_exists_absolute(QuizLibrary.DIR):
+		return
+	for f in DirAccess.get_files_at(QuizLibrary.DIR):
+		SaveManager.forget("%s/%s" % [QuizLibrary.DIR, f])

@@ -7,7 +7,10 @@ const SAVE_PATH := "user://quizforge_save.json"
 
 ## 2: the server address moved into a hidden developer menu, so an address a
 ## student typed under v1 is discarded on load instead of lingering in profiles.
-const PROFILE_VERSION := 2
+## The number itself lives in SaveManager.VERSIONS so the writer and the reader
+## can never disagree about which version they are producing.
+func profile_version() -> int:
+	return int(SaveManager.VERSIONS["profile"])
 
 var user := {
 	"username": "",
@@ -41,26 +44,29 @@ func _ready() -> void:
 
 func load_profile() -> void:
 	## Reads what save_profile() wrote, so a server address or a finished
-	## account survives a restart. Missing or corrupt files are ignored.
-	if not FileAccess.file_exists(SAVE_PATH):
+	## account survives a restart. A missing file is ordinary; a damaged one is
+	## reported by SaveManager and leaves the defaults in place instead of
+	## crashing on startup.
+	var result := SaveManager.read_json(SAVE_PATH, "profile")
+	if not result["ok"]:
+		if result["status"] == SaveManager.CORRUPT:
+			push_warning("Quizforge: the profile save could not be read; starting fresh")
 		return
-	var f := FileAccess.open(SAVE_PATH, FileAccess.READ)
-	if f == null:
-		return
-	var parsed = JSON.parse_string(f.get_as_text())
-	f.close()
+
+	var parsed = result["data"]
 	if typeof(parsed) != TYPE_DICTIONARY:
 		return
 
 	var saved = parsed.get("user", {})
-	var saved_version := int(parsed.get("profile_version", 0))
+	# the version the file arrived as, before SaveManager migrated it
+	var saved_version := int(result.get("from_version", result["version"]))
 	if typeof(saved) == TYPE_DICTIONARY:
 		for key in saved:
 			# never restore a password from disk, even an old save that had one
 			if key != "password":
 				user[key] = saved[key]
-	user["profile_version"] = PROFILE_VERSION
-	if saved_version < PROFILE_VERSION:
+	user["profile_version"] = profile_version()
+	if saved_version < profile_version():
 		# v1 let a student type a server address; that is not a preference worth
 		# carrying forward, so the build default takes over from here on
 		user["server_url"] = ""
@@ -104,18 +110,14 @@ func save_profile() -> void:
 	var safe_user := user.duplicate()
 	safe_user.erase("password")
 	var data := {
-		"profile_version": PROFILE_VERSION,
+		"profile_version": profile_version(),
 		"user": safe_user,
 		"encounter_ready": encounter_ready,
 		"encounter_title": encounter_title,
 		"saved_at": Time.get_datetime_string_from_system(),
 	}
-	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
-	if f == null:
+	if not SaveManager.write_json(SAVE_PATH, data, "profile"):
 		push_warning("could not write save file")
-		return
-	f.store_string(JSON.stringify(data, "\t"))
-	f.close()
 
 
 func has_save() -> bool:

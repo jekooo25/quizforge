@@ -90,38 +90,44 @@ static func save(title: String, questions: Array) -> bool:
 		})
 
 	var data := {
-		"version": 1,
+		"version": int(SaveManager.VERSIONS["quiz"]),
 		"title": title,
 		"saved_at": Time.get_datetime_string_from_system(),
 		"questions": clean,
 	}
-	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
-	if f == null:
-		push_warning("could not write the quiz save")
-		return false
-	f.store_string(JSON.stringify(data, "\t"))
-	f.close()
-	return true
+	return SaveManager.write_json(SAVE_PATH, data, "quiz")
 
 
 static func exists() -> bool:
-	return FileAccess.file_exists(SAVE_PATH)
+	return FileAccess.file_exists(SAVE_PATH) or SaveManager.has_backup(SAVE_PATH)
 
 
-## Returns {"title": String, "questions": Array}, or an empty set if none.
+## Returns {"title": String, "questions": Array, "status": String}.
+##
+## status is SaveManager.STATUS_MISSING when nothing was ever saved, STATUS_CORRUPT
+## when the file *and* its backup are unreadable, and STATUS_OK/STATUS_RECOVERED
+## otherwise. A caller must never paper over STATUS_CORRUPT with sample questions:
+## the student would be answering a set they did not choose.
 static func load_saved() -> Dictionary:
-	if not exists():
-		return {"title": "", "questions": []}
-	var f := FileAccess.open(SAVE_PATH, FileAccess.READ)
-	if f == null:
-		return {"title": "", "questions": []}
-	var parsed = JSON.parse_string(f.get_as_text())
-	f.close()
-	if typeof(parsed) != TYPE_DICTIONARY:
-		return {"title": "", "questions": []}
+	var result := SaveManager.read_json(SAVE_PATH, "quiz")
+	if not result["ok"]:
+		return {"title": "", "questions": [], "status": result["status"]}
 
-	# accept a bare array too, so a hand-written set still loads
-	var raw = parsed.get("questions", parsed if parsed is Array else [])
+	var parsed: Variant = result["data"]
+	var raw: Array = []
+	var title := ""
+	if typeof(parsed) == TYPE_DICTIONARY:
+		var dict: Dictionary = parsed
+		title = str(dict.get("title", ""))
+		var maybe: Variant = dict.get("questions", [])
+		if typeof(maybe) == TYPE_ARRAY:
+			raw.assign(maybe)
+	elif typeof(parsed) == TYPE_ARRAY:
+		# accept a bare array too, so a hand-written set still loads
+		raw.assign(parsed)
+	else:
+		return {"title": "", "questions": [], "status": SaveManager.STATUS_CORRUPT}
+
 	var out: Array = []
 	for item in raw:
 		if typeof(item) != TYPE_DICTIONARY:
@@ -131,4 +137,4 @@ static func load_saved() -> Dictionary:
 			"choices": item.get("choices", []),
 			"correct": int(item.get("correct", item.get("answer", -1))),
 		})
-	return {"title": str(parsed.get("title", "")), "questions": out}
+	return {"title": title, "questions": out, "status": result["status"]}

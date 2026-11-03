@@ -5,24 +5,32 @@ extends RefCounted
 ##
 ## The battle still reads the single-quiz save through QuizData; `play()` hands a
 ## library quiz to it, which keeps one playable-quiz path instead of two.
+##
+## Every read and write goes through SaveManager, which keeps a .bak beside each
+## file and repairs a damaged one from it.
 
 const DIR := "user://quizzes"
 const INDEX_PATH := "user://quizzes/index.json"
 
 
 static func all() -> Array:
-	if not FileAccess.file_exists(INDEX_PATH):
-		return []
-	var f := FileAccess.open(INDEX_PATH, FileAccess.READ)
-	if f == null:
-		return []
-	var parsed = JSON.parse_string(f.get_as_text())
-	f.close()
-	if typeof(parsed) != TYPE_ARRAY:
+	var result := SaveManager.read_json(INDEX_PATH, "library")
+	if not result["ok"]:
 		return []
 
+	var parsed: Variant = result["data"]
+	var raw: Array = []
+	if typeof(parsed) == TYPE_DICTIONARY:
+		# v1 stores {"version", "quizzes"}; v0 was a bare array (migrated on read)
+		var dict: Dictionary = parsed
+		var maybe: Variant = dict.get("quizzes", [])
+		if typeof(maybe) == TYPE_ARRAY:
+			raw.assign(maybe)
+	elif typeof(parsed) == TYPE_ARRAY:
+		raw.assign(parsed)
+
 	var out: Array = []
-	for item in parsed:
+	for item in raw:
 		if typeof(item) == TYPE_DICTIONARY:
 			out.append(item)
 	# newest first, the order a student expects to see their work
@@ -32,56 +40,70 @@ static func all() -> Array:
 
 
 ## Stores a quiz and returns its id, or "" if it could not be written.
-static func add(title: String, questions: Array, source := "generated") -> String:
+##
+## `dedupe_key` identifies the reviewer a set came from. Re-saving the same
+## reviewer (same upload, same title run again) rewrites that entry instead of
+## stacking a second copy of it on the shelf.
+static func add(title: String, questions: Array, source := "generated", dedupe_key := "") -> String:
 	_ensure_dir()
 
-	var clean: Array = []
-	for q in questions:
-		var choices: Array = []
-		for c in q.get("choices", []):
-			choices.append(str(c).strip_edges())
-		clean.append({
-			"q": str(q.get("q", "")).strip_edges(),
-			"choices": choices,
-			"correct": int(q.get("correct", -1)),
-		})
+	var clean := _clean_questions(questions)
+	var entries := all()
 
-	var id := _new_id()
+	var existing_at := -1
+	var id := ""
+	if dedupe_key != "":
+		for i in entries.size():
+			if str(entries[i].get("key", "")) == dedupe_key:
+				existing_at = i
+				id = str(entries[i].get("id", ""))
+				break
+	if id == "":
+		id = _new_id()
+
+	var now := Time.get_datetime_string_from_system()
+	var created_at := now
+	var code := ""
+	if existing_at >= 0:
+		created_at = str(entries[existing_at].get("created_at", now))
+		code = str(entries[existing_at].get("code", ""))
+
 	var record := {
-		"version": 1,
+		"version": int(SaveManager.VERSIONS["library_quiz"]),
 		"title": title,
 		"source": source,
-		"created_at": Time.get_datetime_string_from_system(),
+		"key": dedupe_key,
+		"created_at": created_at,
+		"updated_at": now,
 		"questions": clean,
 	}
-	var f := FileAccess.open(_path_for(id), FileAccess.WRITE)
-	if f == null:
+	if not SaveManager.write_json(_path_for(id), record, "library_quiz"):
 		push_warning("could not write quiz %s" % _path_for(id))
 		return ""
-	f.store_string(JSON.stringify(record, "\t"))
-	f.close()
 
-	var entries := all()
-	entries.append({
+	var entry := {
 		"id": id,
 		"title": title,
 		"count": clean.size(),
 		"source": source,
-		"created_at": record["created_at"],
-		"code": "",
-	})
+		"key": dedupe_key,
+		"created_at": created_at,
+		"updated_at": now,
+		"code": code,
+	}
+	if existing_at >= 0:
+		entries[existing_at] = entry
+	else:
+		entries.append(entry)
 	_write_index(entries)
 	return id
 
 
 static func get_quiz(id: String) -> Dictionary:
-	if not FileAccess.file_exists(_path_for(id)):
+	var result := SaveManager.read_json(_path_for(id), "library_quiz")
+	if not result["ok"]:
 		return {}
-	var f := FileAccess.open(_path_for(id), FileAccess.READ)
-	if f == null:
-		return {}
-	var parsed = JSON.parse_string(f.get_as_text())
-	f.close()
+	var parsed = result["data"]
 	if typeof(parsed) != TYPE_DICTIONARY:
 		return {}
 	return parsed
@@ -93,10 +115,7 @@ static func remove(id: String) -> bool:
 		if str(item.get("id", "")) != id:
 			kept.append(item)
 	_write_index(kept)
-
-	var path := _path_for(id)
-	if FileAccess.file_exists(path):
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	SaveManager.forget(_path_for(id))
 	return true
 
 
@@ -131,14 +150,28 @@ static func _path_for(id: String) -> String:
 	return "%s/%s.json" % [DIR, id]
 
 
+static func _clean_questions(questions: Array) -> Array:
+	var clean: Array = []
+	for q in questions:
+		var choices: Array = []
+		for c in q.get("choices", []):
+			choices.append(str(c).strip_edges())
+		clean.append({
+			"q": str(q.get("q", "")).strip_edges(),
+			"choices": choices,
+			"correct": int(q.get("correct", -1)),
+		})
+	return clean
+
+
 static func _write_index(entries: Array) -> void:
 	_ensure_dir()
-	var f := FileAccess.open(INDEX_PATH, FileAccess.WRITE)
-	if f == null:
+	var data := {
+		"version": int(SaveManager.VERSIONS["library"]),
+		"quizzes": entries,
+	}
+	if not SaveManager.write_json(INDEX_PATH, data, "library"):
 		push_warning("could not write the quiz index")
-		return
-	f.store_string(JSON.stringify(entries, "\t"))
-	f.close()
 
 
 ## Time-stamped so the sort is stable, with a short random tail so two quizzes
