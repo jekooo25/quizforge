@@ -9,7 +9,7 @@ extends Node
 const TMP := "user://_save_tests"
 
 ## Every check this run must reach; a skipped assertion means a script error.
-const EXPECTED_CHECKS := 48
+const EXPECTED_CHECKS := 57
 
 var failures: int = 0
 var checks_run: int = 0
@@ -60,6 +60,7 @@ func _run() -> void:
 	_test_quiz_status()
 	_test_library_dedupe()
 	_test_index_legacy_array()
+	await _test_settings_persist()
 	await _test_battle_refuses_sample()
 
 	_restore_file(Nav.SAVE_PATH, profile_snapshot)
@@ -227,6 +228,72 @@ func _test_index_legacy_array() -> void:
 	_check(int(entries[0].get("count", 0)) == 2, "its count survives")
 
 	_restore_library(saved)
+
+
+## Volume settings live in the profile, so they must reload after a restart and
+## must actually reach the audio buses rather than just a label.
+func _test_settings_persist() -> void:
+	print("-- volume settings save, reload and reach the buses --")
+	var profile_snapshot := _snapshot_file(Nav.SAVE_PATH)
+	var before := AudioMixer.volume_of(Nav.user, "volume_music")
+
+	var screen: Control = load("res://scripts/screens/settings_screen.gd").new()
+	add_child(screen)
+	await get_tree().process_frame
+
+	var music: Variant = screen._sliders.get("volume_music")
+	var sfx: Variant = screen._sliders.get("volume_sfx")
+	_check(music != null and sfx != null, "the screen has a music and an SFX slider")
+	if music == null or sfx == null:
+		screen.queue_free()
+		_restore_file(Nav.SAVE_PATH, profile_snapshot)
+		return
+
+	_check(int(music.value) == before, "the music slider opens at the saved value")
+
+	music.value = 25
+	music.value_changed.emit(25.0)
+	music.drag_ended.emit(true)
+	await get_tree().process_frame
+
+	_check(int(Nav.user.get("volume_music", -1)) == 25, "the drag is held in the session")
+
+	var music_bus := AudioServer.get_bus_index(AudioMixer.MUSIC)
+	_check(music_bus != -1, "a Music bus exists")
+	_check(is_equal_approx(AudioServer.get_bus_volume_db(music_bus), linear_to_db(0.25)),
+		"the level reaches the Music bus")
+	_check(not AudioServer.is_bus_mute(music_bus), "a live level is not muted")
+
+	var saved: Variant = JSON.parse_string(FileAccess.get_file_as_string(Nav.SAVE_PATH))
+	var saved_music := -1
+	if typeof(saved) == TYPE_DICTIONARY:
+		var saved_dict: Dictionary = saved
+		var saved_user: Variant = saved_dict.get("user", {})
+		if typeof(saved_user) == TYPE_DICTIONARY:
+			var user_dict: Dictionary = saved_user
+			saved_music = int(user_dict.get("volume_music", -1))
+	_check(saved_music == 25, "the value is written into the profile file")
+
+	sfx.value = 0
+	sfx.value_changed.emit(0.0)
+	sfx.drag_ended.emit(true)
+	var sfx_bus := AudioServer.get_bus_index(AudioMixer.SFX)
+	_check(sfx_bus != -1 and AudioServer.is_bus_mute(sfx_bus), "zero mutes the SFX bus")
+
+	# a restart: drop the session copy and read the file back
+	Nav.user["volume_music"] = 0
+	Nav.load_profile()
+	_check(int(Nav.user.get("volume_music", -1)) == 25, "the volume survives a restart")
+
+	screen.queue_free()
+	await get_tree().process_frame
+
+	_restore_file(Nav.SAVE_PATH, profile_snapshot)
+	if FileAccess.file_exists(Nav.SAVE_PATH):
+		Nav.load_profile()
+	else:
+		Nav.user["volume_music"] = before
+	AudioMixer.apply(Nav.user)
 
 
 ## The battle must never paper over a damaged quiz with the built-in sample.

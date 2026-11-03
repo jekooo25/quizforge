@@ -11,6 +11,7 @@ var _taps := 0
 var _version_label: Button
 var _dev_field: LineEdit
 var _dev_using: Label
+var _sliders: Dictionary = {}
 
 
 func _ready() -> void:
@@ -45,8 +46,8 @@ func _ready() -> void:
 	rows.add_theme_constant_override("separation", 16)
 	body.add_child(rows)
 
-	rows.add_child(_slider_row("Music", 70))
-	rows.add_child(_slider_row("SFX", 70))
+	rows.add_child(_slider_row("Music", "volume_music", AudioMixer.MUSIC))
+	rows.add_child(_slider_row("SFX", "volume_sfx", AudioMixer.SFX))
 
 	var back := UITheme.button("←  Main Menu", "cream", 40)
 	back.custom_minimum_size = Vector2(200, 40)
@@ -65,7 +66,10 @@ func _ready() -> void:
 	_add_version_label()
 
 
-func _slider_row(label_text: String, initial: float) -> HBoxContainer:
+## `key` is the profile field, `bus` the audio bus it drives. The slider opens at
+## whatever the profile holds, applies as it is dragged, and writes the file once
+## the drag ends rather than on every pixel of movement.
+func _slider_row(label_text: String, key: String, bus: String) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 24)
 
@@ -74,6 +78,8 @@ func _slider_row(label_text: String, initial: float) -> HBoxContainer:
 	l.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(l)
+
+	var initial := AudioMixer.volume_of(Nav.user, key)
 
 	var slider := HSlider.new()
 	slider.custom_minimum_size = Vector2(0, 24)
@@ -103,10 +109,13 @@ func _slider_row(label_text: String, initial: float) -> HBoxContainer:
 
 	slider.value_changed.connect(func(v: float) -> void:
 		value.text = "%d" % int(v)
-		Nav.user["volume_" + label_text.to_lower()] = int(v)
-		if label_text == "Music":
-			AudioServer.set_bus_volume_db(0, linear_to_db(maxf(v / 100.0, 0.0001))))
+		Nav.user[key] = int(v)
+		AudioMixer.set_volume_percent(bus, int(v)))
 
+	slider.drag_ended.connect(func(_changed: bool) -> void:
+		Nav.save_profile())
+
+	_sliders[key] = slider
 	return row
 
 

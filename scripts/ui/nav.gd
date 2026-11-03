@@ -36,6 +36,8 @@ var _current: Control
 
 func _ready() -> void:
 	load_profile()
+	# the sliders are only a store; the buses need setting before anything plays
+	AudioMixer.apply(user)
 	layer = 0
 	_host = Control.new()
 	_host.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
