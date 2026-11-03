@@ -63,7 +63,7 @@ func _tab_row() -> HBoxContainer:
 		tab.focus_mode = Control.FOCUS_NONE
 		tab.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		tab.add_theme_font_override("font", UITheme.font_script)
-		tab.add_theme_font_size_override("font_size", 21)
+		tab.add_theme_font_size_override("font_size", UITheme.crisp(21))
 		tab.pressed.connect(func() -> void: _select_tab(key))
 		_tabs[key] = tab
 		row.add_child(tab)

@@ -119,7 +119,7 @@ func _add_version_label() -> void:
 	_version_label.focus_mode = Control.FOCUS_NONE
 	_version_label.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_version_label.add_theme_font_override("font", UITheme.font_pixel)
-	_version_label.add_theme_font_size_override("font_size", 10)
+	_version_label.add_theme_font_size_override("font_size", UITheme.crisp(10))
 	_version_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.95))
 	_version_label.add_theme_color_override("font_outline_color", Color(0.10, 0.09, 0.08, 0.85))
 	_version_label.add_theme_constant_override("outline_size", 3)

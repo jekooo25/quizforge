@@ -70,7 +70,7 @@ func _ready() -> void:
 
 	_range = UITheme.field("40-65 (optional)")
 	_range.custom_minimum_size = Vector2(180, 32)
-	_range.add_theme_font_size_override("font_size", 13)
+	_range.add_theme_font_size_override("font_size", UITheme.crisp(13))
 	# Without this the field stretches to whatever height the row ends up with.
 	_range.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_range.text = str(Nav.user.get("page_range", ""))

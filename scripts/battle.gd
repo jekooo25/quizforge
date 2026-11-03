@@ -92,7 +92,7 @@ func _add_debug_label() -> void:
 	label.offset_top = -46.0
 	label.offset_bottom = -4.0
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.add_theme_font_size_override("font_size", 10)
+	label.add_theme_font_size_override("font_size", UITheme.crisp(10))
 	label.add_theme_color_override("font_color", Color(0.62, 1.0, 0.62))
 	label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.85))
 	label.add_theme_constant_override("shadow_offset_x", 1)
@@ -120,8 +120,15 @@ func _panel_style(bg: Color, edge: Color, radius: int) -> StyleBoxFlat:
 func _label(text: String, font_size: int, color: Color) -> Label:
 	var l := Label.new()
 	l.text = text
-	l.add_theme_font_size_override("font_size", font_size)
+	l.add_theme_font_size_override("font_size", UITheme.crisp(font_size))
 	l.add_theme_color_override("font_color", color)
+	return l
+
+
+## Banners and names are display text: Monocraft, like the rest of the chrome.
+func _display_label(text: String, font_size: int, color: Color) -> Label:
+	var l := _label(text, font_size, color)
+	l.add_theme_font_override("font", UITheme.font_pixel)
 	return l
 
 
@@ -180,7 +187,7 @@ func _build_ui() -> void:
 	enemy_card.add_child(enemy_box)
 	var enemy_head := HBoxContainer.new()
 	enemy_box.add_child(enemy_head)
-	var enemy_name := _label("Mudlet", 21, TEXT)
+	var enemy_name := _display_label("Mudlet", 24, TEXT)
 	enemy_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	enemy_head.add_child(enemy_name)
 	enemy_hp_text = _label("60 / 60", 15, MUTED)
@@ -247,7 +254,7 @@ func _build_ui() -> void:
 		var btn := Button.new()
 		btn.custom_minimum_size = Vector2(0.0, 44.0)
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		btn.add_theme_font_size_override("font_size", 17)
+		btn.add_theme_font_size_override("font_size", UITheme.crisp(17))
 		btn.add_theme_stylebox_override("normal", _panel_style(Color(0.16, 0.15, 0.22), EDGE, 10))
 		btn.add_theme_stylebox_override("hover", _panel_style(Color(0.21, 0.20, 0.29), ACCENT, 10))
 		btn.add_theme_stylebox_override("pressed", _panel_style(Color(0.24, 0.23, 0.33), ACCENT, 10))
@@ -266,7 +273,7 @@ func _build_ui() -> void:
 	player_card.add_child(player_box)
 	var player_head := HBoxContainer.new()
 	player_box.add_child(player_head)
-	var player_name := _label("Emberpup", 21, TEXT)
+	var player_name := _display_label("Emberpup", 24, TEXT)
 	player_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	player_head.add_child(player_name)
 	streak_label = _label("", 15, GOLD)
@@ -455,7 +462,7 @@ func _end_battle(won: bool) -> void:
 	box.custom_minimum_size = Vector2(420.0, 0.0)
 	center.add_child(box)
 
-	var title := _label("Victory" if won else "Defeated", 46, ACCENT if won else DANGER)
+	var title := _display_label("Victory" if won else "Defeated", 48, ACCENT if won else DANGER)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(title)
 
@@ -467,7 +474,7 @@ func _end_battle(won: bool) -> void:
 	var again := Button.new()
 	again.text = "Battle again"
 	again.custom_minimum_size = Vector2(0.0, 52.0)
-	again.add_theme_font_size_override("font_size", 20)
+	again.add_theme_font_size_override("font_size", UITheme.crisp(20))
 	again.add_theme_stylebox_override("normal", _panel_style(Color(0.16, 0.15, 0.22), ACCENT, 12))
 	again.add_theme_stylebox_override("hover", _panel_style(Color(0.22, 0.24, 0.28), ACCENT, 12))
 	again.add_theme_stylebox_override("pressed", _panel_style(Color(0.26, 0.29, 0.33), ACCENT, 12))

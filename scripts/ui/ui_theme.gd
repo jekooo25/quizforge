@@ -37,9 +37,20 @@ const NIGHT := Color(0.059, 0.067, 0.090)
 const NIGHT_SOFT := Color(0.098, 0.106, 0.137)
 const NIGHT_LINE := Color(0.184, 0.196, 0.243)
 
-static var font_pixel: Font = preload("res://assets/fonts/PressStart2P-Regular.ttf")
-static var font_small: Font = preload("res://assets/fonts/Silkscreen-Regular.ttf")
-static var font_script: Font = preload("res://assets/fonts/Kalam-Bold.ttf")
+## Display text — titles, tile captions, buttons, banners — is Monocraft.
+## Body text (questions, choices, fields, the editor) inherits the app theme's
+## default font, Pixelify Sans, from Project Settings → gui/theme/custom.
+static var font_pixel: Font = preload("res://assets/themes/font_display.tres")
+static var font_small: Font = preload("res://assets/themes/font_display.tres")
+static var font_script: Font = preload("res://assets/themes/font_display.tres")
+static var font_body: Font = preload("res://assets/themes/font_body.tres")
+
+
+## Pixel faces read best on an even pixel rhythm. Neither shipped font has an
+## integer design grid (measured on their outlines), so sizes snap to a 4 px
+## step with a readable floor rather than pretending a native multiple exists.
+static func crisp(size: int) -> int:
+	return maxi(12, int(round(size / 4.0)) * 4)
 
 
 # ------------------------------------------------------------------ labels
@@ -49,7 +60,7 @@ static func _label(text: String, font: Font, size: int, color: Color) -> Label:
 	l.text = text
 	if font != null:
 		l.add_theme_font_override("font", font)
-	l.add_theme_font_size_override("font_size", size)
+	l.add_theme_font_size_override("font_size", crisp(size))
 	l.add_theme_color_override("font_color", color)
 	return l
 
@@ -96,7 +107,8 @@ static func button(text: String, variant := "navy", height := 44.0) -> Button:
 	var b := Button.new()
 	b.text = text
 	b.custom_minimum_size = Vector2(0.0, height)
-	b.add_theme_font_size_override("font_size", 16)
+	b.add_theme_font_override("font", font_pixel)
+	b.add_theme_font_size_override("font_size", crisp(16))
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 
 	var normal: StyleBoxFlat
@@ -130,7 +142,8 @@ static func field(placeholder: String, secret := false) -> LineEdit:
 	e.placeholder_text = placeholder
 	e.custom_minimum_size = Vector2(0.0, 34.0)
 	e.alignment = HORIZONTAL_ALIGNMENT_CENTER
-	e.add_theme_font_size_override("font_size", 15)
+	e.add_theme_font_override("font", font_body)
+	e.add_theme_font_size_override("font_size", crisp(15))
 	e.add_theme_color_override("font_color", INK)
 	e.add_theme_color_override("caret_color", INK)
 	e.add_theme_color_override("font_placeholder_color", Color(0.62, 0.62, 0.62))
@@ -143,7 +156,8 @@ static func field(placeholder: String, secret := false) -> LineEdit:
 static func select() -> OptionButton:
 	var o := OptionButton.new()
 	o.custom_minimum_size = Vector2(0.0, 34.0)
-	o.add_theme_font_size_override("font_size", 14)
+	o.add_theme_font_override("font", font_body)
+	o.add_theme_font_size_override("font_size", crisp(14))
 	o.add_theme_color_override("font_color", INK)
 	o.add_theme_color_override("font_hover_color", INK)
 	o.add_theme_color_override("font_pressed_color", INK)
@@ -225,12 +239,12 @@ static func knob_texture(diameter := 22, fill := YELLOW, rim := YELLOW_DEEP) -> 
 	return ImageTexture.create_from_image(img)
 
 
-## Text-only button in the handwritten menu style.
+## Text-only button used for menu items and back links.
 static func script_button(text: String, size := 26) -> Button:
 	var b := Button.new()
 	b.text = text
 	b.add_theme_font_override("font", font_script)
-	b.add_theme_font_size_override("font_size", size)
+	b.add_theme_font_size_override("font_size", crisp(size))
 	b.add_theme_color_override("font_color", INK)
 	b.add_theme_color_override("font_hover_color", YELLOW_DEEP)
 	b.add_theme_color_override("font_pressed_color", WOOD)

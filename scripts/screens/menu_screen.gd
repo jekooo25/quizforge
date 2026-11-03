@@ -146,7 +146,7 @@ func _add_exit() -> void:
 	b.focus_mode = Control.FOCUS_NONE
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	b.add_theme_font_override("font", UITheme.font_pixel)
-	b.add_theme_font_size_override("font_size", 11)
+	b.add_theme_font_size_override("font_size", UITheme.crisp(11))
 	b.add_theme_color_override("font_color", Color(1, 1, 1, 0.92))
 	b.add_theme_color_override("font_outline_color", Color(0.10, 0.09, 0.08, 0.85))
 	b.add_theme_constant_override("outline_size", 4)

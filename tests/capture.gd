@@ -8,6 +8,8 @@ var _screen := ""
 var _payload := ""
 var _tab := ""
 var _call := ""
+var _size := Vector2i.ZERO
+var _no_stretch := false
 
 
 func _ready() -> void:
@@ -32,6 +34,21 @@ func _ready() -> void:
 			"--call":
 				if i + 1 < args.size():
 					_call = args[i + 1]
+			"--size":
+				if i + 1 < args.size():
+					var parts := args[i + 1].split("x")
+					if parts.size() == 2:
+						_size = Vector2i(int(parts[0]), int(parts[1]))
+			"--no-stretch":
+				_no_stretch = true
+
+	# A real phone width, laid out instead of scaled down. Without --no-stretch
+	# the project's canvas_items stretch shrinks the 1280x562 design instead.
+	if _size != Vector2i.ZERO:
+		if _no_stretch:
+			get_window().content_scale_mode = Window.CONTENT_SCALE_MODE_DISABLED
+		get_window().size = _size
+		await get_tree().process_frame
 
 	var main_scene: Node = load("res://scenes/main.tscn").instantiate()
 	add_child(main_scene)

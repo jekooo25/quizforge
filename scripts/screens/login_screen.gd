@@ -84,7 +84,7 @@ func _role_row() -> HBoxContainer:
 		tab.focus_mode = Control.FOCUS_NONE
 		if not locked:
 			tab.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		tab.add_theme_font_size_override("font_size", 18)
+		tab.add_theme_font_size_override("font_size", UITheme.crisp(18))
 		tab.pressed.connect(func() -> void: _pick_role(id))
 		_tabs[id] = tab
 		row.add_child(tab)
@@ -129,7 +129,7 @@ func _big_field(placeholder: String, secret := false) -> LineEdit:
 	var f := UITheme.field(placeholder, secret)
 	f.custom_minimum_size = Vector2(0, 50)
 	f.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	f.add_theme_font_size_override("font_size", 16)
+	f.add_theme_font_size_override("font_size", UITheme.crisp(16))
 	f.add_theme_stylebox_override("normal",
 		UITheme.padded(UITheme.box(Color.WHITE, Color(0, 0, 0), 2, 12), 16, 10))
 	f.add_theme_stylebox_override("focus",

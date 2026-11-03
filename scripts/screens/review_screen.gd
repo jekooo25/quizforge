@@ -135,7 +135,7 @@ func _build_tabs() -> Control:
 		b.text = "Source Text" if key == "source" else "Questions"
 		b.toggle_mode = true
 		b.custom_minimum_size = Vector2(150, 34)
-		b.add_theme_font_size_override("font_size", 14)
+		b.add_theme_font_size_override("font_size", UITheme.crisp(14))
 		b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		b.add_theme_stylebox_override("normal",
 			UITheme.padded(UITheme.box(Color(0.99, 0.97, 0.93, 0.85), Color(0.72, 0.66, 0.55), 1, 8), 14, 6))
@@ -271,7 +271,7 @@ func _question_card(index: int) -> Control:
 		mark.button_group = group
 		mark.text = char(65 + j)
 		mark.custom_minimum_size = Vector2(32, 34)
-		mark.add_theme_font_size_override("font_size", 12)
+		mark.add_theme_font_size_override("font_size", UITheme.crisp(12))
 		mark.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		_style_mark(mark)
 		mark.set_pressed_no_signal(int(q.get("correct", -1)) == j)
