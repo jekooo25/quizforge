@@ -392,7 +392,7 @@ func _fail(message: String) -> void:
 	_review.visible = false
 	_retry.visible = true
 	# the demo set is a developer aid: students only ever see Try again
-	_sample.visible = Dev.overlay_on()
+	_sample.visible = Dev.sample_allowed()
 	_actions.modulate.a = 1.0
 	_dbg("FAILED: " + message)
 

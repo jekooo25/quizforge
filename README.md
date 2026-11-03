@@ -126,15 +126,26 @@ load, so no shipped profile keeps pointing at someone's laptop.
 ## Test
 
 ```powershell
-# click through every screen, end to end (26 checks)
+# click through every screen, end to end (66 checks)
 godot --headless --path . res://tests/flow.tscn
 
-# battle loop (19 checks)
-godot --headless --path . --script res://tests/smoke_test.gd
+# battle loop (21 checks)
+godot --headless --path . res://tests/smoke.tscn
+
+# save layer: atomic writes, backup recovery, damaged files (48 checks)
+godot --headless --path . res://tests/save.tscn
 
 # screenshot any screen
 godot --path . res://tests/capture.tscn -- --screen res://scripts/screens/menu_screen.gd --out shot.png
 ```
+
+Each suite counts the checks it ran and fails if it did not reach them all, so a
+crashed assertion can no longer report a pass. They run as scenes rather than
+`--script` entry points because a `--script` main loop is compiled before the
+autoloads exist, and the app's scripts resolve autoloads by name.
+
+Running them rewrites `user://` data: the flow test starts from an empty quiz
+library, and the smoke test puts the machine's own quiz back when it finishes.
 
 After adding a script with `class_name`, refresh the class cache:
 `godot --headless --import --path .`

@@ -2,7 +2,13 @@ extends Node
 ## End-to-end flow test: drives the real buttons through every screen.
 ## godot --headless --path . --script res://tests/flow_test.gd
 
+## Every check this run must reach. A script error inside an assertion skips it
+## without counting as a failure, which would otherwise print
+## "ALL FLOW CHECKS PASSED" over a crashed run.
+const EXPECTED_CHECKS := 66
+
 var failures: int = 0
+var checks_run: int = 0
 
 
 func _ready() -> void:
@@ -10,6 +16,7 @@ func _ready() -> void:
 
 
 func _check(condition: bool, message: String) -> void:
+	checks_run += 1
 	if condition:
 		print("  ok   ", message)
 	else:
@@ -41,6 +48,12 @@ func _screen() -> Node:
 
 
 func _run() -> void:
+	if Nav == null or SaveManager == null:
+		printerr("  FAIL an autoload did not load (Nav / SaveManager)")
+		printerr("FLOW CHECKS FAILED")
+		get_tree().quit(1)
+		return
+
 	# Start from a clean slate so a previous run's quiz doesn't leak in.
 	if FileAccess.file_exists(QuizData.SAVE_PATH):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(QuizData.SAVE_PATH))
@@ -278,6 +291,11 @@ func _run() -> void:
 	# leave no test address behind for the next manual run
 	Nav.user["server_url"] = ""
 	Nav.save_profile()
+
+	if checks_run != EXPECTED_CHECKS:
+		failures += 1
+		printerr("  FAIL ran %d checks, expected %d — an assertion errored and was skipped" % [
+			checks_run, EXPECTED_CHECKS])
 
 	print("")
 	if failures == 0:

@@ -58,20 +58,38 @@ var battlefield: Control
 var overlay: Control
 
 
+const UNAVAILABLE := "We couldn't open this quiz. Please choose it again from your saved quizzes or make a new one."
+
+## Set when the battle cannot start because there is no playable quiz. Tests and
+## the debug label read these instead of digging through the node tree.
+var unavailable := false
+var unavailable_message := ""
+
+
 func _ready() -> void:
-	# The reviewed set wins; the built-in questions keep the battle playable
-	# on its own, before any reviewer has been generated.
 	var saved := QuizData.load_saved()
-	_questions = saved.get("questions", [])
-	if _questions.is_empty():
+	var status := str(saved.get("status", SaveManager.STATUS_OK))
+	var questions: Variant = saved.get("questions", [])
+	if typeof(questions) == TYPE_ARRAY:
+		_questions.assign(questions)
+
+	if status == SaveManager.STATUS_CORRUPT or _questions.is_empty():
+		# A quiz that cannot be opened is not a reason to invent one. This used
+		# to fall through to the built-in sample, so a student whose file was
+		# damaged answered questions they never chose. Only a debug run may
+		# substitute the demo set now.
+		if not Dev.sample_allowed():
+			_show_unavailable(status)
+			return
 		_questions = QUESTIONS.duplicate()
-		_source = "BUILT-IN QUESTIONS (no saved quiz)"
+		_source = "BUILT-IN QUESTIONS (debug flag; no playable quiz)"
 	else:
 		_source = "saved quiz, %d questions, title '%s', saved %s" % [
 			_questions.size(),
 			str(saved.get("title", "")),
 			Time.get_datetime_string_from_unix_time(
 				FileAccess.get_modified_time(QuizData.SAVE_PATH))]
+
 	print("[battle] quiz source: ", _source)
 	print("[battle] file: ", ProjectSettings.globalize_path(QuizData.SAVE_PATH))
 	print("[battle] first question: ", str(_questions[0].get("q", "")) if not _questions.is_empty() else "(none)")
@@ -79,6 +97,52 @@ func _ready() -> void:
 	if Dev.overlay_on():
 		_add_debug_label()
 	_start_battle()
+
+
+## The saved quiz is missing or damaged. Say so plainly and offer the way out.
+## No battle is started, so there is nothing to win and no score to show.
+func _show_unavailable(status: String) -> void:
+	unavailable = true
+	unavailable_message = UNAVAILABLE
+	_source = "unavailable (%s)" % status
+	print("[battle] quiz unavailable: ", status)
+	print("[battle] file: ", ProjectSettings.globalize_path(QuizData.SAVE_PATH))
+
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+	var bg := ColorRect.new()
+	bg.color = BG
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(bg)
+
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(center)
+
+	var card := _make_panel(0.0)
+	card.custom_minimum_size = Vector2(560.0, 0.0)
+	center.add_child(card)
+
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 18)
+	card.add_child(column)
+
+	var title := _display_label("No quiz to play", 26, TEXT)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	column.add_child(title)
+
+	var message := _label(UNAVAILABLE, 17, MUTED)
+	message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	column.add_child(message)
+
+	var back := UITheme.button("Back to menu", "navy", 46)
+	back.custom_minimum_size = Vector2(240.0, 46.0)
+	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	back.pressed.connect(func() -> void:
+		Nav.show_screen(load("res://scripts/screens/menu_screen.gd").new()))
+	column.add_child(back)
 
 
 ## TEMPORARY: says which set the battle is actually playing.

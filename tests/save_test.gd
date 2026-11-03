@@ -8,7 +8,11 @@ extends Node
 
 const TMP := "user://_save_tests"
 
+## Every check this run must reach; a skipped assertion means a script error.
+const EXPECTED_CHECKS := 48
+
 var failures: int = 0
+var checks_run: int = 0
 
 
 func _ready() -> void:
@@ -16,6 +20,7 @@ func _ready() -> void:
 
 
 func _check(condition: bool, message: String) -> void:
+	checks_run += 1
 	if condition:
 		print("  ok   ", message)
 	else:
@@ -23,11 +28,22 @@ func _check(condition: bool, message: String) -> void:
 		printerr("  FAIL ", message)
 
 
+## Depth-first search for a Button whose text matches.
+func _find_button(node: Node, text: String) -> Button:
+	if node is Button and (node as Button).text.contains(text):
+		return node as Button
+	for child in node.get_children():
+		var found := _find_button(child, text)
+		if found != null:
+			return found
+	return null
+
+
 func _run() -> void:
 	# A broken autoload makes every check below error out without counting as a
 	# failure, which reads as a pass. Assert it loaded before trusting anything.
-	if SaveManager == null:
-		printerr("  FAIL the SaveManager autoload did not load")
+	if SaveManager == null or Nav == null:
+		printerr("  FAIL an autoload did not load (SaveManager / Nav)")
 		printerr("SAVE CHECKS FAILED")
 		get_tree().quit(1)
 		return
@@ -44,9 +60,15 @@ func _run() -> void:
 	_test_quiz_status()
 	_test_library_dedupe()
 	_test_index_legacy_array()
+	await _test_battle_refuses_sample()
 
 	_restore_file(Nav.SAVE_PATH, profile_snapshot)
 	_wipe(TMP)
+
+	if checks_run != EXPECTED_CHECKS:
+		failures += 1
+		printerr("  FAIL ran %d checks, expected %d — an assertion errored and was skipped" % [
+			checks_run, EXPECTED_CHECKS])
 
 	print("")
 	if failures == 0:
@@ -205,6 +227,37 @@ func _test_index_legacy_array() -> void:
 	_check(int(entries[0].get("count", 0)) == 2, "its count survives")
 
 	_restore_library(saved)
+
+
+## The battle must never paper over a damaged quiz with the built-in sample.
+func _test_battle_refuses_sample() -> void:
+	print("-- a damaged quiz shows a message instead of sample questions --")
+	var saved_quiz := _snapshot_file(QuizData.SAVE_PATH)
+	SaveManager.forget(QuizData.SAVE_PATH)
+
+	var battle: Control = load("res://scenes/battle.tscn").instantiate()
+	add_child(battle)
+	await get_tree().process_frame
+
+	_check(battle.unavailable, "the battle refuses to start")
+	_check(str(battle.unavailable_message).contains("couldn't open this quiz"),
+		"it explains the problem to the student")
+	_check(battle.player == null, "no fight was built")
+	_check(battle.answer_buttons.is_empty(), "no sample answers are offered")
+	_check(battle._questions.is_empty(), "no question set was invented")
+
+	var back := _find_button(battle, "Back to menu")
+	_check(back != null, "there is a way back to the menu")
+	if back != null:
+		back.pressed.emit()
+		await get_tree().process_frame
+		_check(Nav._current != null, "the menu opens")
+		_check(str(Nav._current.get_script().resource_path).ends_with("menu_screen.gd"),
+			"it really is the main menu")
+
+	battle.queue_free()
+	await get_tree().process_frame
+	_restore_file(QuizData.SAVE_PATH, saved_quiz)
 
 
 # ---------------------------------------------------------------- helpers

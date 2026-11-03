@@ -13,3 +13,12 @@ static func overlay_on() -> bool:
 	if OS.has_environment("QF_DEBUG"):
 		return true
 	return OS.get_cmdline_args().has("--debug-overlay")
+
+
+## The built-in sample quiz is a development aid, never a student fallback.
+##
+## A student who has no quiz, or whose quiz file is damaged, gets told so. Only
+## a debug run is allowed to quietly substitute demo questions so the battle can
+## be exercised without building a real set first.
+static func sample_allowed() -> bool:
+	return overlay_on()
