@@ -22,8 +22,9 @@ with `canvas_items` stretch, so it scales to any device.
 | `signup_name_screen.gd` | Sign up step 1 — full name |
 | `signup_school_screen.gd` | Sign up step 2 — school credentials |
 | `loading_screen.gd` | Branded wait screen, then the menu |
-| `menu_screen.gd` | Four tiles on the campus photo, mascot top right |
-| `my_quizzes_screen.gd` | The shelf: every quiz made here (and later, received by code) |
+| `menu_screen.gd` | Three tiles on the campus photo, mascot top right |
+| `progress_screen.gd` | Two tabs: the profile summary, and the saved-quiz shelf |
+| `my_quizzes_screen.gd` | The same shelf as a screen of its own |
 | `upload_screen.gd` | Reviewer picker + backup consent |
 | `generation_screen.gd` | Five-stage pipeline, then Play Encounter |
 | `settings_screen.gd` | Music / SFX |

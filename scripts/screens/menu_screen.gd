@@ -76,18 +76,17 @@ func _add_tiles() -> void:
 	var margin := MarginContainer.new()
 	add_child(margin)
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_left", 112)
-	margin.add_theme_constant_override("margin_right", 112)
+	margin.add_theme_constant_override("margin_left", 146)
+	margin.add_theme_constant_override("margin_right", 146)
 	margin.add_theme_constant_override("margin_top", 148)
 	margin.add_theme_constant_override("margin_bottom", 32)
 
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 24)
+	row.add_theme_constant_override("separation", 32)
 	margin.add_child(row)
 
 	row.add_child(_tile("Daily and\nWeekly Task", "clipboard", _on_daily_task))
 	row.add_child(_tile("Upload\nreviewer", "upload", open_upload))
-	row.add_child(_tile("My\nquizzes", "library", open_library))
 	row.add_child(_tile("View saved\nprogress", "floppy", open_progress))
 
 
@@ -184,10 +183,6 @@ func open_upload() -> void:
 
 func open_progress() -> void:
 	Nav.show_screen(load("res://scripts/screens/progress_screen.gd").new())
-
-
-func open_library() -> void:
-	Nav.show_screen(load("res://scripts/screens/my_quizzes_screen.gd").new())
 
 
 func _on_daily_task() -> void:

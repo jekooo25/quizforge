@@ -237,6 +237,17 @@ func _run() -> void:
 		_check(QuizData.load_saved().get("questions", []).size() > 0,
 			"playing rewrites the battle's quiz file")
 
+		# the shelf is a tab on Progress, which is why the menu stays at three tiles
+		Nav.show_screen(load("res://scripts/screens/progress_screen.gd").new())
+		await get_tree().process_frame
+		_check(_screen().get_script().resource_path.ends_with("progress_screen.gd"),
+			"saved progress opens")
+		_check(_screen()._tab == "progress", "progress opens on the profile tab")
+		_screen().show_quizzes_tab()
+		await get_tree().process_frame
+		_check(_screen()._shelf != null and _screen()._shelf._rows.get_child_count() > 0,
+			"the quizzes tab lists the saved quiz")
+
 	print("-- legacy profile --")
 	# a v1 profile that still carries a typed address must lose it on load
 	var legacy := FileAccess.open(Nav.SAVE_PATH, FileAccess.WRITE)
