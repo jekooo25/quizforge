@@ -4,6 +4,7 @@ extends Control
 
 const Cat := preload("res://scripts/ui/cat_mascot.gd")
 const Icons := preload("res://scripts/ui/pixel_icons.gd")
+const Quit := preload("res://scripts/ui/quit_dialog.gd")
 
 const INK := Color(0.15, 0.15, 0.18)
 
@@ -244,7 +245,7 @@ func _profile_row(key: String, value: String) -> HBoxContainer:
 
 
 func _on_exit() -> void:
-	var dialog := BoardDialog.ask("Are you sure you want to exit the game?", "Yes", "No")
+	var dialog: Control = Quit.new()
 	add_child(dialog)
 	dialog.confirmed.connect(func() -> void:
-		get_tree().quit())
+		Nav.show_screen(load("res://scripts/screens/thank_you_screen.gd").new()))

@@ -152,6 +152,22 @@ func _run() -> void:
 	_press(_screen(), "back to menu")
 	await get_tree().process_frame
 
+	print("-- exit confirmation --")
+	_screen()._on_exit()
+	await get_tree().process_frame
+	var quit_dialog: Control = null
+	for child in _screen().get_children():
+		if child is Control and child.get_script() != null \
+				and str(child.get_script().resource_path).ends_with("quit_dialog.gd"):
+			quit_dialog = child
+	_check(quit_dialog != null, "exit asks for confirmation")
+	if quit_dialog != null:
+		_check(_press(quit_dialog, "No") == true, "No is offered")
+		await get_tree().process_frame
+		_check(not is_instance_valid(quit_dialog), "No closes the dialog without quitting")
+		_check(_screen().get_script().resource_path.ends_with("menu_screen.gd"),
+			"you are still on the menu")
+
 	print("-- upload -> consent -> generation --")
 	_screen().open_upload()
 	await get_tree().process_frame

@@ -28,6 +28,7 @@ with `canvas_items` stretch, so it scales to any device.
 | `upload_screen.gd` | Reviewer picker + backup consent |
 | `generation_screen.gd` | Five-stage pipeline, then Play Encounter |
 | `settings_screen.gd` | Music / SFX |
+| `thank_you_screen.gd` | Farewell after exit, then the app closes |
 | `progress_screen.gd` | What we know about the student |
 | `scenes/battle.tscn` | The encounter itself (placeholder, see below) |
 
