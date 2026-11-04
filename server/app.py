@@ -21,9 +21,11 @@ because wifi dropped is worse than weaker questions.
 
 from __future__ import annotations
 
+import logging
 import os
 import sys
 import tempfile
+import time
 import traceback
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -33,6 +35,12 @@ from flask import Flask, jsonify, request  # noqa: E402
 import qfgen  # noqa: E402
 
 app = Flask(__name__)
+
+# The server window is the only place a failed generation can be diagnosed, so
+# request lines and provider reasons must be visible without debug mode.
+logging.basicConfig(level=logging.INFO,
+                    format="%(asctime)s %(levelname)s %(message)s")
+app.logger.setLevel(logging.INFO)
 
 DEFAULT_PROVIDER = os.environ.get("QF_PROVIDER", "gemini")
 DEFAULT_COUNT = 10
@@ -75,6 +83,46 @@ def _source_payload(extracted: dict, used_pages: list[int]) -> dict:
     }
 
 
+def _log_request(
+    kind: str,
+    filename: str,
+    page_label: str,
+    chars: int,
+    requested_provider: str,
+    used_provider: str,
+    kept: int,
+    started: float,
+) -> None:
+    """One readable line per request, plus the provider's own reason on failure."""
+    last = qfgen.LAST_CALLS[-1] if qfgen.LAST_CALLS else {}
+    status = last.get("status", "-")
+    cleaned = last.get("cleaned", "-")
+    parsed = last.get("parsed", "-")
+    path = used_provider if used_provider == requested_provider \
+        else f"{requested_provider}->{used_provider}"
+    tries = " -> ".join(
+        f"{str(c.get('model', '?')).replace('gemini-', '')}:{c.get('status', '-')}"
+        for c in qfgen.LAST_CALLS
+    ) or "-"
+    app.logger.info(
+        "[%s] %s | %s | %d chars | path %s | tries %s | gemini %s HTTP %s | "
+        "parsed %s cleaned %s kept %d | %.1fs",
+        kind, filename, page_label, chars, path, tries,
+        last.get("model", "-"), status, parsed, cleaned, kept,
+        time.time() - started,
+    )
+    reason = str(last.get("error", "") or "").strip()
+    failed = used_provider == "offline" and requested_provider != "offline"
+    if reason or failed:
+        raw = last.get("model_text") or last.get("raw") or ""
+        app.logger.info(
+            "    reason: %s | finish: %s | raw: %s",
+            reason or "provider unavailable",
+            last.get("finish", "-"),
+            " ".join(str(raw).split())[:500] or "(empty)",
+        )
+
+
 @app.get("/health")
 def health():
     provider = DEFAULT_PROVIDER
@@ -82,12 +130,14 @@ def health():
         "ok": True,
         "provider": provider,
         "ready": _provider_ready(provider),
-        "model": os.environ.get("QF_GEMINI_MODEL", "gemini-3-flash-preview"),
+        "model": qfgen.gemini_models()[0],
     })
 
 
 @app.post("/generate")
 def generate():
+    started = time.time()
+    qfgen.reset_calls()
     upload = request.files.get("file")
     if upload is None or upload.filename == "":
         return jsonify({"error": "no file uploaded"}), 400
@@ -133,8 +183,8 @@ def generate():
 
         try:
             result, used = _generate(ai, provider, selection["pages"], count)
-        except qfgen.QualityError as e:
-            return jsonify({"error": str(e), "code": "quality"}), 422
+        except qfgen.QualityError:
+            raise
 
         used_pages = result.get("used_pages", selection["used_pages"]) if used != "offline" \
             else selection["used_pages"]
@@ -148,14 +198,34 @@ def generate():
             ),
         })
         used_set = set(used_pages)
+        questions_out = (qfgen._clean_questions(result) if used != "offline"
+                         else result["questions"])
+        _log_request(
+            "generate", upload.filename,
+            f"PDF pages {selection['requested']}" if selection["requested"]
+            else f"sampled PDF pages {selection['used_pages']}",
+            source["chars"], provider, used, len(questions_out), started,
+        )
+        if used == "offline" and provider != "offline" and not questions_out:
+            # The AI was unavailable and the file had nothing the rule-based
+            # generator could use. This is our outage, not a bad file, so the
+            # app can say "try again" instead of blaming the reviewer.
+            return jsonify({
+                "error": "Quizforge is busy right now. Please try again in a minute.",
+                "code": "provider_busy",
+            }), 502
         return jsonify({
             "source": source,
             "title": result.get("title") or os.path.splitext(upload.filename)[0][:60],
             "pages": [p for p in extracted["pages"]
                       if int(p.get("page", 0)) in used_set],
-            "questions": qfgen._clean_questions(result) if used != "offline"
-                         else result["questions"],
+            "questions": questions_out,
         })
+    except qfgen.QualityError as e:
+        last = qfgen.LAST_CALLS[-1] if qfgen.LAST_CALLS else {}
+        app.logger.info("[generate] %s | quality reject | gemini HTTP %s | %s",
+                        upload.filename, last.get("status", "-"), e)
+        return jsonify({"error": str(e), "code": "quality"}), 422
     except qfgen.ExtractError as e:
         return jsonify({"error": f"could not read that file: {e}", "code": "unreadable"}), 422
     except Exception:
@@ -170,6 +240,8 @@ def generate():
 
 @app.post("/regenerate")
 def regenerate():
+    started = time.time()
+    qfgen.reset_calls()
     payload = request.get_json(silent=True) or {}
     pages = payload.get("pages") or []
     if not pages:
@@ -211,11 +283,22 @@ def regenerate():
 
     questions = (qfgen._clean_questions(result) if result["provider"] != "offline"
                  else result["questions"])
+    used_pages = result.get("used_pages", [])
+    _log_request(
+        "regenerate", "reviewer text",
+        f"PDF pages {used_pages}", len(text), provider, result["provider"],
+        len(questions), started,
+    )
+    if result["provider"] == "offline" and provider != "offline" and not questions:
+        return jsonify({
+            "error": "Quizforge is busy right now. Please try again in a minute.",
+            "code": "provider_busy",
+        }), 502
     return jsonify({
         "provider": result["provider"],
         "title": result.get("title", ""),
         "questions": questions,
-        "used_pages": result.get("used_pages", []),
+        "used_pages": used_pages,
     })
 
 

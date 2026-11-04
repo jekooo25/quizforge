@@ -154,6 +154,8 @@ static func _code_message(code: int, tag := "") -> String:
 			return "We couldn't write good questions from that part of the file. Try again, or enter a page range."
 		"unreadable":
 			return "We couldn't read that file. Try a different PDF, or a photo of the pages."
+		"provider_busy":
+			return "Quizforge is busy right now. Please try again in a minute."
 		"server":
 			return "Quizforge is having a problem on our side. Try again in a moment."
 

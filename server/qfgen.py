@@ -24,6 +24,7 @@ import json
 import os
 import random
 import re
+import time
 import urllib.error
 import urllib.request
 
@@ -50,7 +51,17 @@ class ExtractError(Exception):
 
 
 class ProviderError(Exception):
-    """The AI call failed, or no key is configured."""
+    """The AI call failed, or no key is configured.
+
+    `status` is the HTTP status when the provider answered at all, so the retry
+    loop can tell a temporary 503 apart from a permanent 400. `retryable` is set
+    only for the statuses that are worth trying again.
+    """
+
+    def __init__(self, message: str, status: int = 0, retryable: bool = False):
+        super().__init__(message)
+        self.status = status
+        self.retryable = retryable
 
 
 class QualityError(ProviderError):
@@ -642,18 +653,73 @@ def build_prompt(pages: list[dict], count: int, strong: bool = False) -> str:
 
 # -------------------------------------------------------------- ai: gemini/openai
 
+# Diagnostics for the server log. Each provider call appends one entry: the
+# HTTP status, the raw reply, and how many questions survived cleaning. The
+# request handler clears this at the start and prints it afterwards, so a
+# failure can be diagnosed from the server window alone.
+LAST_CALLS: list[dict] = []
+
+
+def reset_calls() -> None:
+    LAST_CALLS.clear()
+
+
+def _note(key: str, value) -> None:
+    if LAST_CALLS:
+        LAST_CALLS[-1][key] = value
+
+
+# Model choice lives in the environment so a capstone demo can be moved to a
+# different model without editing code. The defaults are the current stable
+# (non-preview) models from Google's model list; the fallback is a smaller
+# stable model that is less likely to be hit by capacity spikes.
+DEFAULT_GEMINI_MODEL = "gemini-3.6-flash"
+DEFAULT_GEMINI_FALLBACK_MODEL = "gemini-3.5-flash-lite"
+
+# Temporary provider trouble: try again before giving up on the request.
+RETRY_STATUSES = {429, 500, 503}
+RETRY_ATTEMPTS = 3          # first try plus two retries
+RETRY_BACKOFF_SECONDS = (1.0, 2.0)   # short: a student is waiting
+
+
+def gemini_models() -> list[str]:
+    """Primary model, then the optional fallback, without duplicates."""
+    primary = os.environ.get("QF_GEMINI_MODEL", DEFAULT_GEMINI_MODEL).strip()
+    fallback = os.environ.get(
+        "QF_GEMINI_FALLBACK_MODEL", DEFAULT_GEMINI_FALLBACK_MODEL
+    ).strip()
+    chain = [primary or DEFAULT_GEMINI_MODEL]
+    if fallback and fallback != chain[0]:
+        chain.append(fallback)
+    return chain
+
 
 def _post_json(url: str, payload: dict, headers: dict, timeout: int = 120) -> dict:
     body = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(url, data=body, headers=headers, method="POST")
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
-            return json.loads(resp.read().decode("utf-8"))
+            raw = resp.read().decode("utf-8", "replace")
+            LAST_CALLS.append({"status": resp.status, "raw": raw, "error": ""})
+            return json.loads(raw)
     except urllib.error.HTTPError as e:
-        detail = e.read().decode("utf-8", "replace")[:400]
-        raise ProviderError(f"HTTP {e.code}: {detail}") from e
+        detail = e.read().decode("utf-8", "replace")
+        retryable = e.code in RETRY_STATUSES
+        LAST_CALLS.append({"status": e.code, "raw": detail[:6000],
+                           "error": f"HTTP {e.code}: {detail[:300]}",
+                           "retryable": retryable})
+        raise ProviderError(f"HTTP {e.code}: {detail[:400]}",
+                            status=e.code, retryable=retryable) from e
     except urllib.error.URLError as e:
-        raise ProviderError(f"network: {e.reason}") from e
+        # A dropped connection or timeout is also worth one more try.
+        LAST_CALLS.append({"status": 0, "raw": "", "error": f"network: {e.reason}",
+                           "retryable": True})
+        raise ProviderError(f"network: {e.reason}", retryable=True) from e
+    except json.JSONDecodeError as e:
+        LAST_CALLS.append({"status": 200, "raw": raw[:6000],
+                           "error": f"invalid JSON: {e}"})
+        raise ProviderError(f"invalid JSON from the model: {e}") from e
+
 
 
 def _parse_questions(raw: str) -> dict:
@@ -664,6 +730,8 @@ def _parse_questions(raw: str) -> dict:
         cleaned = re.sub(r"\s*```$", "", cleaned)
     start, end = cleaned.find("{"), cleaned.rfind("}")
     if start == -1 or end == -1:
+        if LAST_CALLS:
+            LAST_CALLS[-1]["error"] = "no JSON object in the reply"
         raise ProviderError("model returned no JSON object")
     text = cleaned[start:end + 1]
 
@@ -677,12 +745,18 @@ def _parse_questions(raw: str) -> dict:
         try:
             data = json.loads(repaired)
         except json.JSONDecodeError as e:
+            if LAST_CALLS:
+                LAST_CALLS[-1]["error"] = f"unreadable JSON: {e}"
             raise ProviderError(f"model returned unreadable JSON: {e}") from e
 
     questions = data.get("questions")
     if not isinstance(questions, list) or not questions:
+        if LAST_CALLS:
+            LAST_CALLS[-1]["error"] = "reply contained no questions"
+            LAST_CALLS[-1]["raw"] = raw[:6000]
         raise ProviderError("model returned no questions")
     return data
+
 
 
 def _clean_questions(data: dict) -> list[dict]:
@@ -730,11 +804,6 @@ def gemini_questions(
     key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
     if not key:
         raise ProviderError("GEMINI_API_KEY is not set")
-    model = os.environ.get("QF_GEMINI_MODEL", "gemini-3-flash-preview")
-    url = (
-        "https://generativelanguage.googleapis.com/v1beta/models/"
-        f"{model}:generateContent?key={key}"
-    )
 
     parts = [{"text": build_prompt(pages, count, strong=strong)}]
     for png in images or []:
@@ -748,13 +817,50 @@ def gemini_questions(
         "contents": [{"parts": parts}],
         "generationConfig": {"responseMimeType": "application/json", "temperature": 0.4},
     }
-    resp = _post_json(url, payload, {"Content-Type": "application/json"})
-    try:
-        raw = resp["candidates"][0]["content"]["parts"][0]["text"]
-    except (KeyError, IndexError) as e:
-        raise ProviderError(f"unexpected response shape: {str(resp)[:300]}") from e
-    data = _parse_questions(raw)
-    return {"title": data.get("title", ""), "questions": _clean_questions(data)}
+
+    # 503 UNAVAILABLE and friends are usually gone within seconds. Retry the
+    # model a couple of times, then try the configured fallback model before
+    # letting the caller degrade to the offline generator.
+    last_error: ProviderError | None = None
+    for model in gemini_models():
+        url = (
+            "https://generativelanguage.googleapis.com/v1beta/models/"
+            f"{model}:generateContent?key={key}"
+        )
+        for attempt in range(1, RETRY_ATTEMPTS + 1):
+            try:
+                resp = _post_json(url, payload, {"Content-Type": "application/json"})
+                _note("model", model)
+                _note("attempt", attempt)
+                try:
+                    candidate = resp["candidates"][0]
+                    raw = candidate["content"]["parts"][0]["text"]
+                except (KeyError, IndexError) as e:
+                    _note("error", f"unexpected response shape: {str(resp)[:300]}")
+                    raise ProviderError(
+                        f"unexpected response shape: {str(resp)[:300]}"
+                    ) from e
+                _note("finish", candidate.get("finishReason", ""))
+                _note("model_text", raw[:6000])
+                data = _parse_questions(raw)
+                clean = _clean_questions(data)
+                _note("parsed", len(data.get("questions", []) or []))
+                _note("cleaned", len(clean))
+                return {"title": data.get("title", ""), "questions": clean}
+            except ProviderError as e:
+                last_error = e
+                _note("model", model)
+                _note("attempt", attempt)
+                if not getattr(e, "retryable", False):
+                    raise
+                if attempt < RETRY_ATTEMPTS:
+                    delay = RETRY_BACKOFF_SECONDS[
+                        min(attempt - 1, len(RETRY_BACKOFF_SECONDS) - 1)
+                    ]
+                    time.sleep(delay)
+                # otherwise fall through to the next model
+
+    raise last_error or ProviderError("no Gemini model configured")
 
 
 def openai_questions(
@@ -789,9 +895,14 @@ def openai_questions(
     try:
         raw = resp["choices"][0]["message"]["content"]
     except (KeyError, IndexError) as e:
+        _note("error", f"unexpected response shape: {str(resp)[:300]}")
         raise ProviderError(f"unexpected response shape: {str(resp)[:300]}") from e
+    _note("model_text", raw[:6000])
     data = _parse_questions(raw)
-    return {"title": data.get("title", ""), "questions": _clean_questions(data)}
+    clean = _clean_questions(data)
+    _note("parsed", len(data.get("questions", []) or []))
+    _note("cleaned", len(clean))
+    return {"title": data.get("title", ""), "questions": clean}
 
 
 PROVIDERS = {
