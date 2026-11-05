@@ -41,6 +41,9 @@ static func from_server(payload: Dictionary) -> Array:
 			"q": str(item.get("question", item.get("q", ""))),
 			"choices": choices.slice(0, 4),
 			"correct": int(item.get("answer", item.get("correct", -1))),
+			"explanation": str(item.get("explanation", "")),
+			"page": int(item.get("page", 0)),
+			"source_quote": str(item.get("source_quote", "")),
 		})
 	return out
 
@@ -87,6 +90,9 @@ static func save(title: String, questions: Array) -> bool:
 			"q": str(q.get("q", "")).strip_edges(),
 			"choices": choices,
 			"correct": int(q.get("correct", -1)),
+			"explanation": str(q.get("explanation", "")),
+			"page": int(q.get("page", 0)),
+			"source_quote": str(q.get("source_quote", "")),
 		})
 
 	var data := {
@@ -136,5 +142,8 @@ static func load_saved() -> Dictionary:
 			"q": str(item.get("q", item.get("question", ""))),
 			"choices": item.get("choices", []),
 			"correct": int(item.get("correct", item.get("answer", -1))),
+			"explanation": str(item.get("explanation", "")),
+			"page": int(item.get("page", 0)),
+			"source_quote": str(item.get("source_quote", "")),
 		})
 	return {"title": title, "questions": out, "status": result["status"]}

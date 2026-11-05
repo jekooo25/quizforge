@@ -160,6 +160,9 @@ static func _clean_questions(questions: Array) -> Array:
 			"q": str(q.get("q", "")).strip_edges(),
 			"choices": choices,
 			"correct": int(q.get("correct", -1)),
+			"explanation": str(q.get("explanation", "")),
+			"page": int(q.get("page", 0)),
+			"source_quote": str(q.get("source_quote", "")),
 		})
 	return clean
 

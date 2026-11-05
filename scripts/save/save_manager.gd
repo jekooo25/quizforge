@@ -20,9 +20,9 @@ const BACKUP_SUFFIX := ".bak"
 ## _migrate(). Loading runs the migration before handing data back.
 const VERSIONS := {
 	"profile": 2,
-	"quiz": 1,
+	"quiz": 2,
 	"library": 1,
-	"library_quiz": 1,
+	"library_quiz": 2,
 }
 
 const STATUS_OK := "ok"

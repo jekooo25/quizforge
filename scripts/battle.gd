@@ -1,12 +1,16 @@
 extends Control
 ## Quizmon — a quiz battle slice.
 ##
-## Loop: a question appears with a shrinking timer. Answer correctly and your
-## creature attacks, harder the faster you answered. Answer wrong (or run out of
-## time) and the enemy gets a free hit. First one to 0 HP loses.
+## Demo loop: answer each saved question once, review the answer, then choose
+## Next. Correct answers damage the enemy; wrong or timed-out answers damage
+## the player. Knockout or question exhaustion ends the battle.
 
-const ROUND_TIME := 12.0
-const REVEAL_DELAY := 0.95
+## Long enough to read a full question and its four choices at demo pace.
+const ROUND_TIME := 45.0
+const TARGET_CORRECT_RATIO := 0.70
+const DEMO_PLAYER_HP := 3
+const DEMO_ENEMY_DAMAGE := 1
+const DEMO_PLAYER_DAMAGE := 1
 
 const Dev := preload("res://scripts/ui/dev.gd")
 
@@ -39,9 +43,10 @@ var _source: String = ""
 var streak: int = 0
 var _state: String = "idle"
 var _time_left: float = 0.0
-var _pool: Array = []
 var _correct_index: int = 0
 var _round_number: int = 0
+var _answered_correctly: int = 0
+var _current_question: Dictionary = {}
 
 var enemy_sprite: CreatureSprite
 var player_sprite: CreatureSprite
@@ -53,6 +58,8 @@ var timer_bar: ProgressBar
 var streak_label: Label
 var question_label: Label
 var feedback_label: Label
+var explanation_label: Label
+var next_button: Button
 var answer_buttons: Array[Button] = []
 var battlefield: Control
 var overlay: Control
@@ -230,11 +237,11 @@ func _build_ui() -> void:
 	for side in ["left", "right"]:
 		margin.add_theme_constant_override("margin_" + side, 26)
 	for side in ["top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 18)
+		margin.add_theme_constant_override("margin_" + side, 10)
 	add_child(margin)
 
 	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 10)
+	column.add_theme_constant_override("separation", 6)
 	margin.add_child(column)
 
 	# --- enemy status card, right aligned
@@ -243,15 +250,15 @@ func _build_ui() -> void:
 	var enemy_spacer := Control.new()
 	enemy_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	enemy_row.add_child(enemy_spacer)
-	var enemy_card := _make_panel(78.0)
-	enemy_card.custom_minimum_size = Vector2(390.0, 78.0)
+	var enemy_card := _make_panel(60.0)
+	enemy_card.custom_minimum_size = Vector2(390.0, 60.0)
 	enemy_row.add_child(enemy_card)
 	var enemy_box := VBoxContainer.new()
 	enemy_box.add_theme_constant_override("separation", 6)
 	enemy_card.add_child(enemy_box)
 	var enemy_head := HBoxContainer.new()
 	enemy_box.add_child(enemy_head)
-	var enemy_name := _display_label("Mudlet", 24, TEXT)
+	var enemy_name := _display_label("Mudlet (demo)", 24, TEXT)
 	enemy_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	enemy_head.add_child(enemy_name)
 	enemy_hp_text = _label("60 / 60", 15, MUTED)
@@ -262,32 +269,32 @@ func _build_ui() -> void:
 
 	# --- battlefield
 	battlefield = Control.new()
-	battlefield.custom_minimum_size = Vector2(0.0, 176.0)
+	battlefield.custom_minimum_size = Vector2(0.0, 140.0)
 	battlefield.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	battlefield.clip_contents = false
 	column.add_child(battlefield)
 
 	enemy_sprite = CreatureSprite.new()
-	enemy_sprite.custom_minimum_size = Vector2(190.0, 190.0)
+	enemy_sprite.custom_minimum_size = Vector2(140.0, 140.0)
 	enemy_sprite.anchor_left = 1.0
 	enemy_sprite.anchor_right = 1.0
 	enemy_sprite.anchor_top = 1.0
 	enemy_sprite.anchor_bottom = 1.0
-	enemy_sprite.offset_left = -240.0
+	enemy_sprite.offset_left = -190.0
 	enemy_sprite.offset_right = -50.0
-	enemy_sprite.offset_top = -190.0
+	enemy_sprite.offset_top = -140.0
 	enemy_sprite.offset_bottom = 0.0
 	battlefield.add_child(enemy_sprite)
 
 	player_sprite = CreatureSprite.new()
-	player_sprite.custom_minimum_size = Vector2(190.0, 190.0)
+	player_sprite.custom_minimum_size = Vector2(140.0, 140.0)
 	player_sprite.anchor_left = 0.0
 	player_sprite.anchor_right = 0.0
 	player_sprite.anchor_top = 1.0
 	player_sprite.anchor_bottom = 1.0
 	player_sprite.offset_left = 50.0
-	player_sprite.offset_right = 240.0
-	player_sprite.offset_top = -190.0
+	player_sprite.offset_right = 190.0
+	player_sprite.offset_top = -140.0
 	player_sprite.offset_bottom = 0.0
 	battlefield.add_child(player_sprite)
 
@@ -307,6 +314,10 @@ func _build_ui() -> void:
 	question_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	question_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	card_box.add_child(question_label)
+	explanation_label = _label("", 16, MUTED)
+	explanation_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	explanation_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	card_box.add_child(explanation_label)
 
 	var grid := GridContainer.new()
 	grid.columns = 2
@@ -329,15 +340,22 @@ func _build_ui() -> void:
 		grid.add_child(btn)
 		answer_buttons.append(btn)
 
+	next_button = UITheme.button("Next", "navy", 44)
+	next_button.custom_minimum_size = Vector2(180.0, 44.0)
+	next_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	next_button.visible = false
+	next_button.pressed.connect(_on_next)
+	column.add_child(next_button)
+
 	# --- player status card
-	var player_card := _make_panel(78.0)
+	var player_card := _make_panel(60.0)
 	column.add_child(player_card)
 	var player_box := VBoxContainer.new()
 	player_box.add_theme_constant_override("separation", 6)
 	player_card.add_child(player_box)
 	var player_head := HBoxContainer.new()
 	player_box.add_child(player_head)
-	var player_name := _display_label("Emberpup", 24, TEXT)
+	var player_name := _display_label("Emberpup (demo)", 24, TEXT)
 	player_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	player_head.add_child(player_name)
 	streak_label = _label("", 15, GOLD)
@@ -366,11 +384,14 @@ func _build_ui() -> void:
 # ---------------------------------------------------------------- game state
 
 func _start_battle() -> void:
-	player = Creature.new("Emberpup", 60, 9, Color(0.98, 0.55, 0.32), false)
-	enemy = Creature.new("Mudlet", 60, 8, Color(0.42, 0.62, 0.96), true)
+	# Creature names and HP are placeholders for the demo battle, not selected
+	# player/enemy data. One enemy HP represents one correct answer needed.
+	var enemy_hp := maxi(1, int(ceil(float(_questions.size()) * TARGET_CORRECT_RATIO)))
+	player = Creature.new("Emberpup (demo)", DEMO_PLAYER_HP, DEMO_PLAYER_DAMAGE, Color(0.98, 0.55, 0.32), false)
+	enemy = Creature.new("Mudlet (demo)", enemy_hp, DEMO_ENEMY_DAMAGE, Color(0.42, 0.62, 0.96), true)
 	streak = 0
 	_round_number = 0
-	_pool.clear()
+	_answered_correctly = 0
 
 	player_sprite.set_creature(player)
 	player_sprite.facing = 1
@@ -382,17 +403,22 @@ func _start_battle() -> void:
 		overlay.queue_free()
 		overlay = null
 
-	feedback_label.text = "Answer correctly to attack. Be quick — speed is power."
+	feedback_label.text = "Demo battle — answer correctly to damage the demo enemy."
+	next_button.visible = false
 	_begin_round()
 
 
 func _begin_round() -> void:
+	if _round_number >= _questions.size():
+		_end_battle(enemy.is_down())
+		return
 	_round_number += 1
-	var question: Dictionary = _draw_question()
-	_correct_index = int(question["correct"])
+	_current_question = _questions[_round_number - 1]
+	_correct_index = int(_current_question["correct"])
 
-	question_label.text = "%d.  %s" % [_round_number, question["q"]]
-	var choices: Array = question["choices"]
+	question_label.text = "%d / %d.  %s" % [_round_number, _questions.size(), _current_question["q"]]
+	explanation_label.text = ""
+	var choices: Array = _current_question["choices"]
 	for i in answer_buttons.size():
 		var btn := answer_buttons[i]
 		btn.text = "%s.  %s" % [char(65 + i), choices[i]]
@@ -403,13 +429,7 @@ func _begin_round() -> void:
 	timer_bar.value = ROUND_TIME
 	timer_bar.modulate = Color.WHITE
 	_state = "answering"
-
-
-func _draw_question() -> Dictionary:
-	if _pool.is_empty():
-		_pool = _questions.duplicate(true)
-		_pool.shuffle()
-	return _pool.pop_back()
+	next_button.visible = false
 
 
 func _process(delta: float) -> void:
@@ -437,29 +457,52 @@ func _on_answer(index: int) -> void:
 		"disabled", _panel_style(Color(0.10, 0.26, 0.17), ACCENT, 10))
 
 	if answered_right:
-		_resolve_hit(speed_ratio)
+		_answered_correctly += 1
+		await _resolve_hit(speed_ratio)
 	else:
 		if index >= 0:
 			answer_buttons[index].add_theme_stylebox_override(
 				"disabled", _panel_style(Color(0.30, 0.11, 0.11), DANGER, 10))
-		_resolve_miss()
+		await _resolve_miss()
 
-	await get_tree().create_timer(REVEAL_DELAY).timeout
-	if _state != "resolving":
+	var correct_text := str(answer_buttons[_correct_index].text)
+	feedback_label.text = "Correct answer: %s" % correct_text
+	var details: Array[String] = []
+	var explanation := str(_current_question.get("explanation", "")).strip_edges()
+	var page := int(_current_question.get("page", 0))
+	var quote := str(_current_question.get("source_quote", "")).strip_edges()
+	if explanation != "":
+		details.append(explanation)
+	if page > 0:
+		details.append("Source: page %d" % page)
+	if quote != "":
+		details.append("“%s”" % quote)
+	explanation_label.text = "\n".join(details)
+	_state = "revealed"
+	next_button.text = "Finish" if _round_number >= _questions.size() or enemy.is_down() or player.is_down() else "Next"
+	next_button.visible = true
+
+
+func _on_next() -> void:
+	if _state != "revealed":
 		return
 	for btn in answer_buttons:
 		btn.remove_theme_stylebox_override("disabled")
 		btn.add_theme_stylebox_override("disabled", _panel_style(Color(0.12, 0.11, 0.16), EDGE, 10))
-	_check_end()
+	if enemy.is_down():
+		_end_battle(true)
+	elif player.is_down():
+		_end_battle(false)
+	elif _round_number >= _questions.size():
+		_end_battle(false)
+	else:
+		_begin_round()
 
 
 func _resolve_hit(speed_ratio: float) -> void:
 	streak += 1
 	var crit := speed_ratio > 0.72
-	var damage: float = float(player.atk) * (1.0 + speed_ratio) + float(streak - 1) * 1.5
-	if crit:
-		damage *= 1.4
-	var dealt: int = enemy.take_damage(int(round(damage)))
+	var dealt: int = enemy.take_damage(1)
 
 	player_sprite.play_attack(1)
 	await get_tree().create_timer(0.13).timeout
@@ -468,16 +511,14 @@ func _resolve_hit(speed_ratio: float) -> void:
 		GOLD if crit else TEXT, 38 if crit else 32)
 	_refresh_bars(true)
 
-	var flavour := "Critical! " if crit else ""
-	feedback_label.text = "%sCorrect — %s strikes for %d (%.0f%% speed)." % [
-		flavour, player.display_name, dealt, speed_ratio * 100.0]
+	feedback_label.text = "Correct — %s deals %d demo damage." % [player.display_name, dealt]
 	_update_streak_label()
 
 
 func _resolve_miss() -> void:
 	streak = 0
 	_update_streak_label()
-	var dealt: int = player.take_damage(enemy.atk)
+	var dealt: int = player.take_damage(DEMO_ENEMY_DAMAGE)
 
 	enemy_sprite.play_attack(-1)
 	await get_tree().create_timer(0.13).timeout
@@ -486,21 +527,7 @@ func _resolve_miss() -> void:
 		DANGER, 32)
 	_refresh_bars(true)
 
-	feedback_label.text = "Missed — %s hits back for %d. The answer was \"%s\"." % [
-		enemy.display_name, dealt, answer_buttons[_correct_index].text.substr(4)]
-
-
-func _check_end() -> void:
-	if enemy.is_down():
-		_end_battle(true)
-	elif player.is_down():
-		_end_battle(false)
-	else:
-		_state = "idle"
-		feedback_label.text = feedback_label.text + "  Next question…"
-		await get_tree().create_timer(0.55).timeout
-		if _state == "idle":
-			_begin_round()
+	feedback_label.text = "Incorrect — %s deals %d demo damage." % [enemy.display_name, dealt]
 
 
 func _end_battle(won: bool) -> void:
@@ -530,7 +557,7 @@ func _end_battle(won: bool) -> void:
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(title)
 
-	var sub := _label("Cleared in %d question%s." % [_round_number, "" if _round_number == 1 else "s"],
+	var sub := _label("Demo result — %d correct in %d questions." % [_answered_correctly, _round_number],
 		18, MUTED)
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(sub)
@@ -550,8 +577,8 @@ func _end_battle(won: bool) -> void:
 # ---------------------------------------------------------------- presentation
 
 func _refresh_bars(animated: bool) -> void:
-	enemy_hp_text.text = "%d / %d" % [enemy.hp, enemy.max_hp]
-	player_hp_text.text = "%d / %d" % [player.hp, player.max_hp]
+	enemy_hp_text.text = "DEMO HP %d / %d" % [enemy.hp, enemy.max_hp]
+	player_hp_text.text = "DEMO HP %d / %d" % [player.hp, player.max_hp]
 	enemy_hp_bar.max_value = enemy.max_hp
 	player_hp_bar.max_value = player.max_hp
 

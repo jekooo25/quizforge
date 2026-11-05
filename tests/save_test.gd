@@ -9,7 +9,7 @@ extends Node
 const TMP := "user://_save_tests"
 
 ## Every check this run must reach; a skipped assertion means a script error.
-const EXPECTED_CHECKS := 57
+const EXPECTED_CHECKS := 65
 
 var failures: int = 0
 var checks_run: int = 0
@@ -152,9 +152,25 @@ func _test_migration() -> void:
 	_check(r["migrated"], "the load reports that it migrated")
 	_check(int(r["version"]) == int(SaveManager.VERSIONS["quiz"]),
 		"it is stamped with the current quiz version")
+	_check(int(SaveManager.VERSIONS["quiz"]) == 2,
+		"quiz schema version was bumped for question source metadata")
 
 	var again := SaveManager.read_json(q, "quiz")
 	_check(not again["migrated"], "the migrated shape is written back, so it runs once")
+	var old_v1 := _path("v1_quiz.json")
+	_write_raw(old_v1, JSON.stringify({"version": 1, "title": "v1", "questions": [
+		{"q": "old question", "choices": ["a", "b", "c", "d"], "correct": 1}
+	]}))
+	var upgraded_v1 := SaveManager.read_json(old_v1, "quiz")
+	_check(upgraded_v1["migrated"] and int(upgraded_v1["version"]) == 2,
+		"a version 1 quiz upgrades through SaveManager")
+	var normalized: Dictionary = QuizData.from_server({"questions": [{
+		"question": "new question", "choices": ["a", "b", "c", "d"], "answer": 2,
+		"explanation": "server explanation", "page": 5, "source_quote": "server source"
+	}]})[0]
+	_check(str(normalized["explanation"]) == "server explanation" and int(normalized["page"]) == 5
+		and str(normalized["source_quote"]) == "server source",
+		"server normalization preserves explanation, page, and source quote")
 
 	var prof := _path("legacy_profile.json")
 	SaveManager.forget(prof)
@@ -172,13 +188,31 @@ func _test_quiz_status() -> void:
 	var missing := QuizData.load_saved()
 	_check(missing["status"] == SaveManager.STATUS_MISSING, "no quiz reports MISSING")
 	_check(missing["questions"].is_empty(), "and hands back no questions")
+	_write_raw(QuizData.SAVE_PATH, JSON.stringify({"version": 1, "title": "old quiz", "questions": [
+		{"q": "An old question?", "choices": ["a", "b", "c", "d"], "correct": 0}
+	]}))
+	var legacy_quiz := QuizData.load_saved()
+	_check(legacy_quiz["status"] == SaveManager.STATUS_OK
+		and QuizData.validate(legacy_quiz["questions"]).is_empty()
+		and str(legacy_quiz["questions"][0].get("explanation", "")) == "",
+		"an old quiz without explanation/page/source fields still loads and plays")
 
 	_check(QuizData.save("reviewer", QuizData.sample()), "a quiz saves")
 	var good := QuizData.load_saved()
 	_check(good["status"] == SaveManager.STATUS_OK, "a healthy quiz reports OK")
 	_check(good["questions"].size() == QuizData.sample().size(), "all questions read back")
+	var enriched := QuizData.sample()
+	enriched[0]["explanation"] = "Because this is the explanation."
+	enriched[0]["page"] = 7
+	enriched[0]["source_quote"] = "The source sentence."
+	_check(QuizData.save("enriched", enriched), "a question with source metadata saves")
+	var enriched_loaded: Dictionary = QuizData.load_saved()["questions"][0]
+	_check(str(enriched_loaded["explanation"]) == "Because this is the explanation.", "explanation survives save/load")
+	_check(int(enriched_loaded["page"]) == 7 and str(enriched_loaded["source_quote"]) == "The source sentence.",
+		"page and source quote survive save/load")
 
 	_write_raw(QuizData.SAVE_PATH, "broken beyond repair")
+	_write_raw(QuizData.SAVE_PATH + SaveManager.BACKUP_SUFFIX, "also broken")
 	var bad := QuizData.load_saved()
 	_check(bad["status"] == SaveManager.STATUS_CORRUPT, "a damaged quiz reports CORRUPT")
 	_check(bad["questions"].is_empty(), "it does not hand back sample questions")
@@ -193,6 +227,9 @@ func _test_library_dedupe() -> void:
 	_clear_library()
 
 	var questions := QuizData.sample()
+	questions[0]["explanation"] = "library explanation"
+	questions[0]["page"] = 12
+	questions[0]["source_quote"] = "library source"
 	var first := QuizLibrary.add("reviewer", questions, "generated", "C:/x/UPPER_20LIMB.pdf")
 	_check(first != "", "the first save gets an id")
 	_check(QuizLibrary.all().size() == 1, "one entry on the shelf")
@@ -205,6 +242,11 @@ func _test_library_dedupe() -> void:
 	_check(int(entry.get("count", 0)) == 3, "the entry knows the new question count")
 	_check(QuizLibrary.get_quiz(first).get("questions", []).size() == 3,
 		"the quiz body was rewritten in place")
+	var library_question: Dictionary = QuizLibrary.get_quiz(first)["questions"][0]
+	_check(str(library_question.get("explanation", "")) == "library explanation"
+		and int(library_question.get("page", 0)) == 12
+		and str(library_question.get("source_quote", "")) == "library source",
+		"library save/load preserves explanation, page, and source quote")
 
 	var other := QuizLibrary.add("another", questions, "generated", "C:/x/OTHER.pdf")
 	_check(other != first, "a different reviewer gets its own entry")
