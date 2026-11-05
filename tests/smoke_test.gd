@@ -9,7 +9,7 @@ var _previous_quiz := ""
 
 func _ready() -> void:
 	var questions := QuizData.sample()
-	questions[0]["explanation"] = "The answer is supported by the saved source."
+	questions[0]["explanation"] = "The answer is supported by the saved source. ".repeat(24)
 	questions[0]["page"] = 3
 	questions[0]["source_quote"] = "A source sentence."
 	if FileAccess.file_exists(QuizData.SAVE_PATH):
@@ -25,6 +25,9 @@ func _ready() -> void:
 		"enemy HP targets the named correct-answer ratio")
 	_check(battle.answer_buttons.size() == 4 and battle._state == "answering",
 		"four choices and a question are ready")
+	_check(battle.question_label.get_theme_font_size("font_size") >= 28
+		and battle.answer_buttons[0].get_theme_font_size("font_size") >= 28,
+		"question and choice text are at least 28px at design scale")
 	_check(battle.ROUND_TIME >= 30.0, "timer allows time to read the question and choices")
 	_check(battle._round_number == 1, "first question starts at index one")
 
@@ -39,6 +42,11 @@ func _ready() -> void:
 	_check(battle.explanation_label.text.contains("page 3")
 		and battle.explanation_label.text.contains("A source sentence"),
 		"page and source excerpt are shown after the answer")
+	await get_tree().process_frame
+	_check(battle.explanation_scroll.visible, "the explanation area is a visible scroll container")
+	_check(battle.explanation_scroll.get_v_scroll_bar().max_value
+		> battle.explanation_scroll.get_v_scroll_bar().page,
+		"long explanations can scroll instead of overflowing the card")
 	await get_tree().create_timer(0.2).timeout
 	_check(battle._round_number == 1, "question does not auto-advance")
 	battle._on_next()

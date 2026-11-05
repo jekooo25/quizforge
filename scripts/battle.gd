@@ -59,6 +59,7 @@ var streak_label: Label
 var question_label: Label
 var feedback_label: Label
 var explanation_label: Label
+var explanation_scroll: ScrollContainer
 var next_button: Button
 var answer_buttons: Array[Button] = []
 var battlefield: Control
@@ -237,11 +238,11 @@ func _build_ui() -> void:
 	for side in ["left", "right"]:
 		margin.add_theme_constant_override("margin_" + side, 26)
 	for side in ["top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 10)
+		margin.add_theme_constant_override("margin_" + side, 6)
 	add_child(margin)
 
 	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 6)
+	column.add_theme_constant_override("separation", 4)
 	margin.add_child(column)
 
 	# --- enemy status card, right aligned
@@ -269,33 +270,33 @@ func _build_ui() -> void:
 
 	# --- battlefield
 	battlefield = Control.new()
-	battlefield.custom_minimum_size = Vector2(0.0, 140.0)
+	battlefield.custom_minimum_size = Vector2(0.0, 120.0)
 	battlefield.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	battlefield.clip_contents = false
 	column.add_child(battlefield)
 
 	enemy_sprite = CreatureSprite.new()
-	enemy_sprite.custom_minimum_size = Vector2(140.0, 140.0)
+	enemy_sprite.custom_minimum_size = Vector2(120.0, 120.0)
 	enemy_sprite.anchor_left = 1.0
 	enemy_sprite.anchor_right = 1.0
-	enemy_sprite.anchor_top = 1.0
-	enemy_sprite.anchor_bottom = 1.0
-	enemy_sprite.offset_left = -190.0
+	enemy_sprite.anchor_top = 0.5
+	enemy_sprite.anchor_bottom = 0.5
+	enemy_sprite.offset_left = -170.0
 	enemy_sprite.offset_right = -50.0
-	enemy_sprite.offset_top = -140.0
-	enemy_sprite.offset_bottom = 0.0
+	enemy_sprite.offset_top = -60.0
+	enemy_sprite.offset_bottom = 60.0
 	battlefield.add_child(enemy_sprite)
 
 	player_sprite = CreatureSprite.new()
-	player_sprite.custom_minimum_size = Vector2(140.0, 140.0)
+	player_sprite.custom_minimum_size = Vector2(120.0, 120.0)
 	player_sprite.anchor_left = 0.0
 	player_sprite.anchor_right = 0.0
-	player_sprite.anchor_top = 1.0
-	player_sprite.anchor_bottom = 1.0
+	player_sprite.anchor_top = 0.5
+	player_sprite.anchor_bottom = 0.5
 	player_sprite.offset_left = 50.0
-	player_sprite.offset_right = 190.0
-	player_sprite.offset_top = -140.0
-	player_sprite.offset_bottom = 0.0
+	player_sprite.offset_right = 170.0
+	player_sprite.offset_top = -60.0
+	player_sprite.offset_bottom = 60.0
 	battlefield.add_child(player_sprite)
 
 	# --- feedback line
@@ -310,14 +311,22 @@ func _build_ui() -> void:
 	card_box.add_theme_constant_override("separation", 10)
 	card.add_child(card_box)
 
-	question_label = _label("", 22, TEXT)
+	question_label = _label("", 28, TEXT)
 	question_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	question_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	card_box.add_child(question_label)
+	explanation_scroll = ScrollContainer.new()
+	explanation_scroll.custom_minimum_size = Vector2(0.0, 76.0)
+	explanation_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	explanation_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	explanation_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	explanation_scroll.visible = false
+	card_box.add_child(explanation_scroll)
 	explanation_label = _label("", 16, MUTED)
+	explanation_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	explanation_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	explanation_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	card_box.add_child(explanation_label)
+	explanation_scroll.add_child(explanation_label)
 
 	var grid := GridContainer.new()
 	grid.columns = 2
@@ -327,9 +336,10 @@ func _build_ui() -> void:
 
 	for i in 4:
 		var btn := Button.new()
-		btn.custom_minimum_size = Vector2(0.0, 44.0)
+		btn.custom_minimum_size = Vector2(0.0, 52.0)
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		btn.add_theme_font_size_override("font_size", UITheme.crisp(17))
+		btn.add_theme_font_size_override("font_size", UITheme.crisp(28))
+		btn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		btn.add_theme_stylebox_override("normal", _panel_style(Color(0.16, 0.15, 0.22), EDGE, 10))
 		btn.add_theme_stylebox_override("hover", _panel_style(Color(0.21, 0.20, 0.29), ACCENT, 10))
 		btn.add_theme_stylebox_override("pressed", _panel_style(Color(0.24, 0.23, 0.33), ACCENT, 10))
@@ -418,6 +428,8 @@ func _begin_round() -> void:
 
 	question_label.text = "%d / %d.  %s" % [_round_number, _questions.size(), _current_question["q"]]
 	explanation_label.text = ""
+	explanation_scroll.visible = false
+	battlefield.visible = true
 	var choices: Array = _current_question["choices"]
 	for i in answer_buttons.size():
 		var btn := answer_buttons[i]
@@ -478,6 +490,9 @@ func _on_answer(index: int) -> void:
 	if quote != "":
 		details.append("“%s”" % quote)
 	explanation_label.text = "\n".join(details)
+	explanation_scroll.scroll_vertical = 0
+	explanation_scroll.visible = not details.is_empty()
+	battlefield.visible = details.is_empty()
 	_state = "revealed"
 	next_button.text = "Finish" if _round_number >= _questions.size() or enemy.is_down() or player.is_down() else "Next"
 	next_button.visible = true

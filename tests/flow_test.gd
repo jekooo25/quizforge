@@ -5,7 +5,7 @@ extends Node
 ## Every check this run must reach. A script error inside an assertion skips it
 ## without counting as a failure, which would otherwise print
 ## "ALL FLOW CHECKS PASSED" over a crashed run.
-const EXPECTED_CHECKS := 66
+const EXPECTED_CHECKS := 69
 
 var failures: int = 0
 var checks_run: int = 0
@@ -161,9 +161,12 @@ func _run() -> void:
 
 	_screen().open_progress()
 	await get_tree().process_frame
-	_check(_screen().get_script().resource_path.ends_with("progress_screen.gd"), "progress opens")
-	_press(_screen(), "back to menu")
+	_check(_screen().get_script().resource_path.ends_with("my_quizzes_screen.gd"),
+		"my quizzes opens")
+	_check(_press(_screen(), "Main Menu"), "My Quizzes returns to the main menu")
 	await get_tree().process_frame
+	_check(_screen().get_script().resource_path.ends_with("menu_screen.gd"),
+		"the main menu is showing again")
 
 	print("-- exit confirmation --")
 	_screen()._on_exit()
@@ -257,7 +260,7 @@ func _run() -> void:
 		_check(not QuizLibrary.get_quiz(str(entry.get("id", ""))).is_empty(),
 			"the quiz body loads back off disk")
 
-		Nav.show_screen(load("res://scripts/screens/my_quizzes_screen.gd").new())
+		Nav.show_screen(load("res://scenes/my_quizzes.tscn").instantiate())
 		await get_tree().process_frame
 		_check(_screen().get_script().resource_path.ends_with("my_quizzes_screen.gd"),
 			"my quizzes opens")
@@ -266,16 +269,17 @@ func _run() -> void:
 		_check(QuizData.load_saved().get("questions", []).size() > 0,
 			"playing rewrites the battle's quiz file")
 
-		# the shelf is a tab on Progress, which is why the menu stays at three tiles
-		Nav.show_screen(load("res://scripts/screens/progress_screen.gd").new())
+		# one screen, three tabs: the library is the default, progress is still here
+		Nav.show_screen(load("res://scenes/my_quizzes.tscn").instantiate())
 		await get_tree().process_frame
-		_check(_screen().get_script().resource_path.ends_with("progress_screen.gd"),
-			"saved progress opens")
-		_check(_screen()._tab == "progress", "progress opens on the profile tab")
-		_screen().show_quizzes_tab()
+		_check(_screen().get_script().resource_path.ends_with("my_quizzes_screen.gd"),
+			"my quizzes opens")
+		_check(_screen()._tab == "quizzes", "my quizzes is the default tab")
+		_check(_screen().get_node("%QuizList").get_child_count() > 0,
+			"my quizzes lists the saved quiz")
+		_screen().show_tab("progress")
 		await get_tree().process_frame
-		_check(_screen()._shelf != null and _screen()._shelf._rows.get_child_count() > 0,
-			"the quizzes tab lists the saved quiz")
+		_check(_screen()._tab == "progress", "progress is still reachable as a tab")
 
 	print("-- legacy profile --")
 	# a v1 profile that still carries a typed address must lose it on load
