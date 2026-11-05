@@ -39,6 +39,8 @@ const QUESTIONS := [
 var player: Creature
 var enemy: Creature
 var _questions: Array = []
+var _all_questions: Array = []
+var _missed_questions: Array = []
 var _source: String = ""
 var streak: int = 0
 var _state: String = "idle"
@@ -46,6 +48,7 @@ var _time_left: float = 0.0
 var _correct_index: int = 0
 var _round_number: int = 0
 var _answered_correctly: int = 0
+var _battle_question_count: int = 0
 var _current_question: Dictionary = {}
 
 var enemy_sprite: CreatureSprite
@@ -64,6 +67,13 @@ var next_button: Button
 var answer_buttons: Array[Button] = []
 var battlefield: Control
 var overlay: Control
+var result_title_label: Label
+var result_stats_label: Label
+var result_missed_scroll: ScrollContainer
+var result_missed_list: VBoxContainer
+var retry_missed_button: Button
+var play_again_button: Button
+var my_quizzes_button: Button
 
 
 const UNAVAILABLE := "We couldn't open this quiz. Please choose it again from your saved quizzes or make a new one."
@@ -101,6 +111,7 @@ func _ready() -> void:
 	print("[battle] quiz source: ", _source)
 	print("[battle] file: ", ProjectSettings.globalize_path(QuizData.SAVE_PATH))
 	print("[battle] first question: ", str(_questions[0].get("q", "")) if not _questions.is_empty() else "(none)")
+	_all_questions = _questions.duplicate(true)
 	_build_ui()
 	if Dev.overlay_on():
 		_add_debug_label()
@@ -402,6 +413,8 @@ func _start_battle() -> void:
 	streak = 0
 	_round_number = 0
 	_answered_correctly = 0
+	_battle_question_count = _questions.size()
+	_missed_questions.clear()
 
 	player_sprite.set_creature(player)
 	player_sprite.facing = 1
@@ -475,6 +488,7 @@ func _on_answer(index: int) -> void:
 		if index >= 0:
 			answer_buttons[index].add_theme_stylebox_override(
 				"disabled", _panel_style(Color(0.30, 0.11, 0.11), DANGER, 10))
+		_missed_questions.append(_current_question.duplicate(true))
 		await _resolve_miss()
 
 	var correct_text := str(answer_buttons[_correct_index].text)
@@ -546,6 +560,8 @@ func _resolve_miss() -> void:
 
 
 func _end_battle(won: bool) -> void:
+	if _state == "over":
+		return
 	_state = "over"
 	if won:
 		enemy_sprite.play_faint()
@@ -554,39 +570,126 @@ func _end_battle(won: bool) -> void:
 
 	await get_tree().create_timer(0.6).timeout
 
+	_show_results(won)
+
+
+func _show_results(won: bool) -> void:
 	overlay = ColorRect.new()
-	overlay.color = Color(0.04, 0.04, 0.06, 0.82)
+	overlay.color = Color(0.04, 0.04, 0.06, 0.86)
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(overlay)
 
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	overlay.add_child(center)
+	var panel := _make_panel(0.0)
+	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	panel.offset_left = 48.0
+	panel.offset_top = 24.0
+	panel.offset_right = -48.0
+	panel.offset_bottom = -24.0
+	overlay.add_child(panel)
 
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 14)
-	box.custom_minimum_size = Vector2(420.0, 0.0)
-	center.add_child(box)
+	box.add_theme_constant_override("separation", 8)
+	panel.add_child(box)
 
-	var title := _display_label("Victory" if won else "Defeated", 48, ACCENT if won else DANGER)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(title)
+	result_title_label = _display_label("Victory" if won else "Defeat", 40, ACCENT if won else DANGER)
+	result_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(result_title_label)
 
-	var sub := _label("Demo result — %d correct in %d questions." % [_answered_correctly, _round_number],
-		18, MUTED)
-	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(sub)
+	var accuracy := int(round(100.0 * float(_answered_correctly) / float(maxi(_battle_question_count, 1))))
+	result_stats_label = _label("%d / %d correct  ·  Accuracy %d%%" % [
+		_answered_correctly, _battle_question_count, accuracy], 24, TEXT)
+	result_stats_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(result_stats_label)
 
-	var again := Button.new()
-	again.text = "Battle again"
-	again.custom_minimum_size = Vector2(0.0, 52.0)
-	again.add_theme_font_size_override("font_size", UITheme.crisp(20))
-	again.add_theme_stylebox_override("normal", _panel_style(Color(0.16, 0.15, 0.22), ACCENT, 12))
-	again.add_theme_stylebox_override("hover", _panel_style(Color(0.22, 0.24, 0.28), ACCENT, 12))
-	again.add_theme_stylebox_override("pressed", _panel_style(Color(0.26, 0.29, 0.33), ACCENT, 12))
-	again.add_theme_color_override("font_color", TEXT)
-	again.pressed.connect(_start_battle)
-	box.add_child(again)
+	var missed_heading := _display_label("Missed questions", 24, TEXT)
+	box.add_child(missed_heading)
+	result_missed_scroll = ScrollContainer.new()
+	result_missed_scroll.custom_minimum_size = Vector2(0.0, 0.0)
+	result_missed_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	result_missed_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	result_missed_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	box.add_child(result_missed_scroll)
+	result_missed_list = VBoxContainer.new()
+	result_missed_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	result_missed_list.add_theme_constant_override("separation", 8)
+	result_missed_scroll.add_child(result_missed_list)
+	if _missed_questions.is_empty():
+		var perfect := _label("No missed questions — perfect run!", 20, MUTED)
+		perfect.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		result_missed_list.add_child(perfect)
+	else:
+		for i in _missed_questions.size():
+			_add_missed_result(i, _missed_questions[i])
+
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 10)
+	box.add_child(actions)
+	retry_missed_button = _result_button("Retry missed")
+	retry_missed_button.disabled = _missed_questions.is_empty()
+	retry_missed_button.pressed.connect(_on_retry_missed)
+	actions.add_child(retry_missed_button)
+	play_again_button = _result_button("Play again")
+	play_again_button.pressed.connect(_on_play_again)
+	actions.add_child(play_again_button)
+	my_quizzes_button = _result_button("My quizzes")
+	my_quizzes_button.pressed.connect(_on_my_quizzes)
+	actions.add_child(my_quizzes_button)
+
+
+func _add_missed_result(number: int, question: Dictionary) -> void:
+	var card := _make_panel(0.0)
+	result_missed_list.add_child(card)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 3)
+	card.add_child(column)
+	var question_text := _label("%d. %s" % [number + 1, str(question.get("q", ""))], 20, TEXT)
+	question_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(question_text)
+	var choices: Array = question.get("choices", [])
+	var correct := int(question.get("correct", -1))
+	var correct_text := str(choices[correct]) if correct >= 0 and correct < choices.size() else "Unavailable"
+	var answer_text := _label("Correct answer: %s" % correct_text, 18, ACCENT)
+	answer_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(answer_text)
+	var explanation := str(question.get("explanation", "")).strip_edges()
+	if explanation != "":
+		var explanation_text := _label(explanation, 18, MUTED)
+		explanation_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		column.add_child(explanation_text)
+	var page := int(question.get("page", 0))
+	var quote := str(question.get("source_quote", "")).strip_edges()
+	if page > 0 or quote != "":
+		var source_text := "Source: page %d" % page if page > 0 else "Source"
+		if quote != "":
+			source_text += " · “%s”" % quote
+		var source_label := _label(source_text, 16, MUTED)
+		source_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		column.add_child(source_label)
+
+
+func _result_button(button_text: String) -> Button:
+	var button := UITheme.button(button_text, "navy", 24)
+	button.custom_minimum_size = Vector2(0.0, 52.0)
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	return button
+
+
+func _on_retry_missed() -> void:
+	if _missed_questions.is_empty():
+		return
+	_questions = _missed_questions.duplicate(true)
+	_start_battle()
+
+
+func _on_play_again() -> void:
+	_questions = _all_questions.duplicate(true)
+	_start_battle()
+
+
+func _on_my_quizzes() -> void:
+	var quizzes_scene := load("res://scenes/my_quizzes.tscn") as PackedScene
+	if quizzes_scene != null:
+		Nav.show_screen(quizzes_scene.instantiate() as Control)
 
 
 # ---------------------------------------------------------------- presentation

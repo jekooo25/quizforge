@@ -65,7 +65,45 @@ func _ready() -> void:
 	await battle._on_next()
 	await get_tree().create_timer(0.8).timeout
 	_check(battle._state == "over", "knockout ends the battle")
-	_check(battle.overlay != null, "battle end screen appears")
+	_check(battle.result_title_label.text == "Victory", "win results screen appears")
+	_check(battle.result_stats_label.text.contains("4 / 5")
+		and battle.result_stats_label.text.contains("80%"), "win results show correct/total and accuracy")
+	_check(battle.result_missed_list.get_child_count() == 1, "missed question is listed in results")
+	var missed_column := battle.result_missed_list.get_child(0).get_child(0) as VBoxContainer
+	_check(missed_column.get_child_count() >= 3
+		and str((missed_column.get_child(1) as Label).text).contains("Mars")
+		and str((missed_column.get_child(2) as Label).text).contains("supported by the saved source"),
+		"missed-question result includes its correct answer and explanation")
+	_check(battle.retry_missed_button.visible and battle.retry_missed_button.disabled == false
+		and battle.play_again_button.visible and battle.my_quizzes_button.visible,
+		"results offer Retry missed, Play again, and My quizzes")
+
+	battle._on_retry_missed()
+	await get_tree().process_frame
+	_check(battle._questions.size() == 1 and battle._round_number == 1,
+		"Retry missed starts a battle containing only missed questions")
+	await battle._on_answer(battle._correct_index)
+	battle._on_next()
+	await get_tree().create_timer(0.8).timeout
+	_check(battle.result_title_label.text == "Victory"
+		and battle.retry_missed_button.disabled, "perfect retry has no missed questions to retry")
+
+	battle._on_play_again()
+	await get_tree().process_frame
+	_check(battle._questions.size() == questions.size() and battle._state == "answering",
+		"Play again restores the full quiz")
+	for i in 3:
+		await battle._on_answer((battle._correct_index + 1) % 4)
+		battle._on_next()
+		if i < 2:
+			await get_tree().process_frame
+	await get_tree().create_timer(0.8).timeout
+	_check(battle.result_title_label.text == "Defeat", "loss results screen appears after player knockout")
+	battle.my_quizzes_button.pressed.emit()
+	await get_tree().process_frame
+	_check(Nav._current != null
+		and str(Nav._current.get_script().resource_path).ends_with("my_quizzes_screen.gd"),
+		"My quizzes button leaves the results screen")
 
 	if failures == 0:
 		print("ALL CHECKS PASSED (%d)" % checks_run)
