@@ -4,7 +4,8 @@ func _ready() -> void:
  if OS.get_name()=="Android":get_tree().quit_on_go_back=false
  _make_mobile_scroll()
  _content=%Margin
- %Greeting.text=str(Nav.user.get("username","")).strip_edges()
+ var teacher_name: String=str(Nav.user.get("username","")).strip_edges()
+ %Greeting.text=teacher_name if teacher_name!="" else "Teacher dashboard"
  %Pending.pressed.connect(open_panel.bind("pending"))
  %Library.pressed.connect(open_panel.bind("list"))
  %Published.pressed.connect(open_panel.bind("shared"))

@@ -63,7 +63,7 @@ custom_minimum_size = Vector2(0,72)
 [node name="Greeting" type="Label" parent="Margin/Column"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Username"
+text = "Teacher dashboard"
 autowrap_mode = 3
 theme_override_font_sizes/font_size = 44
 
