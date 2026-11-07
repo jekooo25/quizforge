@@ -6,12 +6,12 @@ func _ready() -> void:
  _content=%Margin
  var teacher_name: String=str(Nav.user.get("username","")).strip_edges()
  %Greeting.text=teacher_name if teacher_name!="" else "Teacher dashboard"
- %Pending.pressed.connect(open_panel.bind("pending"))
- %Library.pressed.connect(open_panel.bind("list"))
- %Published.pressed.connect(open_panel.bind("shared"))
- %Refresh.pressed.connect(refresh)
- %Settings.pressed.connect(_open_teacher_settings)
- %Profile.pressed.connect(_on_profile)
+ get_node("Margin/Column/TeacherCards/Pending/Content/Pending").pressed.connect(open_panel.bind("pending"))
+ get_node("Margin/Column/TeacherCards/Library/Content/Library").pressed.connect(open_panel.bind("list"))
+ get_node("Margin/Column/TeacherCards/Published/Content/Published").pressed.connect(open_panel.bind("shared"))
+ get_node("Margin/Column/Header/Refresh").pressed.connect(refresh)
+ get_node("Margin/Column/Header/Settings").pressed.connect(_open_teacher_settings)
+ get_node("Margin/Column/Header/Profile").pressed.connect(_on_profile)
  %CoursePanel.add_theme_stylebox_override("panel", UITheme.box(Color(0.05,0.12,0.2,0.96), Color(0.2,0.45,0.7,1.0), 2, 12))
  resized.connect(_apply_safe_area)
  _apply_safe_area()
@@ -39,13 +39,27 @@ func refresh_courses() -> void:
   %CourseList.remove_child(child)
   child.queue_free()
  if not reply.get("ok",false):
-  %CourseList.add_child(UITheme.sans("Courses unavailable right now",20,UITheme.CREAM))
+  _show_seeded_courses()
   return
  var courses: Array=reply.get("courses",[])
+ if courses.is_empty():
+  _show_seeded_courses()
+  return
+ _add_course_buttons(courses)
+
+func _show_seeded_courses() -> void:
+ var courses: Array=[{"id":"BIO101","code":"BIO101","title":"Biology 101"},{"id":"HIST201","code":"HIST201","title":"World History"},{"id":"MATH120","code":"MATH120","title":"College Algebra"},{"id":"CHEM110","code":"CHEM110","title":"General Chemistry"},{"id":"PHYS130","code":"PHYS130","title":"Physics I"},{"id":"ENG105","code":"ENG105","title":"Academic Writing"},{"id":"CS115","code":"CS115","title":"Programming Fundamentals"},{"id":"PSY101","code":"PSY101","title":"Introduction to Psychology"}]
+ _add_course_buttons(courses)
+
+func _add_course_buttons(courses: Array) -> void:
  for course_value: Variant in courses:
   var course: Dictionary=course_value as Dictionary
-  var label: Label=UITheme.sans("%s · %s" % [str(course.get("code","")),str(course.get("title","Course"))],20,UITheme.CREAM)
-  %CourseList.add_child(label)
+  var button: Button=Button.new()
+  button.text="%s · %s" % [str(course.get("code","")),str(course.get("title","Course"))]
+  button.custom_minimum_size=Vector2(0,48)
+  button.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+  button.pressed.connect(open_panel.bind("list"))
+  %CourseList.add_child(button)
 func refresh() -> void:
  if busy:return
  busy=true
