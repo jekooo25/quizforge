@@ -8,11 +8,6 @@ func _ready() -> void:
  %BackButton.pressed.connect(back)
  %BattleButton.pressed.connect(open_battle)
  %SpellButton.pressed.connect(open_spell)
- %Difficulty.add_item("Easy · 45 seconds")
- %Difficulty.add_item("Normal · 30 seconds")
- %Difficulty.add_item("Hard · 20 seconds")
- %Difficulty.select(int(Nav.user.get("battle_difficulty", 1)))
- %Difficulty.item_selected.connect(func(index: int) -> void: Nav.user["battle_difficulty"] = index)
  var quiz := QuizLibrary.get_quiz(library_id)
  var questions: Variant = quiz.get("questions",[])
  if quiz.is_empty() or not questions is Array or questions.is_empty():

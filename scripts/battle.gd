@@ -16,12 +16,6 @@ signal battle_completed(score: int)
 const BattleAudio := preload("res://scripts/ui/battle_audio.gd")
 
 const ROUND_TIME := 45.0
-
-func _round_time() -> float:
-	match int(Nav.user.get("battle_difficulty", 1)):
-		0: return 45.0
-		2: return 20.0
-		_: return 30.0
 const SHIELD_COMBO := 3
 const TARGET_CORRECT_RATIO := 0.70
 const DEMO_PLAYER_HP := 3
@@ -242,7 +236,7 @@ func _build_ui() -> void:
 	add_child(_audio)
 	attack_button.pressed.connect(_select_action.bind("attack"))
 	recover_button.pressed.connect(_select_action.bind("recover"))
-	timer_bar.max_value = _round_time()
+	timer_bar.max_value = ROUND_TIME
 	timer_toggle.pressed.connect(_toggle_timer)
 	for i in answer_buttons.size():
 		var btn := answer_buttons[i]
@@ -353,11 +347,11 @@ func _begin_round() -> void:
 		button.disabled = false
 		button.modulate = Color.WHITE
 		button.remove_theme_stylebox_override("disabled")
-	_time_left = _round_time()
+	_time_left = ROUND_TIME
 	_state = "answering"
 	_refresh_timer_mode()
 	_refresh_actions()
-	timer_bar.value = _round_time()
+	timer_bar.value = ROUND_TIME
 	timer_bar.modulate = Color.WHITE
 	next_button.visible = false
 	answer_buttons[0].grab_focus()
@@ -399,7 +393,7 @@ func _toggle_timer() -> void:
 	if _is_recall or _state != "answering":
 		return
 	timed_battle = not timed_battle
-	_time_left = _round_time()
+	_time_left = ROUND_TIME
 	_refresh_timer_mode()
 
 
