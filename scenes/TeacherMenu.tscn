@@ -76,26 +76,27 @@ autowrap_mode = 3
 theme_override_font_sizes/font_size = 25
 theme_override_colors/font_color = Color(0.67,0.77,0.83,1)
 
-[node name="TeacherCards" type="HBoxContainer" parent="Margin/Column"]
+[node name="TeacherCards" type="VBoxContainer" parent="Margin/Column"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 20
+theme_override_constants/separation = 8
 
 [node name="Pending" type="PanelContainer" parent="Margin/Column/TeacherCards"]
 layout_mode = 2
 size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 150)
 
 [node name="Content" type="VBoxContainer" parent="Margin/Column/TeacherCards/Pending"]
 layout_mode = 2
-theme_override_constants/separation = 14
+theme_override_constants/separation = 6
 
 [node name="PendingCount" type="Label" parent="Margin/Column/TeacherCards/Pending/Content"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "01"
 autowrap_mode = 3
-theme_override_font_sizes/font_size = 38
+theme_override_font_sizes/font_size = 28
 theme_override_colors/font_color = Color(1,0.80,0.32,1)
 
 [node name="PendingTitle" type="Label" parent="Margin/Column/TeacherCards/Pending/Content"]
@@ -103,7 +104,7 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Review submissions"
 autowrap_mode = 3
-theme_override_font_sizes/font_size = 29
+theme_override_font_sizes/font_size = 24
 
 
 [node name="PendingHint" type="Label" parent="Margin/Column/TeacherCards/Pending/Content"]
@@ -111,7 +112,7 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Check questions and approve student quizzes."
 autowrap_mode = 3
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 18
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(0.67,0.77,0.83,1)
 
@@ -120,23 +121,24 @@ theme_type_variation = &"Primary"
 unique_name_in_owner = true
 layout_mode = 2
 text = "Review pending"
-custom_minimum_size = Vector2(0,72)
+custom_minimum_size = Vector2(0,52)
 
 
 [node name="Library" type="PanelContainer" parent="Margin/Column/TeacherCards"]
 layout_mode = 2
 size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 150)
 
 [node name="Content" type="VBoxContainer" parent="Margin/Column/TeacherCards/Library"]
 layout_mode = 2
-theme_override_constants/separation = 14
+theme_override_constants/separation = 6
 
 [node name="LibraryCount" type="Label" parent="Margin/Column/TeacherCards/Library/Content"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "02"
 autowrap_mode = 3
-theme_override_font_sizes/font_size = 38
+theme_override_font_sizes/font_size = 28
 theme_override_colors/font_color = Color(1,0.80,0.32,1)
 
 [node name="LibraryTitle" type="Label" parent="Margin/Column/TeacherCards/Library/Content"]
@@ -144,7 +146,7 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Quiz library"
 autowrap_mode = 3
-theme_override_font_sizes/font_size = 29
+theme_override_font_sizes/font_size = 24
 
 
 [node name="LibraryHint" type="Label" parent="Margin/Column/TeacherCards/Library/Content"]
@@ -152,7 +154,7 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Find approved quizzes ready to publish."
 autowrap_mode = 3
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 18
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(0.67,0.77,0.83,1)
 
@@ -160,23 +162,24 @@ theme_override_colors/font_color = Color(0.67,0.77,0.83,1)
 unique_name_in_owner = true
 layout_mode = 2
 text = "Open library"
-custom_minimum_size = Vector2(0,72)
+custom_minimum_size = Vector2(0,52)
 
 
 [node name="Published" type="PanelContainer" parent="Margin/Column/TeacherCards"]
 layout_mode = 2
 size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 150)
 
 [node name="Content" type="VBoxContainer" parent="Margin/Column/TeacherCards/Published"]
 layout_mode = 2
-theme_override_constants/separation = 14
+theme_override_constants/separation = 6
 
 [node name="PublishedCount" type="Label" parent="Margin/Column/TeacherCards/Published/Content"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "03"
 autowrap_mode = 3
-theme_override_font_sizes/font_size = 38
+theme_override_font_sizes/font_size = 28
 theme_override_colors/font_color = Color(1,0.80,0.32,1)
 
 [node name="PublishedTitle" type="Label" parent="Margin/Column/TeacherCards/Published/Content"]
@@ -184,7 +187,7 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Published quizzes"
 autowrap_mode = 3
-theme_override_font_sizes/font_size = 29
+theme_override_font_sizes/font_size = 24
 
 
 [node name="PublishedHint" type="Label" parent="Margin/Column/TeacherCards/Published/Content"]
@@ -192,7 +195,7 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Share a code and view student results."
 autowrap_mode = 3
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 18
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(0.67,0.77,0.83,1)
 
@@ -200,16 +203,18 @@ theme_override_colors/font_color = Color(0.67,0.77,0.83,1)
 unique_name_in_owner = true
 layout_mode = 2
 text = "View published"
-custom_minimum_size = Vector2(0,72)
+custom_minimum_size = Vector2(0,52)
 
 
 [node name="Footer" type="HBoxContainer" parent="Margin/Column"]
 layout_mode = 2
+visible = false
 
 [node name="CoursePanel" type="PanelContainer" parent="Margin/Column"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_vertical = 3
+size_flags_vertical = 1
+custom_minimum_size = Vector2(0, 120)
 
 [node name="CourseColumn" type="VBoxContainer" parent="Margin/Column/CoursePanel"]
 unique_name_in_owner = true

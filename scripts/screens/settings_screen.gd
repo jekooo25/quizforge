@@ -61,7 +61,8 @@ func _ready() -> void:
 	back.offset_bottom = -26.0
 	add_child(back)
 	back.pressed.connect(func() -> void:
-		Nav.show_screen(load("res://scenes/HomeScreen.tscn").instantiate()))
+		var destination: String = "res://scenes/TeacherMenu.tscn" if str(Nav.user.get("role", "student")) == "teacher" else "res://scenes/HomeScreen.tscn"
+		Nav.show_screen(load(destination).instantiate()))
 
 	_add_version_label()
 

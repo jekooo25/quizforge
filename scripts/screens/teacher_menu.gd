@@ -8,7 +8,7 @@ func _ready() -> void:
  %Library.pressed.connect(open_panel.bind("list"))
  %Published.pressed.connect(open_panel.bind("shared"))
  %Refresh.pressed.connect(refresh)
- %Settings.pressed.connect(open_settings)
+ %Settings.pressed.connect(_open_teacher_settings)
  %Profile.pressed.connect(_on_profile)
  %CoursePanel.add_theme_stylebox_override("panel", UITheme.box(Color(0.05,0.12,0.2,0.96), Color(0.2,0.45,0.7,1.0), 2, 12))
  resized.connect(_apply_safe_area)
@@ -34,13 +34,13 @@ func refresh() -> void:
  if busy:return
  busy=true
  %Refresh.disabled=true
- %Connection.text="Connecting..."
+ %Connection.text=""
  var reply: Dictionary=await SharingService.api("/reviews")
  busy=false
  if not is_inside_tree():return
  %Refresh.disabled=false
  if not reply.get("ok",false):
-  %Connection.text="Server offline · start the sharing server, then refresh."
+  %Connection.text="Courses and quizzes are temporarily unavailable."
   for field in [%PendingCount,%LibraryCount,%PublishedCount]:field.text="—"
   return
  var pending:=0
@@ -54,7 +54,10 @@ func refresh() -> void:
  %PendingCount.text=str(pending)+" pending"
  %LibraryCount.text=str(library)+" in library"
  %PublishedCount.text=str(shared)+" published"
- %Connection.text="Connected to laptop server · presentation demo"
+ %Connection.text=""
+
+func _open_teacher_settings() -> void:
+ Nav.show_screen(load("res://scripts/screens/settings_screen.gd").new())
 func open_panel(value: String) -> void:
  var panel: Control=load("res://scenes/TeacherReviewers.tscn").instantiate()
  panel.filter=value
