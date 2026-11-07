@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://scripts/screens/home_screen.gd" id="1_home"]
 [ext_resource type="Texture2D" path="res://assets/sprites/default_slime.png" id="2_slime"]
 [ext_resource type="Theme" path="res://assets/themes/quizforge.tres" id="3_theme"]
+[ext_resource type="Script" path="res://scripts/ui/cat_mascot.gd" id="4_cat"]
 
 [node name="HomeScreen" type="Control"]
 layout_mode = 3
@@ -133,6 +134,13 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 
+[node name="MascotCompanion" type="Control" parent="SafeMargin/RootColumn/MainContent/CenterColumn"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 112)
+mouse_filter = 2
+script = ExtResource("4_cat")
+scale_factor = 0.52
+
 [node name="Stage" type="Control" parent="SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame"]
 layout_mode = 2
 size_flags_vertical = 3
@@ -213,10 +221,10 @@ size_flags_horizontal = 3
 size_flags_stretch_ratio = 1.0
 theme_override_constants/separation = 10
 
-[node name="StartBattleButton" type="Button" parent="SafeMargin/RootColumn/MainContent/RightColumn"]
+[node name="StartBattleButton" type="Button" parent="SafeMargin/RootColumn/MainContent/CenterColumn"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(0, 56)
+custom_minimum_size = Vector2(0, 64)
 size_flags_vertical = 0
 text = "START QUIZ\n(BATTLE)"
 

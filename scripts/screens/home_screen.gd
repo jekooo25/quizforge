@@ -11,7 +11,7 @@ const MIN_TOUCH := Vector2(0, 48)
 @onready var left_column: VBoxContainer = get_node("SafeMargin/RootColumn/MainContent/LeftColumn")
 @onready var center_column: VBoxContainer = get_node("SafeMargin/RootColumn/MainContent/CenterColumn")
 @onready var right_column: VBoxContainer = get_node("SafeMargin/RootColumn/MainContent/RightColumn")
-@onready var start_battle_button: Button = get_node("SafeMargin/RootColumn/MainContent/RightColumn/StartBattleButton")
+@onready var start_battle_button: Button = get_node("SafeMargin/RootColumn/MainContent/CenterColumn/StartBattleButton")
 @onready var upload_reviewer_button: Button = get_node("SafeMargin/RootColumn/MainContent/RightColumn/UploadReviewerButton")
 @onready var quiz_library_button: Button = get_node("SafeMargin/RootColumn/MainContent/RightColumn/QuizLibraryButton")
 @onready var daily_tasks_button: Button = get_node("SafeMargin/RootColumn/BottomNav/DailyTasksButton")
@@ -83,7 +83,8 @@ func _refresh_keyboard_inset() -> void:
 func _configure_schoolyard_cards() -> void:
 	_add_pixel_icon(profile_button, "profile")
 	_add_pixel_icon(settings_button, "gear")
-	var cream_panel: StyleBoxFlat = UITheme.box(Color(0.96, 0.90, 0.78, 0.96), UITheme.WOOD_LIGHT, 2, 12)
+	_add_pixel_icon(start_battle_button, "target")
+	var cream_panel: StyleBoxFlat = UITheme.box(Color(0.96, 0.90, 0.78, 1.0), UITheme.WOOD_LIGHT, 2, 12)
 	var cream_button: StyleBoxFlat = UITheme.box(UITheme.CREAM, UITheme.WOOD_LIGHT, 2, 10)
 	var navy_button: StyleBoxFlat = UITheme.box(UITheme.NAVY, UITheme.NAVY_HOT, 2, 10)
 	var join_card: PanelContainer = get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard")
@@ -95,17 +96,21 @@ func _configure_schoolyard_cards() -> void:
 	recent_label.visible = true
 	recent_list.get_parent().visible = true
 	get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/PortalLabel").text = "Ready for your next battle?"
-	get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/Pedestal").visible = false
+	var pedestal: Panel = get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/Pedestal")
+	pedestal.visible = true
+	pedestal.add_theme_stylebox_override("panel", UITheme.box(UITheme.WOOD, UITheme.WOOD_LIGHT, 2, 6))
+	get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/Pedestal/PedestalLabel").text = Nav.display_name()
+	get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/Pedestal/PedestalLabel").add_theme_color_override("font_color", UITheme.CREAM)
 	start_battle_button.text = "Start battle"
 	upload_reviewer_button.text = "Upload reviewer"
 	quiz_library_button.text = "My quiz library"
-	start_battle_button.reparent(right_column)
+	start_battle_button.reparent(center_column)
 	upload_reviewer_button.reparent(right_column)
 	quiz_library_button.visible = true
 	for button: Button in [start_battle_button, upload_reviewer_button, quiz_library_button]:
-		button.custom_minimum_size = Vector2(0, 56)
+		button.custom_minimum_size = Vector2(0, 64 if button == start_battle_button else 56)
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.add_theme_stylebox_override("normal", navy_button)
+		button.add_theme_stylebox_override("normal", UITheme.box(UITheme.YELLOW, UITheme.WOOD, 2, 10) if button == start_battle_button else navy_button)
 		button.add_theme_stylebox_override("hover", navy_button)
 		button.add_theme_stylebox_override("pressed", navy_button)
 		button.add_theme_color_override("font_color", UITheme.CREAM)
