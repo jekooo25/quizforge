@@ -42,6 +42,8 @@ func _ready() -> void:
 	code_input.text_changed.connect(_on_code_changed)
 	_refresh_recent_quizzes()
 	stars_shop_button.text = "%d Stars | Shop" % TaskManager.stars_balance()
+	stars_shop_button.add_theme_color_override("font_color", UITheme.INK)
+	stars_shop_button.add_theme_font_size_override("font_size", 22)
 	if OS.get_name() == "Android":
 		get_tree().quit_on_go_back = false
 
@@ -166,16 +168,32 @@ func _add_pixel_icon(button: Button, kind: String) -> void:
 
 func _add_button_icon(button: Button, kind: String) -> void:
 	var original_text: String = button.text
-	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	button.text = "        " + original_text
+	button.text = ""
 	button.clip_text = false
+	for child: Node in button.get_children():
+		child.queue_free()
+	var row: HBoxContainer = HBoxContainer.new()
+	row.name = "IconLabelRow"
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	row.offset_left = 12.0
+	row.offset_top = 6.0
+	row.offset_right = -12.0
+	row.offset_bottom = -6.0
+	row.add_theme_constant_override("separation", 10)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	button.add_child(row)
 	var icon: Control = preload("res://scripts/ui/pixel_icons.gd").new()
 	icon.kind = kind
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	button.add_child(icon)
-	icon.set_anchors_preset(Control.PRESET_CENTER_LEFT)
-	icon.position = Vector2(10, 12)
-	icon.size = Vector2(30, 30)
+	icon.custom_minimum_size = Vector2(30, 30)
+	row.add_child(icon)
+	var label: Label = UITheme.sans(original_text, 22, UITheme.CREAM)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(label)
 
 
 func _start_quiz() -> void:
