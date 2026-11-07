@@ -1,0 +1,19 @@
+COMPACT QUIZ UI
+
+Open Shared Quizzes. Each quiz title uses up to two lines with an ellipsis.
+Tap its text area or Open quiz to see the full title, progress and review modes.
+Select Quiz Battle or Word Bank, then press Start. Back returns to the library.
+Join with code reveals Enter code. Browse public opens the public catalog.
+Send saved results appears only when results are waiting to upload.
+All UI controls are authored in editable Godot scenes.
+
+Details scene: scenes/QuizDetails.tscn
+Cards: scenes/quiz_card.tscn
+Join controls: scenes/SharedQuizJoin.tscn
+
+PREVIOUS LAYOUT
+presentation/UI Backups/Before compact quiz cards - 2026-11-07
+Open RESTORE PREVIOUS UI.cmd there to restore the saved layout.
+Close game windows before restoring.
+
+Touch gestures were simulated on the laptop. Physical Android testing is pending.

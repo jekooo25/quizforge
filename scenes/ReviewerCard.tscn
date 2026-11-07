@@ -1,0 +1,136 @@
+[gd_scene load_steps=3 format=3]
+[ext_resource type="Script" path="res://scripts/screens/reviewer_card.gd" id="1"]
+[ext_resource type="Theme" path="res://scenes/TeacherTheme.tres" id="2"]
+
+[node name="ReviewerCard" type="VBoxContainer"]
+layout_mode = 3
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource("2")
+script = ExtResource("1")
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 2
+
+
+[node name="Content" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Heading" type="HBoxContainer" parent="Panel/Content"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="Panel/Content/Heading"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Quiz title"
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 30
+size_flags_horizontal = 3
+
+[node name="Status" type="Label" parent="Panel/Content/Heading"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Pending"
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 23
+custom_minimum_size = Vector2(190,0)
+horizontal_alignment = 2
+theme_override_colors/font_color = Color(1,0.80,0.32,1)
+
+[node name="Meta" type="Label" parent="Panel/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Creator · 5 questions · v1"
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 23
+theme_override_colors/font_color = Color(0.67,0.77,0.83,1)
+
+[node name="ShareRow" type="HBoxContainer" parent="Panel/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Code" type="LineEdit" parent="Panel/Content/ShareRow"]
+unique_name_in_owner = true
+layout_mode = 2
+editable = false
+theme_override_colors/font_uneditable_color = Color(0.95,0.97,1,1)
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0,60)
+theme_override_font_sizes/font_size = 26
+
+[node name="Copy" type="Button" parent="Panel/Content/ShareRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Copy code"
+custom_minimum_size = Vector2(0,72)
+
+
+[node name="Actions" type="HBoxContainer" parent="Panel/Content"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Read" type="Button" parent="Panel/Content/Actions"]
+theme_type_variation = &"Primary"
+unique_name_in_owner = true
+layout_mode = 2
+text = "Review quiz"
+custom_minimum_size = Vector2(0,72)
+
+
+[node name="Approve" type="Button" parent="Panel/Content/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Approve"
+custom_minimum_size = Vector2(0,72)
+visible = false
+
+[node name="Publish" type="Button" parent="Panel/Content/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Publish quiz"
+custom_minimum_size = Vector2(0,72)
+
+
+[node name="Results" type="Button" parent="Panel/Content/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Student results"
+custom_minimum_size = Vector2(0,72)
+
+
+[node name="More" type="Button" parent="Panel/Content/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "More"
+custom_minimum_size = Vector2(0,72)
+
+
+[node name="Tools" type="HFlowContainer" parent="Panel/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+visible = false
+theme_override_constants/h_separation = 12
+
+[node name="Edit" type="Button" parent="Panel/Content/Tools"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Edit new revision"
+custom_minimum_size = Vector2(0,72)
+
+
+[node name="Changes" type="Button" parent="Panel/Content/Tools"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Return for changes"
+custom_minimum_size = Vector2(0,72)
+
+
+[node name="Close" type="Button" parent="Panel/Content/Tools"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Close sharing"
+custom_minimum_size = Vector2(0,72)
+

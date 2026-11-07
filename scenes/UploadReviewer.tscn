@@ -1,0 +1,191 @@
+[gd_scene load_steps=3 format=3]
+[ext_resource type="Script" path="res://scripts/screens/upload_screen.gd" id="1"]
+[ext_resource type="Theme" path="res://assets/themes/quizforge.tres" id="2"]
+[node name="UploadReviewer" type="Control"]
+layout_mode = 3
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource("2")
+script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0.97,0.94,0.87,1)
+
+[node name="Margin" type="MarginContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 32.0
+offset_right = -32.0
+offset_top = 16.0
+offset_bottom = -16.0
+
+[node name="Column" type="VBoxContainer" parent="Margin"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Header" type="HBoxContainer" parent="Margin/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Back" type="Button" parent="Margin/Column/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Back"
+custom_minimum_size = Vector2(0,64)
+theme_type_variation = &"MyQuizzesTab"
+
+[node name="Heading" type="Label" parent="Margin/Column/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "UploadReviewer"
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(0.32,0.21,0.11,1)
+size_flags_horizontal = 3
+vertical_alignment = 1
+
+[node name="Scroll" type="ScrollContainer" parent="Margin/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+scroll_deadzone = 12
+
+[node name="Fields" type="VBoxContainer" parent="Margin/Column/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="Step" type="Label" parent="Margin/Column/Scroll/Fields"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "1 / 3 · Choose your study material"
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.32,0.21,0.11,1)
+
+
+[node name="Formats" type="Label" parent="Margin/Column/Scroll/Fields"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "PDF, TXT, MD, CSV, JSON or images (PNG, JPG, WEBP, BMP, GIF). Up to 20 MB."
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.32,0.21,0.11,1)
+
+
+[node name="Pick" type="Button" parent="Margin/Column/Scroll/Fields"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Choose file"
+custom_minimum_size = Vector2(0,64)
+theme_type_variation = &"MyQuizzesTab"
+
+[node name="File" type="Label" parent="Margin/Column/Scroll/Fields"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "No file selected"
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 26
+theme_override_colors/font_color = Color(0.32,0.21,0.11,1)
+
+
+[node name="FileInfo" type="Label" parent="Margin/Column/Scroll/Fields"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Choose a readable document or a clear photo of your reviewer."
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.32,0.21,0.11,1)
+
+
+[node name="Options" type="HBoxContainer" parent="Margin/Column/Scroll/Fields"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Mode" type="OptionButton" parent="Margin/Column/Scroll/Fields/Options"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0,64)
+theme_type_variation = &"MyQuizzesTab"
+
+[node name="Count" type="SpinBox" parent="Margin/Column/Scroll/Fields/Options"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 5.0
+max_value = 20.0
+value = 10.0
+prefix = "Questions: "
+custom_minimum_size = Vector2(300,64)
+theme_override_font_sizes/font_size = 24
+
+[node name="ModeHint" type="Label" parent="Margin/Column/Scroll/Fields"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Quiz Battle creates complete multiple-choice questions."
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.32,0.21,0.11,1)
+
+
+[node name="PdfOptions" type="HBoxContainer" parent="Margin/Column/Scroll/Fields"]
+unique_name_in_owner = true
+layout_mode = 2
+visible = false
+theme_override_constants/separation = 12
+
+[node name="PagesLabel" type="Label" parent="Margin/Column/Scroll/Fields/PdfOptions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "PDF pages (optional)"
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.32,0.21,0.11,1)
+vertical_alignment = 1
+
+[node name="Pages" type="LineEdit" parent="Margin/Column/Scroll/Fields/PdfOptions"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Example: 4-10"
+custom_minimum_size = Vector2(0,56)
+theme_type_variation = &"MyQuizzesSearch"
+
+[node name="Status" type="Label" parent="Margin/Column/Scroll/Fields"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Your quiz is saved only after you preview and edit it."
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.32,0.21,0.11,1)
+
+
+[node name="Generate" type="Button" parent="Margin/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Generate questions"
+custom_minimum_size = Vector2(0,64)
+theme_type_variation = &"MyQuizPlayButton"
+
+[node name="FileDialog" type="FileDialog" parent="."]
+unique_name_in_owner = true
+title = "Choose reviewer"
+size = Vector2i(760,460)
+file_mode = 0
+access = 2
+use_native_dialog = true
+filters = PackedStringArray("*.pdf,*.txt,*.md,*.csv,*.json,*.png,*.jpg,*.jpeg,*.webp,*.bmp,*.gif ; Supported reviewers")

@@ -35,6 +35,12 @@ from flask import Flask, jsonify, request  # noqa: E402
 import qfgen  # noqa: E402
 
 app = Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = 20 * 1024 * 1024 + 65536
+
+@app.errorhandler(413)
+def file_too_big(_error):
+    return jsonify(error="File exceeds the 20 MB limit.",code="too_big"),413
+
 
 # The server window is the only place a failed generation can be diagnosed, so
 # request lines and provider reasons must be visible without debug mode.
@@ -64,6 +70,11 @@ def _generate(fn, provider: str, fallback_pages: list[dict], count: int) -> tupl
             raise  # the AI answered, it just answered about the document
         except qfgen.ProviderError as e:
             app.logger.warning("provider %s failed: %s", provider, e)
+            # Capacity outages are not a content problem.  Do not conceal a
+            # persistent 503 behind an offline attempt that can later look
+            # like an "insufficient material" error to the student.
+            if e.status == 503 or "UNAVAILABLE" in str(e).upper():
+                raise
     questions = qfgen.filter_document_questions(
         qfgen.offline_questions(fallback_pages, count=count)
     )
@@ -142,7 +153,15 @@ def generate():
     if upload is None or upload.filename == "":
         return jsonify({"error": "no file uploaded"}), 400
 
-    count = min(int(request.form.get("count", DEFAULT_COUNT)), MAX_COUNT)
+    try:
+        count = int(request.form.get("count", DEFAULT_COUNT))
+        seed = int(request.form.get("seed", 0) or 0)
+        if not 1 <= count <= MAX_COUNT: raise ValueError()
+    except (ValueError,TypeError):
+        return jsonify(error="Choose 1 to 40 questions.",code="count"),400
+    suffix = os.path.splitext(upload.filename)[1].lower()
+    if suffix not in qfgen.TEXT_EXTS | qfgen.IMAGE_EXTS | {".pdf"}:
+        return jsonify(error="Unsupported reviewer format.",code="unsupported"),415
     provider = request.form.get("provider", DEFAULT_PROVIDER)
     seed = int(request.form.get("seed", 0) or 0)
 
@@ -151,6 +170,10 @@ def generate():
     os.close(handle)
     try:
         upload.save(temp_path)
+        if os.path.getsize(temp_path)==0:
+            return jsonify(error="The selected file is empty.",code="empty"),422
+        if os.path.getsize(temp_path)>20*1024*1024:
+            return jsonify(error="File exceeds the 20 MB limit.",code="too_big"),413
         try:
             extracted = qfgen.extract(temp_path)
         except qfgen.ExtractError as e:
@@ -160,6 +183,9 @@ def generate():
             # but from the student's side this is still "we couldn't read it"
             app.logger.warning("extract failed: %s", e)
             return jsonify({"error": "could not read that file", "code": "unreadable"}), 422
+
+        if not extracted.get("pending_images") and sum(len(p.get("text","").strip()) for p in extracted["pages"]) < 60:
+            return jsonify(error="This file has too little readable study material.",code="insufficient"),422
 
         try:
             page_range = qfgen.parse_page_range(
@@ -206,14 +232,9 @@ def generate():
             else f"sampled PDF pages {selection['used_pages']}",
             source["chars"], provider, used, len(questions_out), started,
         )
-        if used == "offline" and provider != "offline" and not questions_out:
-            # The AI was unavailable and the file had nothing the rule-based
-            # generator could use. This is our outage, not a bad file, so the
-            # app can say "try again" instead of blaming the reviewer.
-            return jsonify({
-                "error": "Quizforge is busy right now. Please try again in a minute.",
-                "code": "provider_busy",
-            }), 502
+        if not questions_out and used=="offline":
+            tag="vision" if extracted.get("pending_images") else "insufficient"
+            return jsonify(error="Use a text-based PDF or clearer study material.",code=tag),422
         return jsonify({
             "source": source,
             "title": result.get("title") or os.path.splitext(upload.filename)[0][:60],
@@ -226,6 +247,14 @@ def generate():
         app.logger.info("[generate] %s | quality reject | gemini HTTP %s | %s",
                         upload.filename, last.get("status", "-"), e)
         return jsonify({"error": str(e), "code": "quality"}), 422
+    except qfgen.ProviderError as e:
+        if e.status == 503 or "UNAVAILABLE" in str(e).upper():
+            return jsonify({
+                "error": "Quizforge is busy right now. Please try again in a minute.",
+                "code": "provider_busy",
+            }), 502
+        app.logger.warning("provider failed during generation: %s", e)
+        return jsonify({"error": "generation provider failed", "code": "provider"}), 502
     except qfgen.ExtractError as e:
         return jsonify({"error": f"could not read that file: {e}", "code": "unreadable"}), 422
     except Exception:

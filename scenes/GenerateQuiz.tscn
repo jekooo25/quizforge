@@ -1,0 +1,189 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/screens/generation_screen.gd" id="1_script"]
+[ext_resource type="Theme" path="res://assets/themes/quizforge.tres" id="2_theme"]
+[ext_resource type="Texture2D" path="res://assets/sprites/cat_on_books.png" id="3_cat"]
+
+[sub_resource type="StyleBoxFlat" id="StatusPill"]
+bg_color = Color(0.12, 0.23, 0.4, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.82, 0.65, 0.08, 0.7)
+corner_radius_top_left = 22
+corner_radius_top_right = 22
+corner_radius_bottom_right = 22
+corner_radius_bottom_left = 22
+content_margin_left = 20.0
+content_margin_top = 8.0
+content_margin_right = 20.0
+content_margin_bottom = 8.0
+
+[node name="GenerateQuiz" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+script = ExtResource("1_script")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.12, 0.25, 0.44, 1)
+mouse_filter = 2
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 64
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 64
+theme_override_constants/margin_bottom = 32
+
+[node name="Layout" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+
+[node name="TopRow" type="HBoxContainer" parent="Margin/Layout"]
+layout_mode = 2
+
+[node name="Back" type="Button" parent="Margin/Layout/TopRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.72)
+theme_override_font_sizes/font_size = 16
+text = "Cancel"
+flat = true
+
+[node name="TopFill" type="Control" parent="Margin/Layout/TopRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Center" type="CenterContainer" parent="Margin/Layout"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Content" type="VBoxContainer" parent="Margin/Layout/Center"]
+custom_minimum_size = Vector2(680, 0)
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Mascot" type="TextureRect" parent="Margin/Layout/Center/Content"]
+custom_minimum_size = Vector2(0, 170)
+layout_mode = 2
+texture = ExtResource("3_cat")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="StatusChip" type="PanelContainer" parent="Margin/Layout/Center/Content"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StatusPill")
+
+[node name="Status" type="Label" parent="Margin/Layout/Center/Content/StatusChip"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.78, 0.04, 1)
+theme_override_font_sizes/font_size = 18
+text = "●  GENERATING"
+horizontal_alignment = 1
+
+[node name="Heading" type="Label" parent="Margin/Layout/Center/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 38
+text = "Your Encounter is Ready"
+horizontal_alignment = 1
+
+[node name="Summary" type="Label" parent="Margin/Layout/Center/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.84)
+theme_override_font_sizes/font_size = 20
+text = "Questions are checked and saved for offline play"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="File" type="Label" parent="Margin/Layout/Center/Content"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+
+[node name="Mode" type="Label" parent="Margin/Layout/Center/Content"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+
+[node name="Bottom" type="VBoxContainer" parent="Margin/Layout"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="StageRow" type="HBoxContainer" parent="Margin/Layout/Bottom"]
+layout_mode = 2
+
+[node name="StageLabel" type="Label" parent="Margin/Layout/Bottom/StageRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.88, 0.8, 1)
+theme_override_font_sizes/font_size = 25
+text = "Writing questions"
+
+[node name="StageFill" type="Control" parent="Margin/Layout/Bottom/StageRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ProgressPercent" type="Label" parent="Margin/Layout/Bottom/StageRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.78, 0.04, 1)
+theme_override_font_sizes/font_size = 20
+text = "0%"
+
+[node name="Progress" type="ProgressBar" parent="Margin/Layout/Bottom"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 2
+value = 5.0
+show_percentage = false
+
+[node name="Elapsed" type="Label" parent="Margin/Layout/Bottom"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.58)
+theme_override_font_sizes/font_size = 14
+text = "Time elapsed: 0 seconds"
+horizontal_alignment = 1
+
+[node name="Actions" type="HBoxContainer" parent="Margin/Layout"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 14
+
+[node name="Retry" type="Button" parent="Margin/Layout/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(170, 52)
+text = "Try again"
+
+[node name="Choose" type="Button" parent="Margin/Layout/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(190, 52)
+text = "Choose another file"
+
+[node name="Preview" type="Button" parent="Margin/Layout/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(190, 52)
+text = "Preview & edit"

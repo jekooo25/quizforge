@@ -1,0 +1,43 @@
+QUIZ EDITOR, TEACHER APPROVAL AND PUBLIC LEADERBOARD
+
+Restart the laptop sharing server and reopen the game windows after this update.
+Use the presentation launchers for separate teacher and student demo saves.
+
+STUDENT: EDIT A QUIZ
+My Quizzes > quiz options (...) > Edit private draft.
+Edit the title, questions, four choices and correct answer. Explanation, source
+quote and page can also be edited. Validate / Preview checks before saving.
+Save private draft creates a separate local copy. Submit sends it for teacher
+approval. Editing a published quiz never changes the old published version.
+Each saved copy may appear separately in My Quizzes.
+
+TEACHER: APPROVE AND PUBLISH
+Pending Reviewers > inspect the submission. Edit creates a new private revision.
+Approve the revision you want to publish, then choose visibility.
+Student submissions and edited revisions must be approved before publishing.
+Existing codes and reports remain attached to their original version.
+
+PUBLIC QUIZ LEADERBOARDS
+Choose Public in the publication dialog and enable the demo leaderboard.
+Private and code-only quizzes do not have public leaderboards.
+Student > Shared quizzes > Browse Public Quizzes > View demo leaderboard.
+An optional nickname can be entered before joining. Avoid full names or IDs.
+Only completed Quiz Battles submitted while the leaderboard is enabled count.
+Word bank practice is excluded. Best battle per student: accuracy first,
+then correct count; equal scores share a rank. No speed bonus.
+Each published version has its own leaderboard. Disabling or closing the
+publication hides its leaderboard. Old results are not added retroactively.
+
+EDITABLE GODOT SCENES
+scenes/QuizEditor.tscn - editor controls, source fields and discard dialog
+scenes/QuizPreview.tscn - unsaved question and learning-mode preview
+scenes/PublicLeaderboard.tscn - public ranking page
+scenes/LeaderboardEntry.tscn - individual ranking row
+scenes/PublishReview.tscn - visibility and leaderboard controls
+The new controls are scene nodes, editable in Godot's Scene tree.
+Scripts handle behaviour and instantiate the reusable row scenes.
+
+DEMO LIMITS
+The service and database run on this laptop. Roles are local demo roles.
+Scores are client-reported; this is not a secured online competition.
+Android device testing and multi-device hosting have not been performed.

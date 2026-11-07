@@ -1,0 +1,48 @@
+UPLOAD, GENERATE, PREVIEW AND SAVE
+
+1. In the presentation folder, open 0 - Start Quiz Generation.cmd.
+   Keep its window open. This is separate from the sharing server.
+   If another generation server is already running, close/restart that older
+   server instead of starting two copies on port 8765.
+2. Open the Student game and select Upload reviewer / Create a quiz.
+3. Choose a supported file. To test quickly, use Sample study material.txt
+   in this folder. File name, type and size appear after selection.
+4. Choose Quiz Battle (multiple choice) or Word Bank (fill in the blanks).
+   Choose 5-20 questions. PDF page ranges are optional and only shown for PDFs.
+5. Press Generate questions. Progress stays indeterminate until the server
+   responds. It reports the actual number kept, which can be below your request
+   if there is too little suitable material.
+6. Press Preview & edit. Nothing has been saved yet.
+7. Review one question at a time. Edit wording, choices, correct answer,
+   explanation, exact source quote and page. Source opens the extracted text.
+   Word Bank shows the actual sentence with its answer removed.
+   Validate / Preview opens the existing question preview.
+8. Press Save quiz. Invalid or duplicate choices must be corrected first.
+   The saved quiz opens in Quiz details with your selected review mode.
+   Press Start when ready. Saving alone does not start a battle or publish it.
+9. Your quiz appears under My Quizzes. Submit to teacher from its options
+   when ready. Existing approval/sharing rules are unchanged.
+
+ERRORS TO TEST
+- Empty or unsupported file: rejected before generation.
+- Very short text: tells you there is not enough usable study material.
+- PDF page 999 in a one-page document: explains the page-range error.
+- Generation server stopped: explains the connection problem and offers retry.
+- Blank or duplicate answer choices: prevents saving.
+
+LIMITS
+PDF, TXT, MD, CSV, JSON and supported images; maximum file size 20 MB.
+DOCX and PowerPoint uploads are not supported.
+The offline generator works best with clear term-and-definition material.
+Photos/scanned PDFs require a working vision provider; they are not silently
+replaced with sample questions. Live AI/vision quality and physical Android
+file picking have not been verified in this laptop test.
+Fewer questions may be produced than requested. All questions need human review.
+
+EDITABLE SCENES
+scenes/UploadReviewer.tscn
+scenes/GenerateQuiz.tscn
+scenes/GeneratedQuizPreview.tscn (inherits editable fields from QuizEditor.tscn)
+
+PREVIOUS FILES
+presentation/UI Backups/Before upload preview - 2026-11-07

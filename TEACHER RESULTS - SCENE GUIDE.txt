@@ -1,0 +1,52 @@
+TEACHER RESULTS — SEPARATE BATTLE AND WORD-BANK REPORTS
+
+HOW TO OPEN
+Teacher > Shared Reviewers > View student results.
+For a closed quiz, use List of Reviewers > View student results.
+Use All modes, Quiz Battle or Word Bank to filter reports.
+Refresh after a student finishes or sends saved results.
+
+WHAT IS SHOWN
+Student name and review mode.
+First-attempt correct count, total and accuracy.
+Practice recall correct count and attempts, separately.
+Remaining review items, their original question and source page when available.
+Completion date in UTC+8 and the latest practice-update date.
+Battle points and victory/defeat apply only to Quiz Battle.
+Word-bank reports never award battle points, Stars or task answers.
+
+WORD-BANK DELIVERY
+Only quizzes joined from the laptop sharing server are reported to teachers.
+Finishing a word-bank round saves a report for delivery.
+Practise missed updates that SAME round's practice section.
+First-attempt accuracy stays unchanged; a New round creates a separate attempt.
+If the connection fails, results remain in the student outbox.
+Student > Shared quizzes > Send saved results retries the latest saved snapshot.
+Duplicate delivery does not create duplicate reports.
+
+SCENES TO EDIT
+scenes/TeacherResults.tscn
+  Header — back and refresh buttons
+  QuizTitle, Status — reviewer and connection information
+  Filters — three mode filters
+  Scroll/Sections/BattleSection/BattleList — battle report cards
+  Scroll/Sections/SpellSection/SpellList — word-bank report cards
+
+scenes/TeacherResultCard.tscn
+  Student, Mode, FirstPass, Recall, Score, Completed, Updated, Remaining
+  All permanent card labels are editable in the scene tree.
+  The controller instances this scene per completed round; it does not construct labels in code.
+
+scenes/SpellResults.tscn
+  Delivery — student report-delivery message
+
+DATABASE COMPATIBILITY
+The sharing service adds report fields to its existing SQLite database.
+Earlier reports remain classified as Quiz Battle.
+Earlier reports without per-question details say those details were not recorded.
+No earlier scores, publications or joins are deleted.
+
+IMPORTANT
+Restart the laptop sharing-server window after installing this update.
+This remains a laptop-only demonstration with local role selection, not secure online accounts.
+Scores are reported by the game client; this prototype does not verify them against cheating.

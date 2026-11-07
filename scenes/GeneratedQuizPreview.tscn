@@ -1,0 +1,37 @@
+[gd_scene load_steps=3 format=3]
+[ext_resource type="PackedScene" path="res://scenes/QuizEditor.tscn" id="1"]
+[ext_resource type="Script" path="res://scripts/screens/generated_quiz_preview.gd" id="2"]
+[node name="GeneratedQuizPreview" instance=ExtResource("1")]
+script = ExtResource("2")
+[node name="Source" type="Button" parent="Margin/Column/Header" index="3"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0,80)
+text = "Source"
+theme_type_variation = &"MyQuizPlayButton"
+theme_override_font_sizes/font_size = 28
+[node name="SourceDialog" type="AcceptDialog" parent="." index="2"]
+unique_name_in_owner = true
+title = "Extracted source text"
+size = Vector2i(720,360)
+[node name="Scroll" type="ScrollContainer" parent="SourceDialog"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -48.0
+horizontal_scroll_mode = 0
+[node name="Text" type="Label" parent="SourceDialog/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 22
+
+[node name="StylePreview" type="Label" parent="Margin/Column" index="2"]
+unique_name_in_owner = true
+layout_mode = 2
+visible = false
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 26
+theme_override_colors/font_color = Color(0.5,0.9,0.7,1)
+text = "Word Bank preview"

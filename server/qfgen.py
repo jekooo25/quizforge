@@ -502,80 +502,58 @@ def _key_terms(sentence: str) -> list[str]:
 
 
 def offline_questions(pages: list[dict], count: int = 10, seed: int = 0) -> list[dict]:
-    """Rule-based multiple choice: blank out a key word, borrow distractors.
+    """Conservative definition MCQs; never invent missing facts or hide words.
 
-    Ugly next to an LLM, but it needs no key, no network, and always runs.
-    This is the fallback the app uses when the AI is unreachable.
+    This fallback only handles explicit definitions. A shorter honest quiz is
+    preferable to random vocabulary blanks or an answer leaked in its stem.
     """
     rng = random.Random(seed)
-
-    # build a pool of sentences that actually carry content
-    candidates = []
+    definitions = []
+    seen = set()
     for page in pages:
-        for s in _sentences(page["text"]):
-            if 70 <= len(s) <= 260 and _key_terms(s) and not _looks_like_noise(s):
-                candidates.append((s, page["page"]))
-    if len(candidates) < 4:
-        return []
-
-    # every distinct term in the document becomes a distractor source
-    vocab = []
-    seen_vocab = set()
-    for s, _ in candidates:
-        for t in _key_terms(s):
-            if t.lower() not in seen_vocab:
-                seen_vocab.add(t.lower())
-                vocab.append(t)
-
-    rng.shuffle(candidates)
-    questions = []
-    used_terms = set()
-
-    for sentence, page_no in candidates:
-        if len(questions) >= count:
-            break
-        terms = [t for t in _key_terms(sentence) if t.lower() not in used_terms]
-        if not terms:
+        # Preserve glossary line boundaries before splitting prose sentences.
+        for line in str(page.get("text", "")).splitlines():
+            for sentence in _sentences(line):
+                if not 20 <= len(sentence) <= 500 or _looks_like_noise(sentence):
+                    # Glossary entries with a colon may have no copula.
+                    if not 20 <= len(sentence) <= 500 or ":" not in sentence:
+                        continue
+                match = re.match(r"^(?:A |An |The )?([A-Za-z][A-Za-z '-]{1,65}?)\s*(?::|\bis defined as\b|\brefers to\b|\bmeans\b|\bis\b|\bare\b)\s+(.+?)[.!]?$", sentence, re.I)
+                if not match:
+                    continue
+                term, definition = match.groups()
+                term, definition = term.strip(), definition.strip().rstrip(".")
+                if len(term.split()) > 6 or len(definition.split()) < 5:
+                    continue
+                if re.search(r"\b" + re.escape(term) + r"\b", definition, re.I):
+                    continue  # e.g. 'Solution: ... is a solution ...'
+                if re.search(r"https?://|ISBN|copyright|_{2,}|-{3,}",sentence,re.I):
+                    continue
+                key = _choice_key(term)
+                if key in seen:
+                    continue
+                seen.add(key)
+                definitions.append((term,definition,sentence,int(page.get("page",0))))
+    rng.shuffle(definitions)
+    out = []
+    for answer, definition, quote, page in definitions:
+        # Terms occurring in the description would make conspicuous distractors.
+        distractors = [t for t,d,_,_ in definitions if _choice_key(t) != _choice_key(answer)
+                       and _choice_key(d) != _choice_key(definition)
+                       and not re.search(r"\b"+re.escape(t)+r"\b",definition,re.I)]
+        rng.shuffle(distractors)
+        if len(distractors) < 3 or page < 1:
             continue
-        # longest term is usually the most meaningful one
-        answer = max(terms, key=len)
-        low = answer.lower()
-
-        pool = [
-            t for t in vocab
-            if t.lower() != low
-            and t.lower() not in {a.lower() for a in [answer]}
-            and abs(len(t) - len(answer)) <= max(3, len(answer) // 2)
-        ]
-        rng.shuffle(pool)
-        distractors = []
-        for t in pool:
-            if t.lower() in {d.lower() for d in distractors}:
-                continue
-            if t.lower() in sentence.lower():  # it would appear in the visible text
-                continue
-            distractors.append(t)
-            if len(distractors) == 3:
-                break
-        if len(distractors) < 3:
-            continue
-
-        blanked = re.sub(rf"\b{re.escape(answer)}\b", "_____", sentence, count=1)
-        choices = distractors + [answer]
+        choices = distractors[:3] + [answer]
         rng.shuffle(choices)
-
-        used_terms.add(low)
-        questions.append({
-            "id": f"q{len(questions) + 1}",
-            "question": f"Fill in the blank: {blanked}",
-            "choices": choices,
-            "answer": choices.index(answer),
-            "explanation": f"The passage names {answer} here.",
-            "source_quote": sentence,
-            "page": page_no,
-        })
-
-    return questions
+        out.append({"id":f"q{len(out)+1}",
+                    "question":f"Which term matches this description: {definition}?",
+                    "choices":choices,"answer":choices.index(answer),
+                    "explanation":f"The reviewer defines {answer} as {definition}.",
+                    "source_quote":quote,"page":page})
+        if len(out) >= count:
+            break
+    return _clean_questions({"questions":out})
 
 
 # ------------------------------------------------------------------ ai prompts
@@ -595,7 +573,13 @@ QUESTION_SCHEMA_HINT = """Return ONLY JSON, no prose, no code fences, in exactly
   ]
 }
 Rules:
-- exactly 4 choices per question, exactly one correct.
+- Write direct, self-contained multiple-choice questions, not fill-in-the-blank tasks.
+- Never include underscores, dashed blanks, "fill in the blank", or unfinished stems.
+- Do not reveal the correct term in a definition question or repeat its answer in the stem.
+- exactly 4 distinct, plausible choices of comparable type, exactly one correct.
+- Avoid synonymous choices that could both be correct, and avoid "none of the above".
+- Include a substantive explanation supported by an exact source_quote from the cited page.
+- If evidence is insufficient, return fewer questions; never invent facts to reach the count.
 - "answer" is the 0-based index of the correct choice.
 - "page" is the PDF page number shown in the [[page N]] marker where the answer appears.
 - questions must be answerable ONLY from the source text.
@@ -616,7 +600,7 @@ What NOT to test (these are about the document, never the subject):
 - anything whose answer is a fact about the file rather than about the subject.
 """
 
-STRONG_RULES = """IMPORTANT: earlier questions were about the document instead of its subject.
+STRONG_RULES = """IMPORTANT: earlier output failed quality checks. Avoid blanks, leaked answers, unsupported claims, and questions about the document instead of its subject.
 Ignore every page that describes the book itself. Write only questions whose answer
 is a fact about the subject being taught. If the supplied text is publication
 boilerplate, write nothing rather than asking about it.
@@ -759,6 +743,30 @@ def _parse_questions(raw: str) -> dict:
 
 
 
+def _choice_key(text: str) -> str:
+    return re.sub(r"[\W_]+", "", text.casefold())
+
+
+def _ground_questions(questions: list[dict], pages: list[dict]) -> list[dict]:
+    """Verify page/quote support where a text layer is available.
+
+    An exact quote is evidence of provenance, not proof of semantic correctness.
+    Image-only pages still need human review because their quotes cannot be
+    checked against an extracted text layer.
+    """
+    sources = {int(p.get("page",0)): str(p.get("text", "")) for p in pages}
+    out = []
+    for q in questions:
+        if q["page"] not in sources:
+            continue
+        text = sources[q["page"]]
+        normal = lambda t: re.sub(r"\s+", " ", t).strip().casefold()
+        if text.strip() and normal(q["source_quote"]) not in normal(text):
+            continue
+        out.append(q)
+    return out
+
+
 def _clean_questions(data: dict) -> list[dict]:
     """Drop anything malformed. Models pad, duplicate, and miscount."""
     out, seen = [], set()
@@ -770,19 +778,34 @@ def _clean_questions(data: dict) -> list[dict]:
         answer = item.get("answer")
         if not q or not isinstance(choices, list) or len(choices) != 4:
             continue
-        choices = [str(c).strip() for c in choices]
-        if any(not c for c in choices) or len(set(choices)) != 4:
+        if not all(isinstance(c,str) for c in choices):
             continue
-        if not isinstance(answer, int) or not 0 <= answer <= 3:
+        choices = [c.strip() for c in choices]
+        if any(not c for c in choices) or len({_choice_key(c) for c in choices}) != 4:
+            continue
+        if type(answer) is not int or not 0 <= answer <= 3:
+            continue
+        if re.search(r"fill\s+in\s+(?:the\s+)?blank|_{2,}|[-–—]{3,}|\.{4,}",q,re.I):
+            continue
+        if any(_choice_key(c) in {"alloftheabove","noneoftheabove","alltheabove","nonetheabove"} for c in choices):
+            continue
+        correct = choices[answer]
+        if len(correct) >= 4 and re.search(r"which\s+(?:term|concept|word|process)|what\s+(?:term|concept)",q,re.I) and re.search(r"\b"+re.escape(correct)+r"\b",q,re.I):
+            continue
+        explanation = item.get("explanation", "")
+        quote = item.get("source_quote", "")
+        if not isinstance(explanation,str) or not explanation.strip() or not isinstance(quote,str) or not quote.strip():
             continue
         key = re.sub(r"\W+", "", q.lower())
         if key in seen:
             continue
-        seen.add(key)
         try:
             page = int(item.get("page"))
         except (TypeError, ValueError):
             page = None
+        if page is None or page < 1:
+            continue
+        seen.add(key)
         out.append({
             "id": f"q{len(out) + 1}",
             "question": q,
@@ -822,7 +845,8 @@ def gemini_questions(
     # model a couple of times, then try the configured fallback model before
     # letting the caller degrade to the offline generator.
     last_error: ProviderError | None = None
-    for model in gemini_models():
+    models = gemini_models()
+    for model_index, model in enumerate(models):
         url = (
             "https://generativelanguage.googleapis.com/v1beta/models/"
             f"{model}:generateContent?key={key}"
@@ -843,7 +867,7 @@ def gemini_questions(
                 _note("finish", candidate.get("finishReason", ""))
                 _note("model_text", raw[:6000])
                 data = _parse_questions(raw)
-                clean = _clean_questions(data)
+                clean = _ground_questions(_clean_questions(data), pages)
                 _note("parsed", len(data.get("questions", []) or []))
                 _note("cleaned", len(clean))
                 return {"title": data.get("title", ""), "questions": clean}
@@ -858,7 +882,17 @@ def gemini_questions(
                         min(attempt - 1, len(RETRY_BACKOFF_SECONDS) - 1)
                     ]
                     time.sleep(delay)
-                # otherwise fall through to the next model
+
+        # Switch models only for the documented temporary capacity outage.
+        # Rate limits, internal errors, and network failures finish with the
+        # offline fallback instead of silently multiplying provider requests.
+        if model_index + 1 < len(models):
+            unavailable = last_error is not None and (
+                last_error.status == 503 or "UNAVAILABLE" in str(last_error).upper()
+            )
+            if model_index == 0 and unavailable:
+                continue
+            break
 
     raise last_error or ProviderError("no Gemini model configured")
 
@@ -899,7 +933,7 @@ def openai_questions(
         raise ProviderError(f"unexpected response shape: {str(resp)[:300]}") from e
     _note("model_text", raw[:6000])
     data = _parse_questions(raw)
-    clean = _clean_questions(data)
+    clean = _ground_questions(_clean_questions(data), pages)
     _note("parsed", len(data.get("questions", []) or []))
     _note("cleaned", len(clean))
     return {"title": data.get("title", ""), "questions": clean}
@@ -982,7 +1016,7 @@ def ai_generate(
 
     if not _enough(questions, count, final=True):
         raise QualityError(
-            "The AI kept asking about the document itself instead of the subject. "
+            "Too few questions passed the wording and source-quality checks. "
             "Try again, or enter a PDF page range so it reads course content."
         )
 
@@ -1069,7 +1103,7 @@ def regenerate_questions(
 
     if not _enough(questions, count, final=True):
         raise QualityError(
-            "The AI kept asking about the document itself instead of the subject. "
+            "Too few questions passed the wording and source-quality checks. "
             "Try Regenerate again, or upload the file with a page range."
         )
 

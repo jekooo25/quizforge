@@ -439,19 +439,18 @@ func _on_save() -> void:
 		return
 
 	var title := _title_text()
-	if not QuizData.save(title, _questions):
+	# Filed on the shelf as well, so My quizzes can list and replay it. The
+	# upload is the identity: saving the same reviewer again updates that shelf
+	# entry instead of stacking a duplicate beside it.
+	var reviewer := str(Nav.user.get("reviewer_file", "")).strip_edges()
+	var kept_id := QuizLibrary.add(title, _questions, "generated", reviewer)
+	if kept_id.is_empty() or not QuizData.save(title, _questions, kept_id):
 		_status.add_theme_color_override("font_color", UITheme.RED)
 		_status.text = "Could not save the quiz."
 		return
 
 	print("[review] saved %d questions, title '%s' to %s" % [
 		_questions.size(), title, ProjectSettings.globalize_path(QuizData.SAVE_PATH)])
-
-	# Filed on the shelf as well, so My quizzes can list and replay it. The
-	# upload is the identity: saving the same reviewer again updates that shelf
-	# entry instead of stacking a duplicate beside it.
-	var reviewer := str(Nav.user.get("reviewer_file", "")).strip_edges()
-	var kept_id := QuizLibrary.add(title, _questions, "generated", reviewer)
 	print("[review] filed in library as '%s'" % kept_id)
 
 	Nav.encounter_ready = true

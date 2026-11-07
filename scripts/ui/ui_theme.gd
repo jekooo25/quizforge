@@ -37,9 +37,8 @@ const NIGHT := Color(0.059, 0.067, 0.090)
 const NIGHT_SOFT := Color(0.098, 0.106, 0.137)
 const NIGHT_LINE := Color(0.184, 0.196, 0.243)
 
-## Display text — titles, tile captions, buttons, banners — is Monocraft.
-## Body text (questions, choices, fields, the editor) inherits the app theme's
-## default font, Pixelify Sans, from Project Settings → gui/theme/custom.
+## Font selection lives in assets/themes/font_body.tres. Display is an alias of
+## that resource, so changing its single base-font line updates all UI text.
 static var font_pixel: Font = preload("res://assets/themes/font_display.tres")
 static var font_small: Font = preload("res://assets/themes/font_display.tres")
 static var font_script: Font = preload("res://assets/themes/font_display.tres")

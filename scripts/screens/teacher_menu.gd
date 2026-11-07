@@ -1,0 +1,44 @@
+extends "res://scripts/screens/menu_screen.gd"
+var busy:=false
+func _ready() -> void:
+ if OS.get_name()=="Android":get_tree().quit_on_go_back=false
+ _content=%Margin
+ %Greeting.text=str(Nav.user.get("username","")).strip_edges()
+ %Pending.pressed.connect(open_panel.bind("pending"))
+ %Library.pressed.connect(open_panel.bind("list"))
+ %Published.pressed.connect(open_panel.bind("shared"))
+ %Refresh.pressed.connect(refresh)
+ %Settings.pressed.connect(open_settings)
+ %Profile.pressed.connect(_on_profile)
+ resized.connect(_apply_safe_area)
+ _apply_safe_area()
+ refresh()
+func refresh() -> void:
+ if busy:return
+ busy=true
+ %Refresh.disabled=true
+ %Connection.text="Connecting..."
+ var reply: Dictionary=await SharingService.api("/reviews")
+ busy=false
+ if not is_inside_tree():return
+ %Refresh.disabled=false
+ if not reply.get("ok",false):
+  %Connection.text="Server offline · start the sharing server, then refresh."
+  for field in [%PendingCount,%LibraryCount,%PublishedCount]:field.text="—"
+  return
+ var pending:=0
+ var library:=0
+ var shared:=0
+ for row: Dictionary in reply.reviews:
+  if row.status=="pending" and row.get("duplicate_of","")!="":continue
+  if row.status=="pending":pending+=1
+  else:library+=1
+  if row.status=="shared":shared+=1
+ %PendingCount.text=str(pending)+" pending"
+ %LibraryCount.text=str(library)+" in library"
+ %PublishedCount.text=str(shared)+" published"
+ %Connection.text="Connected to laptop server · presentation demo"
+func open_panel(value: String) -> void:
+ var panel: Control=load("res://scenes/TeacherReviewers.tscn").instantiate()
+ panel.filter=value
+ Nav.show_screen(panel)

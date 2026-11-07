@@ -51,7 +51,7 @@ func load_profile() -> void:
 	## crashing on startup.
 	var result := SaveManager.read_json(SAVE_PATH, "profile")
 	if not result["ok"]:
-		if result["status"] == SaveManager.CORRUPT:
+		if result["status"] == SaveManager.STATUS_CORRUPT:
 			push_warning("Quizforge: the profile save could not be read; starting fresh")
 		return
 
@@ -81,6 +81,9 @@ func start() -> void:
 
 
 func show_screen(screen: Control) -> void:
+	if user.get("role", "student") == "teacher" and screen.get_script() != null and screen.get_script().resource_path == "res://scripts/screens/menu_screen.gd":
+		screen.free()
+		screen = load("res://scenes/TeacherMenu.tscn").instantiate()
 	if _current != null and is_instance_valid(_current):
 		if _current.get_parent() == _host:
 			_host.remove_child(_current)

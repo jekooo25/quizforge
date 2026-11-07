@@ -170,9 +170,47 @@ def test_real_pdf() -> None:
     check(len(selection["used_pages"]) >= 5, "several pages are sent")
 
 
+def test_gemini_retries_then_falls_back_on_503() -> None:
+    """Simulate persistent 503/UNAVAILABLE responses without calling Gemini."""
+    print("-- Gemini 503 retry sequence --")
+    os.environ["GEMINI_API_KEY"] = "test-key"
+    os.environ["QF_GEMINI_MODEL"] = "retry-primary"
+    os.environ["QF_GEMINI_FALLBACK_MODEL"] = "retry-fallback"
+    calls: list[str] = []
+    real_post = qfgen._post_json
+    real_backoff = qfgen.RETRY_BACKOFF_SECONDS
+
+    def always_503(url, payload, headers, timeout=120):
+        calls.append(url)
+        qfgen.LAST_CALLS.append({"status": 503, "error": "UNAVAILABLE"})
+        raise qfgen.ProviderError("HTTP 503: UNAVAILABLE", status=503,
+                                  retryable=True)
+
+    qfgen._post_json = always_503
+    qfgen.RETRY_BACKOFF_SECONDS = (0, 0)
+    qfgen.reset_calls()
+    try:
+        try:
+            qfgen.gemini_questions([{"page": 1, "text": "test source text"}])
+            check(False, "persistent 503 responses raise provider-busy error")
+        except qfgen.ProviderError as error:
+            check(error.status == 503, "the final provider error remains a 503")
+        check(len(calls) == qfgen.RETRY_ATTEMPTS * 2,
+              f"each of two models gets {qfgen.RETRY_ATTEMPTS} attempts "
+              f"(got {len(calls)})")
+        check(all("retry-primary" in url for url in calls[:qfgen.RETRY_ATTEMPTS])
+              and all("retry-fallback" in url
+                      for url in calls[qfgen.RETRY_ATTEMPTS:]),
+              "the fallback is called only after primary retries are exhausted")
+    finally:
+        qfgen._post_json = real_post
+        qfgen.RETRY_BACKOFF_SECONDS = real_backoff
+        qfgen.reset_calls()
+
+
 def test_provider_busy() -> None:
-    """Every Gemini attempt returns 503, so the app must get a 502, not a file error."""
-    print("-- provider busy --")
+    """Every primary and fallback attempt returns 503 before the app returns 502."""
+    print("-- provider busy: retry and fallback --")
     try:
         import app as server
     except ImportError as e:  # Flask is only needed for this one check
@@ -208,7 +246,13 @@ def test_provider_busy() -> None:
         response = client.post(
             "/generate",
             data={
-                "file": (io.BytesIO(b"A short handout about nothing useful."),
+                # Long enough to pass the endpoint's meaningful-text guard;
+                # this test is about provider failure, not input rejection.
+                "file": (io.BytesIO(
+                    b"The humerus is the long bone of the upper arm. "
+                    b"It joins the shoulder to the elbow and supports arm movement. "
+                    b"Muscles attach to named landmarks on the humerus."
+                ),
                          "handout.txt"),
                 "count": "10",
             },
@@ -225,6 +269,9 @@ def test_provider_busy() -> None:
         check(len(calls) == qfgen.RETRY_ATTEMPTS * 2,
               f"two models each tried {qfgen.RETRY_ATTEMPTS} times "
               f"(got {len(calls)} calls)")
+        check(all("primary-test" in u for u in calls[:qfgen.RETRY_ATTEMPTS])
+              and all("fallback-test" in u for u in calls[qfgen.RETRY_ATTEMPTS:]),
+              "the fallback starts only after all primary 503 attempts")
         check(any("primary-test" in u for u in calls)
               and any("fallback-test" in u for u in calls),
               "the fallback model is tried after the primary")
@@ -241,6 +288,7 @@ def main() -> int:
     test_sampling()
     test_document_filter()
     test_prompt()
+    test_gemini_retries_then_falls_back_on_503()
     test_provider_busy()
     test_real_pdf()
     print()

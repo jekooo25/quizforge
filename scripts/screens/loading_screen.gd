@@ -1,74 +1,22 @@
 extends Control
-## The branded wait screen shown after login / sign up.
+## The editable branded wait screen shown after a successful login.
 
-const SPRITE := preload("res://assets/sprites/cat_on_books.png")
-
-const BLUE := Color(0.129, 0.216, 0.376)
-
-var _mode: String = "login"
-
-
-class Spinner extends Control:
-	var _angle: float = 0.0
-
-	func _ready() -> void:
-		mouse_filter = Control.MOUSE_FILTER_IGNORE
-		custom_minimum_size = Vector2(52, 52)
-
-	func _process(delta: float) -> void:
-		_angle += delta * 3.6
-		queue_redraw()
-
-	func _draw() -> void:
-		var r: float = minf(size.x, size.y) * 0.5 - 4.0
-		var c := size * 0.5
-		draw_arc(c, r, 0.0, TAU, 48, Color(1, 1, 1, 0.16), 6.0, true)
-		draw_arc(c, r, _angle, _angle + TAU * 0.26, 24, UITheme.YELLOW, 6.0, true)
-
+var _mode := "login"
 
 func setup(mode: String) -> Control:
 	_mode = mode
 	return self
 
-
 func _ready() -> void:
-	var bg := ColorRect.new()
-	bg.color = BLUE
-	add_child(bg)
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-
-	var center := CenterContainer.new()
-	add_child(center)
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 16)
-	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	center.add_child(box)
-
-	var art := TextureRect.new()
-	art.texture = SPRITE
-	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	art.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	art.custom_minimum_size = Vector2(200, 200)
-	art.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	box.add_child(art)
-
-	var heading := UITheme.sans("Sign up complete!" if _mode == "signup" else "Login successful!",
-		30, Color.WHITE)
-	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(heading)
-
-	var sub := UITheme.sans("Please wait while we prepare your experience.",
-		15, Color(1, 1, 1, 0.62))
-	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(sub)
-
-	var spinner := Spinner.new()
-	spinner.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	box.add_child(spinner)
-
+	# Legacy callers that create the script directly still receive the scene-tree
+	# version, so there is only one loading-screen layout to maintain.
+	if scene_file_path == "":
+		var screen: Control = load("res://scenes/LoadingScreen.tscn").instantiate()
+		screen.setup(_mode)
+		Nav.show_screen.call_deferred(screen)
+		return
+	%Heading.text = "Login successful!"
+	%Summary.text = "Preparing your Quizforge experience..."
 	Nav.save_profile()
 	await get_tree().create_timer(2.6).timeout
 	if is_inside_tree():

@@ -36,6 +36,12 @@ func _draw() -> void:
 			_draw_floppy(u)
 		"library":
 			_draw_library(u)
+		"trophy":
+			_draw_trophy(u)
+		"target":
+			_draw_target(u)
+		"star":
+			_draw_star(u)
 
 
 # ------------------------------------------------------------------ helpers
@@ -165,3 +171,58 @@ func _draw_floppy(u: float) -> void:
 	_px(u, 13.3, 11.2, 1.4, 2.9, INK)
 	_px(u, 12.3, 13.6, 3.4, 1.0, INK)
 	_px(u, 12.9, 14.4, 2.2, 1.0, INK)
+
+
+func _draw_trophy(u: float) -> void:
+	# Gold cup with stepped handles, stem, and a pixel base.
+	_px(u, 6.0, 3.0, 8.0, 2.0, INK)
+	_px(u, 7.0, 5.0, 6.0, 6.0, INK)
+	_px(u, 8.0, 11.0, 4.0, 2.0, INK)
+	_px(u, 9.0, 13.0, 2.0, 2.0, INK)
+	_px(u, 6.0, 15.0, 8.0, 2.0, INK)
+	_px(u, 3.0, 5.0, 3.0, 2.0, INK)
+	_px(u, 4.0, 7.0, 2.0, 3.0, INK)
+	_px(u, 14.0, 5.0, 3.0, 2.0, INK)
+	_px(u, 14.0, 7.0, 2.0, 3.0, INK)
+	_px(u, 7.0, 4.0, 6.0, 1.0, YELLOW)
+	_px(u, 8.0, 5.0, 4.0, 5.0, YELLOW)
+	_px(u, 6.0, 6.0, 2.0, 3.0, YELLOW)
+	_px(u, 12.0, 6.0, 2.0, 3.0, YELLOW)
+	_px(u, 9.0, 10.0, 2.0, 2.0, YELLOW)
+	_px(u, 10.0, 12.0, 1.0, 2.0, YELLOW)
+	_px(u, 7.0, 16.0, 6.0, 1.0, YELLOW)
+
+
+func _draw_target(u: float) -> void:
+	_disc(u, 9.5, 10.0, 8.0, INK)
+	_disc(u, 9.5, 10.0, 6.4, PINK_DEEP)
+	_disc(u, 9.5, 10.0, 4.7, CREAM)
+	_disc(u, 9.5, 10.0, 3.0, PINK)
+	_disc(u, 9.5, 10.0, 1.3, YELLOW)
+	# arrow through the rings
+	_px(u, 10.0, 2.0, 1.4, 8.0, INK)
+	_px(u, 8.4, 2.0, 4.6, 1.6, INK)
+	_px(u, 10.0, 3.0, 1.0, 6.0, WHITE)
+	_px(u, 5.0, 14.0, 2.0, 2.0, GREEN)
+	_px(u, 7.0, 16.0, 4.0, 2.0, GREEN)
+
+
+func _draw_star(u: float) -> void:
+	# Stepped five-point reward star with a dark pixel outline.
+	_px(u, 9.0, 1.0, 2.0, 2.0, INK)
+	_px(u, 8.0, 3.0, 4.0, 2.0, INK)
+	_px(u, 2.0, 6.0, 16.0, 2.0, INK)
+	_px(u, 4.0, 8.0, 12.0, 3.0, INK)
+	_px(u, 5.0, 11.0, 10.0, 2.0, INK)
+	_px(u, 6.0, 13.0, 3.0, 5.0, INK)
+	_px(u, 11.0, 13.0, 3.0, 5.0, INK)
+	_px(u, 4.0, 16.0, 5.0, 2.0, INK)
+	_px(u, 11.0, 16.0, 5.0, 2.0, INK)
+	_px(u, 9.0, 3.0, 2.0, 2.0, YELLOW)
+	_px(u, 4.0, 7.0, 12.0, 2.0, YELLOW)
+	_px(u, 6.0, 9.0, 8.0, 2.0, YELLOW)
+	_px(u, 7.0, 11.0, 6.0, 2.0, YELLOW)
+	_px(u, 7.0, 13.0, 2.0, 3.0, YELLOW)
+	_px(u, 11.0, 13.0, 2.0, 3.0, YELLOW)
+	_px(u, 6.0, 16.0, 3.0, 1.0, YELLOW)
+	_px(u, 11.0, 16.0, 3.0, 1.0, YELLOW)

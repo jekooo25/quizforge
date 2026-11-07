@@ -1,8 +1,6 @@
-[gd_resource type="FontVariation" load_steps=3 format=3]
+[gd_resource type="FontVariation" format=3 uid="uid://5pevjptvipgo"]
 
-[ext_resource type="FontFile" path="res://assets/fonts/Monocraft.ttf" id="1_display"]
-[ext_resource type="FontFile" path="res://assets/fonts/PixelifySans-Regular.ttf" id="2_fallback"]
+[ext_resource type="FontVariation" uid="uid://qc7v81i423a8" path="res://assets/themes/font_body.tres" id="1_body"]
 
 [resource]
-base_font = ExtResource("1_display")
-fallbacks = Array[Font]([ExtResource("2_fallback")])
+base_font = ExtResource("1_body")

@@ -1,0 +1,190 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/screens/StarsShop.gd" id="1_shop"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/LoginBackground.jpg" id="2_courtyard"]
+[ext_resource type="Theme" path="res://assets/themes/stars_shop.tres" id="3_shop_theme"]
+[node name="StarsShop" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("3_shop_theme")
+script = ExtResource("1_shop")
+
+[node name="CourtyardBackground" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_courtyard")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="ScreenTint" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.035, 0.045, 0.06, 0.42)
+
+[node name="SafeArea" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 36
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 36
+theme_override_constants/margin_bottom = 18
+
+[node name="MainPanel" type="PanelContainer" parent="SafeArea"]
+custom_minimum_size = Vector2(700, 0)
+layout_mode = 2
+theme_type_variation = &"StarsShopWindow"
+
+[node name="ContentColumn" type="VBoxContainer" parent="SafeArea/MainPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="HeaderRow" type="HBoxContainer" parent="SafeArea/MainPanel/ContentColumn"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Title" type="Label" parent="SafeArea/MainPanel/ContentColumn/HeaderRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"StarsShopTitle"
+text = "Stars Shop"
+vertical_alignment = 1
+
+[node name="BalanceLabel" type="Label" parent="SafeArea/MainPanel/ContentColumn/HeaderRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+theme_type_variation = &"StarsShopBalance"
+text = "Stars: 0"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="CloseButton" type="Button" parent="SafeArea/MainPanel/ContentColumn/HeaderRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+theme_type_variation = &"ShopActionButton"
+text = "X"
+
+[node name="Subtitle" type="Label" parent="SafeArea/MainPanel/ContentColumn"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"ShopItemBody"
+text = "Cosmetics only · Equip a look to show it on Emberpup in battle."
+autowrap_mode = 3
+
+[node name="ItemsScroll" type="ScrollContainer" parent="SafeArea/MainPanel/ContentColumn"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 3
+
+[node name="ItemList" type="VBoxContainer" parent="SafeArea/MainPanel/ContentColumn/ItemsScroll"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="FooterNote" type="Label" parent="SafeArea/MainPanel/ContentColumn"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"ShopItemStatus"
+text = "Stars are earned from Daily Tasks. Purchases are saved on this device."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="ConfirmationOverlay" type="Control" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dimmer" type="ColorRect" parent="ConfirmationOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.08, 0.06, 0.035, 0.60)
+
+[node name="Center" type="CenterContainer" parent="ConfirmationOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ConfirmPanel" type="PanelContainer" parent="ConfirmationOverlay/Center"]
+custom_minimum_size = Vector2(440, 0)
+layout_mode = 2
+theme_type_variation = &"StarsShopWindow"
+
+[node name="ConfirmMargin" type="MarginContainer" parent="ConfirmationOverlay/Center/ConfirmPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 20
+
+[node name="ConfirmColumn" type="VBoxContainer" parent="ConfirmationOverlay/Center/ConfirmPanel/ConfirmMargin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="ConfirmTitle" type="Label" parent="ConfirmationOverlay/Center/ConfirmPanel/ConfirmMargin/ConfirmColumn"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"ShopConfirmTitle"
+text = "Confirm purchase"
+horizontal_alignment = 1
+
+[node name="ConfirmText" type="Label" parent="ConfirmationOverlay/Center/ConfirmPanel/ConfirmMargin/ConfirmColumn"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"ShopConfirmBody"
+text = "Spend 35 Stars?"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="ConfirmButtons" type="HBoxContainer" parent="ConfirmationOverlay/Center/ConfirmPanel/ConfirmMargin/ConfirmColumn"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="CancelButton" type="Button" parent="ConfirmationOverlay/Center/ConfirmPanel/ConfirmMargin/ConfirmColumn/ConfirmButtons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"ShopActionButton"
+text = "CANCEL"
+
+[node name="ConfirmButton" type="Button" parent="ConfirmationOverlay/Center/ConfirmPanel/ConfirmMargin/ConfirmColumn/ConfirmButtons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"ShopActionButton"
+text = "BUY"

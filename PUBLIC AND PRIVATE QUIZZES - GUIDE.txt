@@ -1,0 +1,48 @@
+QUIZ VISIBILITY — LAPTOP DEMO
+
+TEACHER FLOW
+1. Pending Reviewers > Read reviewer > Approve.
+2. List of Reviewers > Publish / visibility.
+3. Choose Private draft, Code-only, or Public > Apply visibility.
+4. Shared Reviewers shows currently open publications and their join codes.
+5. Use Change visibility to switch modes.
+6. Use Close sharing to close new access without discarding reports or the chosen visibility.
+
+VISIBILITY
+Private draft: no public listing and no new joins by code or public ID.
+Code-only: active approved quiz, accessible by code, hidden from public browsing.
+Public: active approved quiz, listed in the public browser and joinable without a code.
+Student submissions default to private and cannot bypass teacher approval.
+Uploads saved in My Quizzes are not automatically published.
+
+STUDENT FLOW
+Play Quizzes > Shared quizzes > Browse Public Quizzes.
+Choose Add quiz and choose review mode to save a public quiz and open the existing mode picker.
+Code-only quizzes still use the join-code field in Shared quizzes.
+If a teacher changes visibility after a page loaded, joining checks the current server state.
+Refresh to update the catalog.
+
+WHAT CLOSING OR MAKING PRIVATE DOES
+Blocks NEW joins and removes the quiz from public browsing.
+Keeps downloaded copies, local quiz history and previous teacher reports.
+An already joined student can still deliver a queued result.
+This is not a remote-delete feature.
+
+EDITABLE GODOT SCENES
+scenes/PublishReview.tscn — visibility choices, explanations, Apply and Cancel.
+scenes/ReviewerCard.tscn — teacher card with approval, publishing, closure, code and results controls.
+scenes/PublicQuizzes.tscn — public browser, notice, status, refresh and scroll area.
+scenes/PublicQuizCard.tscn — public quiz title, author/count and join button.
+scenes/TeacherReviewers.tscn — includes the Browse Public Quizzes button.
+Permanent controls are scene nodes; scripts only supply data and behaviour.
+
+EXISTING DATA
+Previously shared quizzes migrate to Code-only, never Public automatically.
+Other existing submissions default to Private draft.
+Migration preserves quizzes, joins, reports and codes.
+Adding a quiz already in My Quizzes preserves its local battle result.
+
+PRESENTATION SCOPE
+Restart the sharing-server window and both game windows to load this update.
+Public means discoverable on this laptop service, not published on the internet.
+Teacher/student selection remains a local demo role, not secure online account authentication.

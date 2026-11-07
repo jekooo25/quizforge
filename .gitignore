@@ -23,9 +23,16 @@ __pycache__/
 venv/
 server/*.questions.json
 server/.env
+server/data/
+server/uploads/
+server/*.db
+server/*.sqlite
+server/*.sqlite3
+server/*.sqlite3-journal
 
 # Credentials never go in git
 secrets.gd
+secrets.gd.uid
 *.env
 *.key
 
@@ -35,4 +42,23 @@ secrets.gd
 
 # Third-party addon binaries (50MB of prebuilt libraries)
 addons/*/bin/
+addons/
 
+
+# Laptop demo runtime data
+presentation/sessions/
+*.sqlite3
+*.sqlite3-journal
+*.db
+*.sqlite
+*.log
+uploads/
+
+# Generated local test state and capture output
+tests/.godot_appdata/
+tests/*.png
+tests/*.png.import
+
+# Local experimental integration helper; never ship credentials from it
+scenes/gemini_ai.gd
+scenes/gemini_ai.gd.uid

@@ -1,0 +1,5 @@
+Solution: A number that makes an equation true.
+Variable: A letter used to represent an unknown number.
+Coefficient: A number multiplied by a variable in an algebraic term.
+Expression: A combination of numbers and operations without an equality sign.
+Equation: A statement that two mathematical expressions are equal.

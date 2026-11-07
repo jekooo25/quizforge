@@ -99,4 +99,6 @@ func _on_submit() -> void:
 	if str(Nav.user["username"]).strip_edges() == "":
 		Nav.user["username"] = email.get_slice("@", 0)
 
-	Nav.show_screen(load("res://scripts/screens/loading_screen.gd").new().setup("signup"))
+	var loader: Control = load("res://scenes/LoadingScreen.tscn").instantiate()
+	loader.setup("signup")
+	Nav.show_screen(loader)

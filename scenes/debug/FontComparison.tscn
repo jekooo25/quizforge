@@ -1,0 +1,208 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/debug/font_comparison.gd" id="1_script"]
+[ext_resource type="Theme" path="res://assets/themes/quizforge.tres" id="2_theme"]
+[sub_resource type="StyleBoxFlat" id="PanelStyle"]
+bg_color = Color(0.98, 0.95, 0.88, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.12, 0.25, 0.44, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+content_margin_left = 24.0
+content_margin_top = 20.0
+content_margin_right = 24.0
+content_margin_bottom = 20.0
+
+[sub_resource type="StyleBoxFlat" id="AnswerStyle"]
+bg_color = Color(1, 1, 1, 0.82)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.2, 0.36, 0.55, 0.45)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 14.0
+content_margin_top = 8.0
+content_margin_right = 14.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="HeaderStyle"]
+bg_color = Color(0.12, 0.25, 0.44, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+content_margin_left = 16.0
+content_margin_top = 10.0
+content_margin_right = 16.0
+content_margin_bottom = 10.0
+
+[node name="FontComparison" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+script = ExtResource("1_script")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.12, 0.25, 0.44, 1)
+mouse_filter = 2
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 18
+
+[node name="Layout" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Margin/Layout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 28
+text = "DEBUG ONLY · Body-font comparison at 24 px"
+horizontal_alignment = 1
+
+[node name="Panels" type="HBoxContainer" parent="Margin/Layout"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 18
+
+[node name="CMUPanel" type="PanelContainer" parent="Margin/Layout/Panels"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("PanelStyle")
+[node name="Content" type="VBoxContainer" parent="Margin/Layout/Panels/CMUPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+[node name="Name" type="PanelContainer" parent="Margin/Layout/Panels/CMUPanel/Content"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("HeaderStyle")
+[node name="Label" type="Label" parent="Margin/Layout/Panels/CMUPanel/Content/Name"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "CMU Typewriter"
+horizontal_alignment = 1
+[node name="Question" type="Label" parent="Margin/Layout/Panels/CMUPanel/Content"]
+layout_mode = 2
+text = "Question: Which organ pumps blood through the body?"
+autowrap_mode = 2
+[node name="Answers" type="VBoxContainer" parent="Margin/Layout/Panels/CMUPanel/Content"]
+layout_mode = 2
+theme_override_constants/separation = 4
+[node name="A" type="PanelContainer" parent="Margin/Layout/Panels/CMUPanel/Content/Answers"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("AnswerStyle")
+[node name="Label" type="Label" parent="Margin/Layout/Panels/CMUPanel/Content/Answers/A"]
+layout_mode = 2
+text = "A. Heart"
+[node name="B" type="PanelContainer" parent="Margin/Layout/Panels/CMUPanel/Content/Answers"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("AnswerStyle")
+[node name="Label" type="Label" parent="Margin/Layout/Panels/CMUPanel/Content/Answers/B"]
+layout_mode = 2
+text = "B. Lungs"
+[node name="C" type="PanelContainer" parent="Margin/Layout/Panels/CMUPanel/Content/Answers"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("AnswerStyle")
+[node name="Label" type="Label" parent="Margin/Layout/Panels/CMUPanel/Content/Answers/C"]
+layout_mode = 2
+text = "C. Stomach"
+[node name="D" type="PanelContainer" parent="Margin/Layout/Panels/CMUPanel/Content/Answers"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("AnswerStyle")
+[node name="Label" type="Label" parent="Margin/Layout/Panels/CMUPanel/Content/Answers/D"]
+layout_mode = 2
+text = "D. Brain"
+[node name="Explanation" type="Label" parent="Margin/Layout/Panels/CMUPanel/Content"]
+layout_mode = 2
+text = "Explanation: The heart is a muscular pump. It moves blood through the body so oxygen and nutrients can reach every cell."
+autowrap_mode = 2
+[node name="Glyphs" type="Label" parent="Margin/Layout/Panels/CMUPanel/Content"]
+layout_mode = 2
+text = "first · Ñandú · Peña · 0O1lI"
+[node name="Metrics" type="Label" parent="Margin/Layout/Panels/CMUPanel/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+
+[node name="NunitoPanel" type="PanelContainer" parent="Margin/Layout/Panels"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("PanelStyle")
+[node name="Content" type="VBoxContainer" parent="Margin/Layout/Panels/NunitoPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+[node name="Name" type="PanelContainer" parent="Margin/Layout/Panels/NunitoPanel/Content"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("HeaderStyle")
+[node name="Label" type="Label" parent="Margin/Layout/Panels/NunitoPanel/Content/Name"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "Nunito · rounded option"
+horizontal_alignment = 1
+[node name="Question" type="Label" parent="Margin/Layout/Panels/NunitoPanel/Content"]
+layout_mode = 2
+text = "Question: Which organ pumps blood through the body?"
+autowrap_mode = 2
+[node name="Answers" type="VBoxContainer" parent="Margin/Layout/Panels/NunitoPanel/Content"]
+layout_mode = 2
+theme_override_constants/separation = 4
+[node name="A" type="PanelContainer" parent="Margin/Layout/Panels/NunitoPanel/Content/Answers"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("AnswerStyle")
+[node name="Label" type="Label" parent="Margin/Layout/Panels/NunitoPanel/Content/Answers/A"]
+layout_mode = 2
+text = "A. Heart"
+[node name="B" type="PanelContainer" parent="Margin/Layout/Panels/NunitoPanel/Content/Answers"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("AnswerStyle")
+[node name="Label" type="Label" parent="Margin/Layout/Panels/NunitoPanel/Content/Answers/B"]
+layout_mode = 2
+text = "B. Lungs"
+[node name="C" type="PanelContainer" parent="Margin/Layout/Panels/NunitoPanel/Content/Answers"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("AnswerStyle")
+[node name="Label" type="Label" parent="Margin/Layout/Panels/NunitoPanel/Content/Answers/C"]
+layout_mode = 2
+text = "C. Stomach"
+[node name="D" type="PanelContainer" parent="Margin/Layout/Panels/NunitoPanel/Content/Answers"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("AnswerStyle")
+[node name="Label" type="Label" parent="Margin/Layout/Panels/NunitoPanel/Content/Answers/D"]
+layout_mode = 2
+text = "D. Brain"
+[node name="Explanation" type="Label" parent="Margin/Layout/Panels/NunitoPanel/Content"]
+layout_mode = 2
+text = "Explanation: The heart is a muscular pump. It moves blood through the body so oxygen and nutrients can reach every cell."
+autowrap_mode = 2
+[node name="Glyphs" type="Label" parent="Margin/Layout/Panels/NunitoPanel/Content"]
+layout_mode = 2
+text = "first · Ñandú · Peña · 0O1lI"
+[node name="Metrics" type="Label" parent="Margin/Layout/Panels/NunitoPanel/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15

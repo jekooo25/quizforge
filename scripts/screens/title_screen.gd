@@ -8,9 +8,7 @@ extends Control
 
 const Cat := preload("res://scripts/ui/cat_mascot.gd")
 const CREST := preload("res://assets/sprites/omsu_logo.png")
-const FACE_TITLE := preload("res://assets/fonts/Montserrat-ExtraBold.ttf")
-const FACE_CREDIT := preload("res://assets/fonts/Montserrat-SemiBold.ttf")
-const FACE_BUTTON := preload("res://assets/fonts/Montserrat-Bold.ttf")
+const QUIZFORGE_LOGO := preload("res://assets/sprites/quizforge_logo.png")
 
 const BG := Color(0.122, 0.239, 0.420)          # #1F3D6B
 const TITLE_YELLOW := Color(0.945, 0.737, 0.043) # #F1BC0B
@@ -64,11 +62,22 @@ func _ready() -> void:
 	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(column)
 
-	var title := _text("OMSU Review Portal", FACE_TITLE, 48, TITLE_YELLOW)
+	var title := _text("OMSU Review Portal", UITheme.font_pixel, 48, TITLE_YELLOW)
 	column.add_child(title)
 
-	var credit := _text("powered by QuizForge", FACE_CREDIT, 30, WARM_WHITE)
-	column.add_child(credit)
+	var powered_row := HBoxContainer.new()
+	powered_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	powered_row.add_theme_constant_override("separation", 18)
+	column.add_child(powered_row)
+	var credit := _text("powered by", UITheme.font_body, 30, WARM_WHITE)
+	powered_row.add_child(credit)
+	var logo := TextureRect.new()
+	logo.texture = QUIZFORGE_LOGO
+	logo.custom_minimum_size = Vector2(275, 52)
+	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	powered_row.add_child(logo)
 
 	# --- the way in
 	var plaque := PanelContainer.new()
@@ -88,7 +97,7 @@ func _ready() -> void:
 	plaque.offset_bottom = BUTTON_RECT.end.y
 	add_child(plaque)
 
-	var hint := _text("Tap anywhere to start...", FACE_BUTTON, 38, BUTTON_YELLOW)
+	var hint := _text("Tap anywhere to start...", UITheme.font_pixel, 38, BUTTON_YELLOW)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	plaque.add_child(hint)

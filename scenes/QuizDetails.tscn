@@ -1,0 +1,159 @@
+[gd_scene load_steps=3 format=3]
+[ext_resource type="Script" path="res://scripts/screens/quiz_details.gd" id="1"]
+[ext_resource type="Theme" path="res://assets/themes/quizforge.tres" id="2"]
+[node name="QuizDetails" type="Control"]
+layout_mode = 3
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource("2")
+script = ExtResource("1")
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0.97,0.94,0.87,1)
+[node name="SafeArea" type="MarginContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 32.0
+offset_right = -32.0
+offset_top = 16.0
+offset_bottom = -16.0
+[node name="Column" type="VBoxContainer" parent="SafeArea"]
+layout_mode = 2
+theme_override_constants/separation = 14
+[node name="Header" type="HBoxContainer" parent="SafeArea/Column"]
+layout_mode = 2
+theme_override_constants/separation = 20
+[node name="BackButton" type="Button" parent="SafeArea/Column/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Back"
+custom_minimum_size = Vector2(220,64)
+theme_type_variation = &"MyQuizzesMainMenuButton"
+[node name="Heading" type="Label" parent="SafeArea/Column/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Quiz details"
+theme_type_variation = &"MyQuizzesTitle"
+[node name="Scroll" type="ScrollContainer" parent="SafeArea/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+scroll_deadzone = 12
+[node name="Content" type="VBoxContainer" parent="SafeArea/Column/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="QuizTitle" type="Label" parent="SafeArea/Column/Scroll/Content"]
+theme_override_font_sizes/font_size = 28
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 3
+text = "Full quiz title"
+theme_type_variation = &"MyQuizTitle"
+
+[node name="Meta" type="Label" parent="SafeArea/Column/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 3
+text = "Creator · Questions · Version"
+theme_type_variation = &"MyQuizDetails"
+
+[node name="Progress" type="Label" parent="SafeArea/Column/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 3
+text = "Not started"
+theme_type_variation = &"MyQuizScore"
+
+[node name="Status" type="Label" parent="SafeArea/Column/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 3
+text = "Choose a mode to begin."
+theme_type_variation = &"MyQuizDetails"
+
+[node name="Modes" type="HBoxContainer" parent="SafeArea/Column/Scroll/Content"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="BattleCard" type="PanelContainer" parent="SafeArea/Column/Scroll/Content/Modes"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"MyQuizCardPanel"
+mouse_filter = 1
+
+[node name="Content" type="VBoxContainer" parent="SafeArea/Column/Scroll/Content/Modes/BattleCard"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BattleCount" type="Label" parent="SafeArea/Column/Scroll/Content/Modes/BattleCard/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 3
+text = "Available questions"
+theme_type_variation = &"MyQuizDetails"
+
+[node name="BattleReason" type="Label" parent="SafeArea/Column/Scroll/Content/Modes/BattleCard/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 3
+text = "Mode description"
+theme_type_variation = &"MyQuizDetails"
+
+[node name="BattleButton" type="Button" parent="SafeArea/Column/Scroll/Content/Modes/BattleCard/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0,72)
+mouse_filter = 1
+toggle_mode = true
+text = "Quiz Battle"
+theme_type_variation = &"MyQuizzesTab"
+
+[node name="SpellCard" type="PanelContainer" parent="SafeArea/Column/Scroll/Content/Modes"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"MyQuizCardPanel"
+mouse_filter = 1
+
+[node name="Content" type="VBoxContainer" parent="SafeArea/Column/Scroll/Content/Modes/SpellCard"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SpellCount" type="Label" parent="SafeArea/Column/Scroll/Content/Modes/SpellCard/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 3
+text = "Available questions"
+theme_type_variation = &"MyQuizDetails"
+
+[node name="SpellReason" type="Label" parent="SafeArea/Column/Scroll/Content/Modes/SpellCard/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 3
+text = "Mode description"
+theme_type_variation = &"MyQuizDetails"
+
+[node name="SpellButton" type="Button" parent="SafeArea/Column/Scroll/Content/Modes/SpellCard/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0,72)
+mouse_filter = 1
+toggle_mode = true
+text = "Word Bank"
+theme_type_variation = &"MyQuizzesTab"
+
+[node name="Start" type="Button" parent="SafeArea/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0,76)
+text = "Start"
+theme_type_variation = &"MyQuizPlayButton"

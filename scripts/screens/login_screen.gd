@@ -3,12 +3,10 @@ extends Control
 ## passes. The role tabs are real: they record which side of the app you are
 ## signing into, even though the menus do not branch on it yet.
 
-## Student is the only live role. Teacher is shown but locked until teacher
-## accounts exist; Admin is deliberately not offered here at all — an admin
-## surface needs real authentication, not a tab anyone can tap.
+## Role selection is local-only; it is not server authentication.
 const ROLES := [
 	["student", "Student", false],
-	["teacher", "Teacher · soon", true],
+	["teacher", "Teacher", false],
 ]
 
 var _username: LineEdit
@@ -58,11 +56,15 @@ func _ready() -> void:
 	login.pressed.connect(_on_login)
 	box.add_child(login)
 
-	var signup := UITheme.button("Sign up", "navy", 46)
-	signup.custom_minimum_size = Vector2(240, 46)
-	signup.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	signup.pressed.connect(_on_signup)
-	box.add_child(signup)
+	var forgot_password := Button.new()
+	forgot_password.text = "Forgot password?"
+	forgot_password.flat = true
+	forgot_password.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	forgot_password.add_theme_font_size_override("font_size", UITheme.crisp(16))
+	forgot_password.add_theme_color_override("font_color", UITheme.YELLOW_DEEP)
+	forgot_password.add_theme_color_override("font_hover_color", UITheme.NAVY)
+	forgot_password.pressed.connect(_on_forgot_password)
+	box.add_child(forgot_password)
 
 	_refresh_tabs()
 	_username.grab_focus()
@@ -144,11 +146,15 @@ func _on_login() -> void:
 	if entered == "":
 		_error.text = "Enter a username to continue."
 		return
+	if _password.text.strip_edges() == "":
+		_error.text = "Enter your password to continue."
+		return
 	Nav.user["username"] = entered
 	Nav.user["role"] = _role
-	Nav.show_screen(load("res://scripts/screens/loading_screen.gd").new().setup("login"))
+	var loader: Control = load("res://scenes/LoadingScreen.tscn").instantiate()
+	loader.setup("login")
+	Nav.show_screen(loader)
 
 
-func _on_signup() -> void:
-	Nav.user["role"] = _role
-	Nav.show_screen(load("res://scripts/screens/signup_name_screen.gd").new())
+func _on_forgot_password() -> void:
+	Nav.show_screen(load("res://scenes/ForgotPassword.tscn").instantiate())

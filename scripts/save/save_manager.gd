@@ -23,6 +23,7 @@ const VERSIONS := {
 	"quiz": 2,
 	"library": 1,
 	"library_quiz": 2,
+	"daily_tasks": 2,
 }
 
 const STATUS_OK := "ok"

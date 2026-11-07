@@ -1,0 +1,177 @@
+[gd_scene load_steps=3 format=3]
+[ext_resource type="Script" path="res://scripts/screens/teacher_quiz_review.gd" id="1"]
+[ext_resource type="Theme" path="res://scenes/TeacherTheme.tres" id="2"]
+
+[node name="TeacherQuizReview" type="Control"]
+layout_mode = 3
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource("2")
+script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 2
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0.035,0.085,0.14,1)
+
+[node name="Margin" type="MarginContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 36.0
+offset_right = -36.0
+offset_top = 20.0
+offset_bottom = -20.0
+
+[node name="Column" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Header" type="HBoxContainer" parent="Margin/Column"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Back" type="Button" parent="Margin/Column/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Back to quizzes"
+custom_minimum_size = Vector2(0,72)
+
+
+[node name="Title" type="Label" parent="Margin/Column/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Review quiz"
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 34
+size_flags_horizontal = 3
+vertical_alignment = 1
+
+[node name="Counter" type="Label" parent="Margin/Column/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "1 / 5"
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 26
+custom_minimum_size = Vector2(120,0)
+vertical_alignment = 1
+horizontal_alignment = 2
+
+[node name="Scroll" type="ScrollContainer" parent="Margin/Column"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Body" type="VBoxContainer" parent="Margin/Column/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="Question" type="Label" parent="Margin/Column/Scroll/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Question wording"
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 32
+
+
+[node name="ChoiceA" type="Label" parent="Margin/Column/Scroll/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "A. Answer"
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 26
+
+
+[node name="ChoiceB" type="Label" parent="Margin/Column/Scroll/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "B. Answer"
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 26
+
+
+[node name="ChoiceC" type="Label" parent="Margin/Column/Scroll/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "C. Answer"
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 26
+
+
+[node name="ChoiceD" type="Label" parent="Margin/Column/Scroll/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "D. Answer"
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 26
+
+
+[node name="Explanation" type="Label" parent="Margin/Column/Scroll/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Explanation"
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.67,0.77,0.83,1)
+
+[node name="Source" type="Label" parent="Margin/Column/Scroll/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Source quote"
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 23
+theme_override_colors/font_color = Color(0.67,0.77,0.83,1)
+
+[node name="Actions" type="HBoxContainer" parent="Margin/Column"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Previous" type="Button" parent="Margin/Column/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Previous"
+custom_minimum_size = Vector2(0,72)
+
+
+[node name="Next" type="Button" parent="Margin/Column/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Next question"
+custom_minimum_size = Vector2(0,72)
+
+
+[node name="Edit" type="Button" parent="Margin/Column/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Edit revision"
+custom_minimum_size = Vector2(0,72)
+
+
+[node name="Changes" type="Button" parent="Margin/Column/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Request changes"
+custom_minimum_size = Vector2(0,72)
+
+
+[node name="Approve" type="Button" parent="Margin/Column/Actions"]
+theme_type_variation = &"Primary"
+unique_name_in_owner = true
+layout_mode = 2
+text = "Approve quiz"
+custom_minimum_size = Vector2(0,72)
+
+
+[node name="Publish" type="Button" parent="Margin/Column/Actions"]
+theme_type_variation = &"Primary"
+unique_name_in_owner = true
+layout_mode = 2
+text = "Publish quiz"
+custom_minimum_size = Vector2(0,72)
+

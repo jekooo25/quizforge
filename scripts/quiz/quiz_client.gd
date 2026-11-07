@@ -131,7 +131,7 @@ static func _result_message(result: int) -> String:
 			return "Quizforge took too long to answer. Check your connection and try again."
 		HTTPRequest.RESULT_CANT_RESOLVE, HTTPRequest.RESULT_CANT_CONNECT, \
 				HTTPRequest.RESULT_CONNECTION_ERROR:
-			return "No internet, or Quizforge can't be reached. Check your connection and try again."
+			return "Could not connect to quiz generation. Check that the laptop generation server is running, then try again."
 		HTTPRequest.RESULT_TLS_HANDSHAKE_ERROR:
 			return "We couldn't make a secure connection. Try again in a moment."
 		_:
@@ -148,6 +148,16 @@ static func _error_code(body: PackedByteArray) -> String:
 
 static func _code_message(code: int, tag := "") -> String:
 	match tag:
+		"empty":
+			return "This file is empty. Choose a reviewer containing study material."
+		"insufficient":
+			return "Not enough clear study material was found. Try a chapter with complete definitions or explanations."
+		"vision":
+			return "This image or scan could not be read by the current generation setup. Try a text-based PDF or TXT file."
+		"unsupported":
+			return "This format is not supported. Choose a PDF, text file or supported image."
+		"count":
+			return "Choose a valid number of questions, then try again."
 		"page_range":
 			return "That page range isn't in this file. Check the page numbers, or leave the range empty."
 		"quality":

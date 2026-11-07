@@ -1,0 +1,197 @@
+[gd_scene load_steps=4 format=3]
+[ext_resource type="Script" path="res://scripts/screens/review_mode_select.gd" id="1"]
+[ext_resource type="Theme" path="res://assets/themes/quizforge.tres" id="2"]
+[sub_resource type="StyleBoxFlat" id="Card"]
+bg_color = Color(0.09,0.20,0.29,1)
+border_color = Color(0.35,0.58,0.64,1)
+border_width_left = 2
+border_width_right = 2
+border_width_top = 2
+border_width_bottom = 2
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_left = 14
+corner_radius_bottom_right = 14
+content_margin_left = 20.0
+content_margin_right = 20.0
+content_margin_top = 16.0
+content_margin_bottom = 16.0
+
+[node name="ReviewModeSelect" type="Control"]
+layout_mode = 3
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource("2")
+script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.055,0.13,0.21,1)
+mouse_filter = 2
+
+[node name="SafeArea" type="MarginContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 32.0
+offset_right = -32.0
+offset_top = 16.0
+offset_bottom = -16.0
+
+[node name="Scroll" type="ScrollContainer" parent="SafeArea"]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Content" type="VBoxContainer" parent="SafeArea/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="Header" type="HBoxContainer" parent="SafeArea/Scroll/Content"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="BackButton" type="Button" parent="SafeArea/Scroll/Content/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0,80)
+theme_type_variation = &"MyQuizPlayButton"
+text = "My Quizzes"
+theme_override_font_sizes/font_size = 28
+
+[node name="Heading" type="Label" parent="SafeArea/Scroll/Content/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "CHOOSE REVIEW MODE"
+theme_override_font_sizes/font_size = 36
+theme_override_colors/font_color = Color(1,0.80,0.30,1)
+autowrap_mode = 3
+size_flags_horizontal = 3
+vertical_alignment = 1
+
+[node name="QuizTitle" type="Label" parent="SafeArea/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Your saved quiz"
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(1,1,1,1)
+autowrap_mode = 3
+
+[node name="Status" type="Label" parent="SafeArea/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Choose how you want to review."
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.78,0.86,0.9,1)
+autowrap_mode = 3
+
+[node name="ModeCards" type="HBoxContainer" parent="SafeArea/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="BattleCard" type="PanelContainer" parent="SafeArea/Scroll/Content/ModeCards"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("Card")
+
+[node name="Content" type="VBoxContainer" parent="SafeArea/Scroll/Content/ModeCards/BattleCard"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BattleTitle" type="Label" parent="SafeArea/Scroll/Content/ModeCards/BattleCard/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "QUIZ BATTLE"
+theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(1,0.80,0.30,1)
+autowrap_mode = 3
+
+[node name="BattleDescription" type="Label" parent="SafeArea/Scroll/Content/ModeCards/BattleCard/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Answer multiple-choice questions to attack or recover."
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1,1,1,1)
+autowrap_mode = 3
+
+[node name="BattleCount" type="Label" parent="SafeArea/Scroll/Content/ModeCards/BattleCard/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "0 questions"
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(0.48,0.9,0.7,1)
+autowrap_mode = 3
+
+[node name="BattleReason" type="Label" parent="SafeArea/Scroll/Content/ModeCards/BattleCard/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Availability and scoring details"
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.78,0.86,0.9,1)
+autowrap_mode = 3
+size_flags_vertical = 3
+
+[node name="BattleButton" type="Button" parent="SafeArea/Scroll/Content/ModeCards/BattleCard/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0,80)
+theme_type_variation = &"MyQuizPlayButton"
+text = "Start Quiz Battle"
+theme_override_font_sizes/font_size = 28
+
+[node name="SpellCard" type="PanelContainer" parent="SafeArea/Scroll/Content/ModeCards"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("Card")
+
+[node name="Content" type="VBoxContainer" parent="SafeArea/Scroll/Content/ModeCards/SpellCard"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SpellTitle" type="Label" parent="SafeArea/Scroll/Content/ModeCards/SpellCard/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "COMPLETE THE SPELL"
+theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(1,0.80,0.30,1)
+autowrap_mode = 3
+
+[node name="SpellDescription" type="Label" parent="SafeArea/Scroll/Content/ModeCards/SpellCard/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Choose a word to complete a reviewer sentence and cast a spell."
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1,1,1,1)
+autowrap_mode = 3
+
+[node name="SpellCount" type="Label" parent="SafeArea/Scroll/Content/ModeCards/SpellCard/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "0 sentences"
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(0.48,0.9,0.7,1)
+autowrap_mode = 3
+
+[node name="SpellReason" type="Label" parent="SafeArea/Scroll/Content/ModeCards/SpellCard/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Availability and scoring details"
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.78,0.86,0.9,1)
+autowrap_mode = 3
+size_flags_vertical = 3
+
+[node name="SpellButton" type="Button" parent="SafeArea/Scroll/Content/ModeCards/SpellCard/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0,80)
+theme_type_variation = &"MyQuizPlayButton"
+text = "Start Word Bank"
+theme_override_font_sizes/font_size = 28

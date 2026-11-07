@@ -1,0 +1,76 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/screens/loading_screen.gd" id="1_screen"]
+[ext_resource type="Texture2D" path="res://assets/sprites/quizforge_logo.png" id="2_logo"]
+[ext_resource type="Texture2D" path="res://assets/sprites/cat_on_books.png" id="3_cat"]
+[ext_resource type="Script" path="res://scripts/ui/loading_spinner.gd" id="4_spinner"]
+
+[node name="LoadingScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_screen")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.122, 0.239, 0.42, 1)
+mouse_filter = 2
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Content" type="VBoxContainer" parent="Center"]
+custom_minimum_size = Vector2(560, 0)
+layout_mode = 2
+theme_override_constants/separation = 18
+alignment = 1
+
+[node name="Logo" type="TextureRect" parent="Center/Content"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+texture = ExtResource("2_logo")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Mascot" type="TextureRect" parent="Center/Content"]
+custom_minimum_size = Vector2(0, 150)
+layout_mode = 2
+texture = ExtResource("3_cat")
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+
+[node name="Heading" type="Label" parent="Center/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.78, 0.196, 1)
+theme_override_font_sizes/font_size = 30
+text = "Login successful!"
+horizontal_alignment = 1
+
+[node name="Summary" type="Label" parent="Center/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.95, 0.91, 0.8)
+theme_override_font_sizes/font_size = 18
+text = "Preparing your Quizforge experience..."
+horizontal_alignment = 1
+
+[node name="Spinner" type="Control" parent="Center/Content"]
+custom_minimum_size = Vector2(52, 52)
+layout_mode = 2
+size_flags_horizontal = 4
+script = ExtResource("4_spinner")

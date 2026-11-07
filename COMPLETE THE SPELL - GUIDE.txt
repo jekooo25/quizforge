@@ -1,0 +1,53 @@
+COMPLETE THE SPELL — WORD-BANK REVIEW MODE
+
+HOW TO OPEN
+Play Quizzes > REVIEW on a saved quiz > Start Word Bank.
+REVIEW opens the editable mode picker; Start Quiz Battle opens the multiple-choice battle.
+
+HOW TO PLAY
+Tap a word to insert it into the missing part of the sentence.
+Tap Cast Spell to submit it.
+Correct answers animate and advance automatically.
+Incorrect answers show the completed source sentence, explanation and reviewer page.
+Take your time reading, then tap Continue.
+At the end, use Practise missed for remaining sentences or New round for another short round.
+Pause freezes cast resolution and automatic advancement.
+
+WHICH QUIZZES WORK
+The mode uses the saved reviewer quote, not a guessed or invented sentence.
+A usable question needs four distinct short answer choices, a source quote and a source page.
+The correct answer must appear exactly once as a whole word or phrase in that quote.
+Quotes with a repeated answer are skipped to avoid giving the answer away elsewhere.
+If there are no suitable sentences, the mode explains why and offers a return to My Quizzes.
+Generate or review a source-supported quiz to add more suitable material.
+
+SCENES YOU CAN EDIT IN GODOT
+scenes/CompleteTheSpell.tscn
+  Layout/Column/Header — navigation, title, progress, spell count, pause
+  Challenge — existing Emberpup, spell effect and power indicator
+  Challenge/Board/BoardScroll — sentence and source/explanation review
+  WordBank/Words — four editable word buttons
+  CastButton, ContinueButton, AutoBar — progression controls
+  Unavailable — no suitable source sentences message
+  Results — instance of scenes/SpellResults.tscn
+  PauseMenu — instance of scenes/SpellPauseMenu.tscn (inherits the shared pause layout)
+
+scenes/SpellResults.tscn
+  First-pass accuracy, practice recall and remaining review items.
+  Practise missed, New round and My Quizzes buttons.
+
+The permanent UI is in scene files. Scripts supply question data, signals and state changes.
+
+SCORING
+Spell counts belong to the current review round.
+This mode does not change battle scores, Stars or Daily Tasks.
+Quizzes joined from the laptop server send a separate word-bank report to the teacher.
+Practise missed updates that round without overwriting first-attempt accuracy.
+First-pass accuracy remains separate from subsequent word-bank practice recall.
+A correct practice answer does not claim long-term mastery.
+
+CURRENT LIMITS
+Tap-to-select word bank only; typed answers are not included.
+Source-supported cards are derived locally from the selected saved quiz.
+No new AI request or running server is needed to play this mode.
+Real Android cutouts and gestures still need physical-device testing.

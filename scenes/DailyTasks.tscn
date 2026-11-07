@@ -1,0 +1,252 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/screens/DailyTasks.gd" id="1_daily_tasks"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/LoginBackground.jpg" id="2_courtyard"]
+[ext_resource type="Theme" path="res://assets/themes/daily_tasks.tres" id="3_daily_theme"]
+[ext_resource type="Script" path="res://scripts/ui/pixel_icons.gd" id="4_icons"]
+
+[node name="DailyTasks" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("3_daily_theme")
+script = ExtResource("1_daily_tasks")
+
+[node name="CourtyardBackground" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_courtyard")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="ScreenTint" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.035, 0.045, 0.06, 0.42)
+
+[node name="SafeArea" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 36
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 36
+theme_override_constants/margin_bottom = 18
+
+[node name="MainPanel" type="PanelContainer" parent="SafeArea"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(620, 0)
+layout_mode = 2
+theme_type_variation = &"DailyTasksWindow"
+
+[node name="ContentColumn" type="VBoxContainer" parent="SafeArea/MainPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="HeaderRow" type="HBoxContainer" parent="SafeArea/MainPanel/ContentColumn"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="SafeArea/MainPanel/ContentColumn/HeaderRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"DailyTasksTitle"
+text = "Daily Tasks"
+vertical_alignment = 1
+
+[node name="StarsLabel" type="Label" parent="SafeArea/MainPanel/ContentColumn/HeaderRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+theme_type_variation = &"DailyTasksBalance"
+text = "Stars: 0"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="CloseButton" type="Button" parent="SafeArea/MainPanel/ContentColumn/HeaderRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+theme_type_variation = &"DailyTasksCloseButton"
+text = "X"
+
+[node name="Subtitle" type="Label" parent="SafeArea/MainPanel/ContentColumn"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"DailyTasksSubtitle"
+text = "Complete tasks in real battles to earn Stars."
+autowrap_mode = 3
+
+[node name="TasksScroll" type="ScrollContainer" parent="SafeArea/MainPanel/ContentColumn"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 3
+
+[node name="TasksContainer" type="VBoxContainer" parent="SafeArea/MainPanel/ContentColumn/TasksScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="DailyTaskCard" type="PanelContainer" parent="SafeArea/MainPanel/ContentColumn/TasksScroll/TasksContainer"]
+custom_minimum_size = Vector2(0, 150)
+layout_mode = 2
+theme_type_variation = &"DailyTaskCard"
+
+[node name="DailyTaskMargin" type="MarginContainer" parent="SafeArea/MainPanel/ContentColumn/TasksScroll/TasksContainer/DailyTaskCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 4
+
+[node name="DailyTaskRow" type="HBoxContainer" parent="SafeArea/MainPanel/ContentColumn/TasksScroll/TasksContainer/DailyTaskCard/DailyTaskMargin"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="DailyTaskIcon" type="Control" parent="SafeArea/MainPanel/ContentColumn/TasksScroll/TasksContainer/DailyTaskCard/DailyTaskMargin/DailyTaskRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(76, 76)
+layout_mode = 2
+script = ExtResource("4_icons")
+kind = "trophy"
+
+[node name="DailyTaskInfo" type="VBoxContainer" parent="SafeArea/MainPanel/ContentColumn/TasksScroll/TasksContainer/DailyTaskCard/DailyTaskMargin/DailyTaskRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 3
+
+[node name="DailyTaskTitle" type="Label" parent="SafeArea/MainPanel/ContentColumn/TasksScroll/TasksContainer/DailyTaskCard/DailyTaskMargin/DailyTaskRow/DailyTaskInfo"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"DailyTaskHeading"
+text = "Daily High Score"
+
+[node name="DailyTaskDescription" type="Label" parent="SafeArea/MainPanel/ContentColumn/TasksScroll/TasksContainer/DailyTaskCard/DailyTaskMargin/DailyTaskRow/DailyTaskInfo"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"DailyTaskDescription"
+text = "Score 300 points in one battle. Each correct answer earns 100 points."
+autowrap_mode = 3
+
+[node name="DailyProgressText" type="Label" parent="SafeArea/MainPanel/ContentColumn/TasksScroll/TasksContainer/DailyTaskCard/DailyTaskMargin/DailyTaskRow/DailyTaskInfo"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"DailyTaskProgress"
+text = "Best score today: 0 / 300"
+
+[node name="DailyProgressBar" type="ProgressBar" parent="SafeArea/MainPanel/ContentColumn/TasksScroll/TasksContainer/DailyTaskCard/DailyTaskMargin/DailyTaskRow/DailyTaskInfo"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 2
+theme_type_variation = &"DailyTaskProgressBar"
+max_value = 300.0
+show_percentage = false
+
+[node name="DailyStatusLabel" type="Label" parent="SafeArea/MainPanel/ContentColumn/TasksScroll/TasksContainer/DailyTaskCard/DailyTaskMargin/DailyTaskRow/DailyTaskInfo"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"DailyTaskStatus"
+text = "COMPLETED · REWARD READY"
+
+[node name="DailyClaimButton" type="Button" parent="SafeArea/MainPanel/ContentColumn/TasksScroll/TasksContainer/DailyTaskCard/DailyTaskMargin/DailyTaskRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(148, 56)
+layout_mode = 2
+theme_type_variation = &"DailyTaskClaimButton"
+text = "LOCKED"
+
+[node name="WeeklyTaskCard" type="PanelContainer" parent="SafeArea/MainPanel/ContentColumn/TasksScroll/TasksContainer"]
+custom_minimum_size = Vector2(0, 150)
+layout_mode = 2
+theme_type_variation = &"DailyTaskCard"
+
+[node name="WeeklyTaskMargin" type="MarginContainer" parent="SafeArea/MainPanel/ContentColumn/TasksScroll/TasksContainer/WeeklyTaskCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 4
+
+[node name="WeeklyTaskRow" type="HBoxContainer" parent="SafeArea/MainPanel/ContentColumn/TasksScroll/TasksContainer/WeeklyTaskCard/WeeklyTaskMargin"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="WeeklyTaskIcon" type="Control" parent="SafeArea/MainPanel/ContentColumn/TasksScroll/TasksContainer/WeeklyTaskCard/WeeklyTaskMargin/WeeklyTaskRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(76, 76)
+layout_mode = 2
+script = ExtResource("4_icons")
+kind = "target"
+
+[node name="WeeklyTaskInfo" type="VBoxContainer" parent="SafeArea/MainPanel/ContentColumn/TasksScroll/TasksContainer/WeeklyTaskCard/WeeklyTaskMargin/WeeklyTaskRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 3
+
+[node name="WeeklyTaskTitle" type="Label" parent="SafeArea/MainPanel/ContentColumn/TasksScroll/TasksContainer/WeeklyTaskCard/WeeklyTaskMargin/WeeklyTaskRow/WeeklyTaskInfo"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"DailyTaskHeading"
+text = "Weekly Accuracy Challenge"
+
+[node name="WeeklyTaskDescription" type="Label" parent="SafeArea/MainPanel/ContentColumn/TasksScroll/TasksContainer/WeeklyTaskCard/WeeklyTaskMargin/WeeklyTaskRow/WeeklyTaskInfo"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"DailyTaskDescription"
+text = "Answer at least 50% correctly this week. Accuracy uses all answers submitted in battles."
+autowrap_mode = 3
+
+[node name="WeeklyProgressText" type="Label" parent="SafeArea/MainPanel/ContentColumn/TasksScroll/TasksContainer/WeeklyTaskCard/WeeklyTaskMargin/WeeklyTaskRow/WeeklyTaskInfo"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"DailyTaskProgress"
+text = "This week: 0% · 0 / 0 correct"
+
+[node name="WeeklyProgressBar" type="ProgressBar" parent="SafeArea/MainPanel/ContentColumn/TasksScroll/TasksContainer/WeeklyTaskCard/WeeklyTaskMargin/WeeklyTaskRow/WeeklyTaskInfo"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 2
+theme_type_variation = &"DailyTaskProgressBar"
+max_value = 50.0
+show_percentage = false
+
+[node name="WeeklyStatusLabel" type="Label" parent="SafeArea/MainPanel/ContentColumn/TasksScroll/TasksContainer/WeeklyTaskCard/WeeklyTaskMargin/WeeklyTaskRow/WeeklyTaskInfo"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"DailyTaskStatus"
+text = "COMPLETED · REWARD READY"
+
+[node name="WeeklyClaimButton" type="Button" parent="SafeArea/MainPanel/ContentColumn/TasksScroll/TasksContainer/WeeklyTaskCard/WeeklyTaskMargin/WeeklyTaskRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(148, 56)
+layout_mode = 2
+theme_type_variation = &"DailyTaskClaimButton"
+text = "LOCKED"
+
+[node name="ResetNote" type="Label" parent="SafeArea/MainPanel/ContentColumn"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"DailyTasksSubtitle"
+text = "Daily tasks reset at local midnight · Weekly tasks reset every Monday"
+horizontal_alignment = 1
+autowrap_mode = 3

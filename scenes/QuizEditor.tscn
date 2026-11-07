@@ -1,0 +1,296 @@
+[gd_scene load_steps=3 format=3]
+[ext_resource type="Script" path="res://scripts/screens/quiz_editor.gd" id="1"]
+[ext_resource type="Theme" path="res://assets/themes/quizforge.tres" id="2"]
+
+[node name="QuizEditor" type="Control"]
+layout_mode = 3
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource("2")
+script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.055,0.13,0.21,1)
+mouse_filter = 2
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_right = -24.0
+offset_top = 12.0
+offset_bottom = -12.0
+
+[node name="Column" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Header" type="HBoxContainer" parent="Margin/Column"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Back" type="Button" parent="Margin/Column/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Back"
+custom_minimum_size = Vector2(0,80)
+theme_override_font_sizes/font_size = 28
+theme_type_variation = &"MyQuizPlayButton"
+
+[node name="Title" type="Label" parent="Margin/Column/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "QUIZ EDITOR"
+theme_override_font_sizes/font_size = 32
+autowrap_mode = 3
+size_flags_horizontal = 3
+vertical_alignment = 1
+
+[node name="Save" type="Button" parent="Margin/Column/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Save private draft"
+custom_minimum_size = Vector2(0,80)
+theme_override_font_sizes/font_size = 28
+theme_type_variation = &"MyQuizPlayButton"
+
+[node name="Submit" type="Button" parent="Margin/Column/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Submit for approval"
+custom_minimum_size = Vector2(0,80)
+theme_override_font_sizes/font_size = 28
+theme_type_variation = &"MyQuizPlayButton"
+
+[node name="Status" type="Label" parent="Margin/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Edit a private copy. Published versions and results stay intact."
+theme_override_font_sizes/font_size = 24
+autowrap_mode = 3
+
+[node name="Scroll" type="ScrollContainer" parent="Margin/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Fields" type="VBoxContainer" parent="Margin/Column/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="QuizTitleLabel" type="Label" parent="Margin/Column/Scroll/Fields"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Quiz title"
+theme_override_font_sizes/font_size = 24
+autowrap_mode = 3
+
+[node name="QuizTitle" type="LineEdit" parent="Margin/Column/Scroll/Fields"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0,80)
+theme_override_font_sizes/font_size = 28
+
+[node name="QuestionNav" type="HBoxContainer" parent="Margin/Column/Scroll/Fields"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Previous" type="Button" parent="Margin/Column/Scroll/Fields/QuestionNav"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Previous"
+custom_minimum_size = Vector2(0,80)
+theme_override_font_sizes/font_size = 28
+theme_type_variation = &"MyQuizPlayButton"
+
+[node name="Counter" type="Label" parent="Margin/Column/Scroll/Fields/QuestionNav"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Question 1 / 1"
+theme_override_font_sizes/font_size = 24
+autowrap_mode = 3
+size_flags_horizontal = 3
+vertical_alignment = 1
+
+[node name="Add" type="Button" parent="Margin/Column/Scroll/Fields/QuestionNav"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Add"
+custom_minimum_size = Vector2(0,80)
+theme_override_font_sizes/font_size = 28
+theme_type_variation = &"MyQuizPlayButton"
+
+[node name="Remove" type="Button" parent="Margin/Column/Scroll/Fields/QuestionNav"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Remove"
+custom_minimum_size = Vector2(0,80)
+theme_override_font_sizes/font_size = 28
+theme_type_variation = &"MyQuizPlayButton"
+
+[node name="Next" type="Button" parent="Margin/Column/Scroll/Fields/QuestionNav"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Next"
+custom_minimum_size = Vector2(0,80)
+theme_override_font_sizes/font_size = 28
+theme_type_variation = &"MyQuizPlayButton"
+
+[node name="QuestionLabel" type="Label" parent="Margin/Column/Scroll/Fields"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Question wording"
+theme_override_font_sizes/font_size = 24
+autowrap_mode = 3
+
+[node name="Question" type="TextEdit" parent="Margin/Column/Scroll/Fields"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0,140)
+theme_override_font_sizes/font_size = 28
+wrap_mode = 1
+
+[node name="ChoiceHelp" type="Label" parent="Margin/Column/Scroll/Fields"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Enter four distinct choices and mark ONE correct answer."
+theme_override_font_sizes/font_size = 24
+autowrap_mode = 3
+
+[node name="RowA" type="HBoxContainer" parent="Margin/Column/Scroll/Fields"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ChoiceA" type="LineEdit" parent="Margin/Column/Scroll/Fields/RowA"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0,80)
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 28
+placeholder_text = "Choice A"
+
+[node name="CorrectA" type="CheckBox" parent="Margin/Column/Scroll/Fields/RowA"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(180,80)
+text = "Correct"
+theme_override_font_sizes/font_size = 24
+
+[node name="RowB" type="HBoxContainer" parent="Margin/Column/Scroll/Fields"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ChoiceB" type="LineEdit" parent="Margin/Column/Scroll/Fields/RowB"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0,80)
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 28
+placeholder_text = "Choice B"
+
+[node name="CorrectB" type="CheckBox" parent="Margin/Column/Scroll/Fields/RowB"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(180,80)
+text = "Correct"
+theme_override_font_sizes/font_size = 24
+
+[node name="RowC" type="HBoxContainer" parent="Margin/Column/Scroll/Fields"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ChoiceC" type="LineEdit" parent="Margin/Column/Scroll/Fields/RowC"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0,80)
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 28
+placeholder_text = "Choice C"
+
+[node name="CorrectC" type="CheckBox" parent="Margin/Column/Scroll/Fields/RowC"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(180,80)
+text = "Correct"
+theme_override_font_sizes/font_size = 24
+
+[node name="RowD" type="HBoxContainer" parent="Margin/Column/Scroll/Fields"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ChoiceD" type="LineEdit" parent="Margin/Column/Scroll/Fields/RowD"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0,80)
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 28
+placeholder_text = "Choice D"
+
+[node name="CorrectD" type="CheckBox" parent="Margin/Column/Scroll/Fields/RowD"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(180,80)
+text = "Correct"
+theme_override_font_sizes/font_size = 24
+
+[node name="ExplanationLabel" type="Label" parent="Margin/Column/Scroll/Fields"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Explanation (why this answer is correct)"
+theme_override_font_sizes/font_size = 24
+autowrap_mode = 3
+
+[node name="Explanation" type="TextEdit" parent="Margin/Column/Scroll/Fields"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0,120)
+theme_override_font_sizes/font_size = 24
+wrap_mode = 1
+
+[node name="QuoteLabel" type="Label" parent="Margin/Column/Scroll/Fields"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Exact reviewer source quote"
+theme_override_font_sizes/font_size = 24
+autowrap_mode = 3
+
+[node name="Quote" type="TextEdit" parent="Margin/Column/Scroll/Fields"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0,140)
+theme_override_font_sizes/font_size = 24
+wrap_mode = 1
+
+[node name="PageLabel" type="Label" parent="Margin/Column/Scroll/Fields"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Reviewer source page (0 = not recorded)"
+theme_override_font_sizes/font_size = 24
+autowrap_mode = 3
+
+[node name="Page" type="SpinBox" parent="Margin/Column/Scroll/Fields"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0,80)
+max_value = 10000
+theme_override_font_sizes/font_size = 28
+
+[node name="Preview" type="Button" parent="Margin/Column/Scroll/Fields"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Validate / Preview modes"
+custom_minimum_size = Vector2(0,80)
+theme_override_font_sizes/font_size = 28
+theme_type_variation = &"MyQuizPlayButton"
+
+[node name="Discard" type="ConfirmationDialog" parent="."]
+unique_name_in_owner = true
+title = "Discard unsaved edits?"
+dialog_text = "Unsaved changes will be discarded. Saved drafts remain available."
+ok_button_text = "Discard edits"

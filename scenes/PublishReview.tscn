@@ -1,0 +1,125 @@
+[gd_scene load_steps=3 format=3]
+[ext_resource type="Script" path="res://scripts/screens/publish_review.gd" id="1"]
+[ext_resource type="Theme" path="res://scenes/TeacherTheme.tres" id="2"]
+
+[node name="PublishReview" type="Control"]
+layout_mode = 3
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1")
+theme = ExtResource("2")
+
+[node name="Scrim" type="ColorRect" parent="."]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.035,0.09,0.15,0.99)
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 40.0
+offset_right = -40.0
+offset_top = 24.0
+offset_bottom = -24.0
+
+[node name="Scroll" type="ScrollContainer" parent="Margin"]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Content" type="VBoxContainer" parent="Margin/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 18
+
+[node name="Title" type="Label" parent="Margin/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Publish quiz"
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 36
+
+[node name="Notice" type="Label" parent="Margin/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Choose how students can find this approved quiz."
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 24
+
+[node name="Options" type="HBoxContainer" parent="Margin/Scroll/Content"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Private" type="Button" parent="Margin/Scroll/Content/Options"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Private draft"
+custom_minimum_size = Vector2(0,80)
+theme_type_variation = &"Button"
+theme_override_font_sizes/font_size = 28
+toggle_mode = true
+size_flags_horizontal = 3
+
+[node name="CodeOnly" type="Button" parent="Margin/Scroll/Content/Options"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Code-only"
+custom_minimum_size = Vector2(0,80)
+theme_type_variation = &"Button"
+theme_override_font_sizes/font_size = 28
+toggle_mode = true
+size_flags_horizontal = 3
+
+[node name="Public" type="Button" parent="Margin/Scroll/Content/Options"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Public"
+custom_minimum_size = Vector2(0,80)
+theme_type_variation = &"Button"
+theme_override_font_sizes/font_size = 28
+toggle_mode = true
+size_flags_horizontal = 3
+
+[node name="Explanation" type="Label" parent="Margin/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Private draft: no new joins or public listing."
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 28
+
+[node name="Limits" type="Label" parent="Margin/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Public means discoverable on this laptop server, not the internet. Downloaded copies and existing results are retained."
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 24
+
+[node name="Leaderboard" type="CheckButton" parent="Margin/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0,80)
+text = "Show leaderboard for this public quiz"
+theme_override_font_sizes/font_size = 24
+
+[node name="Actions" type="HBoxContainer" parent="Margin/Scroll/Content"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Cancel" type="Button" parent="Margin/Scroll/Content/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Cancel"
+custom_minimum_size = Vector2(0,80)
+theme_type_variation = &"Button"
+theme_override_font_sizes/font_size = 28
+size_flags_horizontal = 3
+
+[node name="Apply" type="Button" parent="Margin/Scroll/Content/Actions"]
+theme_type_variation = &"Primary"
+unique_name_in_owner = true
+layout_mode = 2
+text = "Save publication"
+custom_minimum_size = Vector2(0,80)
+theme_override_font_sizes/font_size = 28
+size_flags_horizontal = 3

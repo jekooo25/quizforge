@@ -1,7 +1,377 @@
-[gd_resource type="Theme" load_steps=2 format=3]
+[gd_resource type="Theme" format=3 uid="uid://e0yqcl27852i"]
 
-[ext_resource type="FontVariation" path="res://assets/themes/font_body.tres" id="1_body"]
+[ext_resource type="FontVariation" uid="uid://qc7v81i423a8" path="res://assets/themes/font_body.tres" id="1_body"]
+[ext_resource type="FontVariation" uid="uid://5pevjptvipgo" path="res://assets/themes/font_display.tres" id="2_display"]
+
+[sub_resource type="StyleBoxFlat" id="QuizCardPanel"]
+content_margin_left = 20.0
+content_margin_top = 15.0
+content_margin_right = 20.0
+content_margin_bottom = 15.0
+bg_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="FontVariation" id="MyQuizzesDisplayFont"]
+base_font = ExtResource("2_display")
+opentype_features = {
+&"calt": 0,
+&"liga": 0
+}
+
+[sub_resource type="StyleBoxFlat" id="MenuButtonHover"]
+content_margin_left = 15.0
+content_margin_top = 8.0
+content_margin_right = 15.0
+content_margin_bottom = 8.0
+bg_color = Color(0.968627, 0.937255, 0.866667, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.878431, 0.658824, 0, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="MenuButton"]
+content_margin_left = 15.0
+content_margin_top = 8.0
+content_margin_right = 15.0
+content_margin_bottom = 8.0
+bg_color = Color(1, 1, 1, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.760784, 0.654902, 0.52549, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="MenuButtonPressed"]
+content_margin_left = 15.0
+content_margin_top = 8.0
+content_margin_right = 15.0
+content_margin_bottom = 8.0
+bg_color = Color(0.988235, 0.968627, 0.913725, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.760784, 0.654902, 0.52549, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="NavyButtonHover"]
+content_margin_left = 20.0
+content_margin_top = 8.0
+content_margin_right = 20.0
+content_margin_bottom = 8.0
+bg_color = Color(0.12549, 0.270588, 0.415686, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.086275, 0.196078, 0.309804, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="NavyButton"]
+content_margin_left = 20.0
+content_margin_top = 8.0
+content_margin_right = 20.0
+content_margin_bottom = 8.0
+bg_color = Color(0.086275, 0.196078, 0.309804, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.062745, 0.145098, 0.235294, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="NavyButtonPressed"]
+content_margin_left = 20.0
+content_margin_top = 8.0
+content_margin_right = 20.0
+content_margin_bottom = 8.0
+bg_color = Color(0.062745, 0.145098, 0.235294, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.062745, 0.145098, 0.235294, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="ActiveTab"]
+content_margin_left = 14.0
+content_margin_top = 8.0
+content_margin_right = 14.0
+content_margin_bottom = 8.0
+bg_color = Color(1, 0.784314, 0.196078, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.878431, 0.658824, 0, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="ListPanel"]
+content_margin_left = 18.0
+content_margin_top = 14.0
+content_margin_right = 18.0
+content_margin_bottom = 14.0
+bg_color = Color(0.988235, 0.968627, 0.913725, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.639216, 0.435294, 0.258824, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="CreamButtonHover"]
+content_margin_left = 22.0
+content_margin_top = 8.0
+content_margin_right = 22.0
+content_margin_bottom = 8.0
+bg_color = Color(1, 1, 1, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.878431, 0.658824, 0, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="CreamButton"]
+content_margin_left = 22.0
+content_margin_top = 8.0
+content_margin_right = 22.0
+content_margin_bottom = 8.0
+bg_color = Color(0.968627, 0.937255, 0.866667, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.639216, 0.435294, 0.258824, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="CreamButtonPressed"]
+content_margin_left = 22.0
+content_margin_top = 8.0
+content_margin_right = 22.0
+content_margin_bottom = 8.0
+bg_color = Color(0.988235, 0.968627, 0.913725, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.478431, 0.321569, 0.188235, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="FieldFocus"]
+content_margin_left = 10.0
+content_margin_top = 6.0
+content_margin_right = 10.0
+content_margin_bottom = 6.0
+bg_color = Color(1, 1, 1, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.878431, 0.658824, 0, 1)
+corner_radius_top_left = 7
+corner_radius_top_right = 7
+corner_radius_bottom_right = 7
+corner_radius_bottom_left = 7
+
+[sub_resource type="StyleBoxFlat" id="FieldNormal"]
+content_margin_left = 10.0
+content_margin_top = 6.0
+content_margin_right = 10.0
+content_margin_bottom = 6.0
+bg_color = Color(1, 1, 1, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.796078, 0.776471, 0.721569, 1)
+corner_radius_top_left = 7
+corner_radius_top_right = 7
+corner_radius_bottom_right = 7
+corner_radius_bottom_left = 7
+
+[sub_resource type="StyleBoxFlat" id="InactiveTab"]
+content_margin_left = 14.0
+content_margin_top = 8.0
+content_margin_right = 14.0
+content_margin_bottom = 8.0
+bg_color = Color(0.988235, 0.968627, 0.913725, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.639216, 0.435294, 0.258824, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="SurfacePanel"]
+content_margin_left = 24.0
+content_margin_top = 12.0
+content_margin_right = 24.0
+content_margin_bottom = 12.0
+bg_color = Color(0.968627, 0.937255, 0.866667, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.322, 0.208, 0.114, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+shadow_color = Color(0.1, 0.08, 0.04, 0.28)
+shadow_size = 8
+shadow_offset = Vector2(0, 4)
 
 [resource]
 default_font = ExtResource("1_body")
 default_font_size = 16
+MyQuizCardPanel/base_type = &"PanelContainer"
+MyQuizCardPanel/styles/panel = SubResource("QuizCardPanel")
+MyQuizDetails/base_type = &"Label"
+MyQuizDetails/colors/font_color = Color(0.322, 0.208, 0.114, 1)
+MyQuizDetails/font_sizes/font_size = 20
+MyQuizDetails/fonts/font = ExtResource("1_body")
+MyQuizMenuButton/base_type = &"MenuButton"
+MyQuizMenuButton/colors/font_color = Color(0.322, 0.208, 0.114, 1)
+MyQuizMenuButton/colors/font_hover_color = Color(0.322, 0.208, 0.114, 1)
+MyQuizMenuButton/colors/font_pressed_color = Color(0.322, 0.208, 0.114, 1)
+MyQuizMenuButton/font_sizes/font_size = 26
+MyQuizMenuButton/fonts/font = SubResource("MyQuizzesDisplayFont")
+MyQuizMenuButton/styles/hover = SubResource("MenuButtonHover")
+MyQuizMenuButton/styles/normal = SubResource("MenuButton")
+MyQuizMenuButton/styles/pressed = SubResource("MenuButtonPressed")
+MyQuizPlayButton/base_type = &"Button"
+MyQuizPlayButton/colors/font_color = Color(1, 1, 1, 1)
+MyQuizPlayButton/colors/font_hover_color = Color(1, 1, 1, 1)
+MyQuizPlayButton/colors/font_pressed_color = Color(1, 0.784314, 0.196078, 1)
+MyQuizPlayButton/font_sizes/font_size = 26
+MyQuizPlayButton/fonts/font = SubResource("MyQuizzesDisplayFont")
+MyQuizPlayButton/styles/hover = SubResource("NavyButtonHover")
+MyQuizPlayButton/styles/normal = SubResource("NavyButton")
+MyQuizPlayButton/styles/pressed = SubResource("NavyButtonPressed")
+MyQuizScore/base_type = &"Label"
+MyQuizScore/colors/font_color = Color(0.322, 0.208, 0.114, 1)
+MyQuizScore/font_sizes/font_size = 20
+MyQuizScore/fonts/font = ExtResource("1_body")
+MyQuizTitle/base_type = &"Label"
+MyQuizTitle/colors/font_color = Color(0.322, 0.208, 0.114, 1)
+MyQuizTitle/font_sizes/font_size = 32
+MyQuizTitle/fonts/font = SubResource("MyQuizzesDisplayFont")
+MyQuizzesActiveTab/base_type = &"Button"
+MyQuizzesActiveTab/colors/font_color = Color(0.322, 0.208, 0.114, 1)
+MyQuizzesActiveTab/colors/font_hover_color = Color(0.322, 0.208, 0.114, 1)
+MyQuizzesActiveTab/colors/font_pressed_color = Color(0.322, 0.208, 0.114, 1)
+MyQuizzesActiveTab/font_sizes/font_size = 24
+MyQuizzesActiveTab/fonts/font = SubResource("MyQuizzesDisplayFont")
+MyQuizzesActiveTab/styles/disabled = SubResource("ActiveTab")
+MyQuizzesActiveTab/styles/hover = SubResource("ActiveTab")
+MyQuizzesActiveTab/styles/normal = SubResource("ActiveTab")
+MyQuizzesActiveTab/styles/pressed = SubResource("ActiveTab")
+MyQuizzesEmpty/base_type = &"Label"
+MyQuizzesEmpty/colors/font_color = Color(0.322, 0.208, 0.114, 1)
+MyQuizzesEmpty/font_sizes/font_size = 24
+MyQuizzesEmpty/fonts/font = ExtResource("1_body")
+MyQuizzesListPanel/base_type = &"PanelContainer"
+MyQuizzesListPanel/styles/panel = SubResource("ListPanel")
+MyQuizzesMainMenuButton/base_type = &"Button"
+MyQuizzesMainMenuButton/colors/font_color = Color(0.322, 0.208, 0.114, 1)
+MyQuizzesMainMenuButton/colors/font_hover_color = Color(0.322, 0.208, 0.114, 1)
+MyQuizzesMainMenuButton/colors/font_pressed_color = Color(0.322, 0.208, 0.114, 1)
+MyQuizzesMainMenuButton/font_sizes/font_size = 24
+MyQuizzesMainMenuButton/fonts/font = SubResource("MyQuizzesDisplayFont")
+MyQuizzesMainMenuButton/styles/hover = SubResource("CreamButtonHover")
+MyQuizzesMainMenuButton/styles/normal = SubResource("CreamButton")
+MyQuizzesMainMenuButton/styles/pressed = SubResource("CreamButtonPressed")
+MyQuizzesSearch/base_type = &"LineEdit"
+MyQuizzesSearch/colors/caret_color = Color(0.322, 0.208, 0.114, 1)
+MyQuizzesSearch/colors/font_color = Color(0.322, 0.208, 0.114, 1)
+MyQuizzesSearch/colors/font_placeholder_color = Color(0.62, 0.62, 0.62, 1)
+MyQuizzesSearch/font_sizes/font_size = 24
+MyQuizzesSearch/fonts/font = ExtResource("1_body")
+MyQuizzesSearch/styles/focus = SubResource("FieldFocus")
+MyQuizzesSearch/styles/normal = SubResource("FieldNormal")
+MyQuizzesSoonTab/base_type = &"Button"
+MyQuizzesSoonTab/colors/font_color = Color(0.478431, 0.321569, 0.188235, 1)
+MyQuizzesSoonTab/colors/font_hover_color = Color(0.322, 0.208, 0.114, 1)
+MyQuizzesSoonTab/colors/font_pressed_color = Color(0.322, 0.208, 0.114, 1)
+MyQuizzesSoonTab/font_sizes/font_size = 24
+MyQuizzesSoonTab/fonts/font = SubResource("MyQuizzesDisplayFont")
+MyQuizzesSoonTab/styles/hover = SubResource("CreamButtonHover")
+MyQuizzesSoonTab/styles/normal = SubResource("InactiveTab")
+MyQuizzesSoonTab/styles/pressed = SubResource("CreamButtonPressed")
+MyQuizzesSort/base_type = &"OptionButton"
+MyQuizzesSort/colors/font_color = Color(0.322, 0.208, 0.114, 1)
+MyQuizzesSort/colors/font_hover_color = Color(0.322, 0.208, 0.114, 1)
+MyQuizzesSort/colors/font_pressed_color = Color(0.322, 0.208, 0.114, 1)
+MyQuizzesSort/font_sizes/font_size = 24
+MyQuizzesSort/fonts/font = ExtResource("1_body")
+MyQuizzesSort/styles/focus = SubResource("FieldFocus")
+MyQuizzesSort/styles/hover = SubResource("CreamButtonHover")
+MyQuizzesSort/styles/normal = SubResource("FieldNormal")
+MyQuizzesSort/styles/pressed = SubResource("CreamButtonPressed")
+MyQuizzesSurfacePanel/base_type = &"PanelContainer"
+MyQuizzesSurfacePanel/styles/panel = SubResource("SurfacePanel")
+MyQuizzesTab/base_type = &"Button"
+MyQuizzesTab/colors/font_color = Color(0.322, 0.208, 0.114, 1)
+MyQuizzesTab/colors/font_hover_color = Color(0.322, 0.208, 0.114, 1)
+MyQuizzesTab/colors/font_pressed_color = Color(0.322, 0.208, 0.114, 1)
+MyQuizzesTab/font_sizes/font_size = 24
+MyQuizzesTab/fonts/font = SubResource("MyQuizzesDisplayFont")
+MyQuizzesTab/styles/hover = SubResource("CreamButtonHover")
+MyQuizzesTab/styles/normal = SubResource("InactiveTab")
+MyQuizzesTab/styles/pressed = SubResource("CreamButtonPressed")
+MyQuizzesTitle/base_type = &"Label"
+MyQuizzesTitle/colors/font_color = Color(0.322, 0.208, 0.114, 1)
+MyQuizzesTitle/font_sizes/font_size = 38
+MyQuizzesTitle/fonts/font = SubResource("MyQuizzesDisplayFont")
+MyQuizzesUploadButton/base_type = &"Button"
+MyQuizzesUploadButton/colors/font_color = Color(1, 1, 1, 1)
+MyQuizzesUploadButton/colors/font_hover_color = Color(1, 1, 1, 1)
+MyQuizzesUploadButton/colors/font_pressed_color = Color(1, 0.784314, 0.196078, 1)
+MyQuizzesUploadButton/font_sizes/font_size = 24
+MyQuizzesUploadButton/fonts/font = SubResource("MyQuizzesDisplayFont")
+MyQuizzesUploadButton/styles/hover = SubResource("NavyButtonHover")
+MyQuizzesUploadButton/styles/normal = SubResource("NavyButton")
+MyQuizzesUploadButton/styles/pressed = SubResource("NavyButtonPressed")

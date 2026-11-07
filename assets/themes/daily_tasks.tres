@@ -1,0 +1,209 @@
+[gd_resource type="Theme" format=3 uid="uid://c4shys00hhf0b"]
+
+[ext_resource type="FontVariation" uid="uid://qc7v81i423a8" path="res://assets/themes/font_body.tres" id="1_body"]
+[ext_resource type="FontVariation" uid="uid://5pevjptvipgo" path="res://assets/themes/font_display.tres" id="2_display"]
+
+[sub_resource type="StyleBoxFlat" id="TaskCard"]
+content_margin_left = 16.0
+content_margin_top = 12.0
+content_margin_right = 16.0
+content_margin_bottom = 12.0
+bg_color = Color(0.988, 0.969, 0.914, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.949, 0.749, 0.243, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="ClaimButtonDisabled"]
+content_margin_left = 20.0
+content_margin_top = 8.0
+content_margin_right = 20.0
+content_margin_bottom = 8.0
+bg_color = Color(0.83, 0.8, 0.71, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.71, 0.67, 0.56, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="ClaimButtonHover"]
+content_margin_left = 20.0
+content_margin_top = 8.0
+content_margin_right = 20.0
+content_margin_bottom = 8.0
+bg_color = Color(0.38, 0.78, 0.42, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.21, 0.53, 0.27, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="ClaimButton"]
+content_margin_left = 20.0
+content_margin_top = 8.0
+content_margin_right = 20.0
+content_margin_bottom = 8.0
+bg_color = Color(0.31, 0.69, 0.35, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.21, 0.53, 0.27, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="ClaimButtonPressed"]
+content_margin_left = 20.0
+content_margin_top = 8.0
+content_margin_right = 20.0
+content_margin_bottom = 8.0
+bg_color = Color(0.24, 0.57, 0.29, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.17, 0.43, 0.21, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="ProgressBackground"]
+bg_color = Color(1, 1, 1, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.76, 0.65, 0.51, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="ProgressFill"]
+bg_color = Color(0.31, 0.69, 0.35, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="CloseButtonHover"]
+bg_color = Color(1, 1, 1, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.878, 0.659, 0, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="CloseButton"]
+bg_color = Color(0.988, 0.969, 0.914, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.639, 0.435, 0.259, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="TaskWindow"]
+content_margin_left = 24.0
+content_margin_top = 20.0
+content_margin_right = 24.0
+content_margin_bottom = 18.0
+bg_color = Color(0.969, 0.937, 0.867, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.878, 0.659, 0, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+
+[resource]
+default_font = ExtResource("1_body")
+default_font_size = 20
+DailyTaskCard/base_type = &"PanelContainer"
+DailyTaskCard/styles/panel = SubResource("TaskCard")
+DailyTaskClaimButton/base_type = &"Button"
+DailyTaskClaimButton/colors/font_color = Color(1, 1, 1, 1)
+DailyTaskClaimButton/colors/font_disabled_color = Color(0.322, 0.208, 0.114, 1)
+DailyTaskClaimButton/colors/font_hover_color = Color(1, 1, 1, 1)
+DailyTaskClaimButton/colors/font_pressed_color = Color(1, 1, 1, 1)
+DailyTaskClaimButton/font_sizes/font_size = 24
+DailyTaskClaimButton/fonts/font = ExtResource("2_display")
+DailyTaskClaimButton/styles/disabled = SubResource("ClaimButtonDisabled")
+DailyTaskClaimButton/styles/hover = SubResource("ClaimButtonHover")
+DailyTaskClaimButton/styles/normal = SubResource("ClaimButton")
+DailyTaskClaimButton/styles/pressed = SubResource("ClaimButtonPressed")
+DailyTaskDescription/base_type = &"Label"
+DailyTaskDescription/colors/font_color = Color(0.322, 0.208, 0.114, 1)
+DailyTaskDescription/font_sizes/font_size = 20
+DailyTaskDescription/fonts/font = ExtResource("1_body")
+DailyTaskHeading/base_type = &"Label"
+DailyTaskHeading/colors/font_color = Color(0.322, 0.208, 0.114, 1)
+DailyTaskHeading/font_sizes/font_size = 26
+DailyTaskHeading/fonts/font = ExtResource("2_display")
+DailyTaskProgress/base_type = &"Label"
+DailyTaskProgress/colors/font_color = Color(0.478, 0.322, 0.188, 1)
+DailyTaskProgress/font_sizes/font_size = 20
+DailyTaskProgress/fonts/font = ExtResource("1_body")
+DailyTaskProgressBar/base_type = &"ProgressBar"
+DailyTaskProgressBar/styles/background = SubResource("ProgressBackground")
+DailyTaskProgressBar/styles/fill = SubResource("ProgressFill")
+DailyTaskStatus/base_type = &"Label"
+DailyTaskStatus/colors/font_color = Color(0.24, 0.48, 0.24, 1)
+DailyTaskStatus/font_sizes/font_size = 20
+DailyTaskStatus/fonts/font = ExtResource("2_display")
+DailyTasksBalance/base_type = &"Label"
+DailyTasksBalance/colors/font_color = Color(0.322, 0.208, 0.114, 1)
+DailyTasksBalance/font_sizes/font_size = 22
+DailyTasksBalance/fonts/font = ExtResource("1_body")
+DailyTasksCloseButton/base_type = &"Button"
+DailyTasksCloseButton/colors/font_color = Color(0.322, 0.208, 0.114, 1)
+DailyTasksCloseButton/colors/font_hover_color = Color(0.322, 0.208, 0.114, 1)
+DailyTasksCloseButton/font_sizes/font_size = 24
+DailyTasksCloseButton/fonts/font = ExtResource("2_display")
+DailyTasksCloseButton/styles/hover = SubResource("CloseButtonHover")
+DailyTasksCloseButton/styles/normal = SubResource("CloseButton")
+DailyTasksCloseButton/styles/pressed = SubResource("CloseButton")
+DailyTasksSubtitle/base_type = &"Label"
+DailyTasksSubtitle/colors/font_color = Color(0.322, 0.208, 0.114, 1)
+DailyTasksSubtitle/font_sizes/font_size = 20
+DailyTasksSubtitle/fonts/font = ExtResource("1_body")
+DailyTasksTitle/base_type = &"Label"
+DailyTasksTitle/colors/font_color = Color(0.322, 0.208, 0.114, 1)
+DailyTasksTitle/font_sizes/font_size = 36
+DailyTasksTitle/fonts/font = ExtResource("2_display")
+DailyTasksWindow/base_type = &"PanelContainer"
+DailyTasksWindow/styles/panel = SubResource("TaskWindow")
+RewardPopupText/base_type = &"Label"
+RewardPopupText/colors/font_color = Color(0.322, 0.208, 0.114, 1)
+RewardPopupText/font_sizes/font_size = 22
+RewardPopupText/fonts/font = ExtResource("1_body")
+RewardPopupTitle/base_type = &"Label"
+RewardPopupTitle/colors/font_color = Color(0.322, 0.208, 0.114, 1)
+RewardPopupTitle/font_sizes/font_size = 30
+RewardPopupTitle/fonts/font = ExtResource("2_display")

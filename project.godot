@@ -18,8 +18,11 @@ config/features=PackedStringArray("4.7", "GL Compatibility")
 
 [autoload]
 
+SharingService="*res://scripts/sharing_service.gd"
 SaveManager="*res://scripts/save/save_manager.gd"
 Nav="*res://scripts/ui/nav.gd"
+TaskManager="*res://scripts/TaskManager.gd"
+ShopManager="*res://scripts/ShopManager.gd"
 
 [display]
 
@@ -29,17 +32,19 @@ window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation=4
 
+[editor_plugins]
+
+enabled=PackedStringArray()
+
 [gui]
 
-theme/custom="res://assets/themes/quizforge.tres"
 theme/default_font_antialiasing=0
 theme/default_font_hinting=0
 theme/default_font_subpixel_positioning=0
-theme/default_font_multichannel_signed_distance_field=false
-theme/default_font_generate_mipmaps=false
+theme/custom="res://assets/themes/quizforge.tres"
 
 [rendering]
 
+textures/canvas_textures/default_texture_filter=0
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
-textures/canvas_textures/default_texture_filter=0

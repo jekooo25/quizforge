@@ -1,0 +1,45 @@
+STUDENT SHARED QUIZZES - FIX AND TEST GUIDE
+
+Restart the sharing server and reopen both game windows after this update.
+
+MY QUIZZES
+Only your generated quizzes and private drafts appear here.
+
+SHARED QUIZZES
+Open My Quizzes > Shared quizzes. Previously downloaded quizzes now appear
+here automatically. Your existing scores and downloaded files are retained.
+Enter the teacher code and press Join quiz. The downloaded quiz appears below.
+Press REVIEW to choose Quiz Battle or Word Bank. Back returns to Shared Quizzes.
+Public quizzes opens the public browser. Send saved results retries unsent rounds.
+Joining the same published version again keeps one downloaded copy.
+Shared copies cannot be submitted straight back to the teacher. You can edit a
+private draft to create a revision instead.
+
+DUPLICATE SUBMISSIONS
+Submitting the same questions from the same student, even under a different
+saved ID or title, reuses the existing submission rather than creating another.
+The student sees an already-submitted message.
+Actual changes to questions, answers, explanations or source material can create
+a new revision, which still needs approval. A returned unchanged quiz must be
+edited before it can be resubmitted.
+Already-approved identical copies cannot be approved again. Older duplicate
+pending entries are hidden from Pending; saved records/reports are retained.
+Different students can submit the same material independently.
+Existing duplicate local drafts are retained; this update does not delete quizzes.
+
+EDITABLE SCENES
+scenes/SharedQuizzes.tscn - inherited student library opened on Shared quizzes
+scenes/SharedQuizJoin.tscn - code entry, join, public browser and result retry
+scenes/my_quizzes.tscn - shared library layout and tabs
+
+QUICK TEST
+1. Open My Quizzes: only your own quizzes should appear.
+2. Switch to Shared quizzes: old downloads should already be listed.
+3. Join a teacher code, then join it again: only one copy should appear.
+4. Press REVIEW and Back: you should return to Shared quizzes.
+5. Submit two identical private copies as the same student: teacher should get
+   one submission. Approve it, then try submitting again: no new approval.
+6. Change a question or explanation, save a new draft and submit: it should
+   appear as a new pending revision requiring approval.
+
+This is still a local laptop demo. Android device testing remains to be done.

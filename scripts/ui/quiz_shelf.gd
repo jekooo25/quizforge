@@ -115,7 +115,7 @@ func _when(stamp: String) -> String:
 
 
 func _on_play(id: String) -> void:
-	if id == "" or not QuizLibrary.play(id):
-		_status.text = "That quiz could not be loaded."
-		return
-	Nav.show_screen(load("res://scenes/battle.tscn").instantiate())
+	if id == "": return
+	var picker: Control = load("res://scenes/ReviewModeSelect.tscn").instantiate()
+	picker.library_id = id
+	Nav.show_screen(picker)

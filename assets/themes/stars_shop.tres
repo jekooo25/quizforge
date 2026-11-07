@@ -1,0 +1,138 @@
+[gd_resource type="Theme" format=3 uid="uid://c2eokudtn8k7w"]
+
+[ext_resource type="FontVariation" uid="uid://qc7v81i423a8" path="res://assets/themes/font_body.tres" id="1_body"]
+[ext_resource type="FontVariation" uid="uid://5pevjptvipgo" path="res://assets/themes/font_display.tres" id="2_display"]
+
+[sub_resource type="StyleBoxFlat" id="ShopButtonDisabled"]
+content_margin_left = 18.0
+content_margin_top = 8.0
+content_margin_right = 18.0
+content_margin_bottom = 8.0
+bg_color = Color(0.83, 0.8, 0.71, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.71, 0.67, 0.56, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="NavyButton"]
+content_margin_left = 18.0
+content_margin_top = 8.0
+content_margin_right = 18.0
+content_margin_bottom = 8.0
+bg_color = Color(0.149, 0.196, 0.38, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.09, 0.13, 0.28, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="NavyButtonHover"]
+content_margin_left = 18.0
+content_margin_top = 8.0
+content_margin_right = 18.0
+content_margin_bottom = 8.0
+bg_color = Color(0.22, 0.29, 0.52, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.09, 0.13, 0.28, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="ShopCard"]
+content_margin_left = 14.0
+content_margin_top = 12.0
+content_margin_right = 14.0
+content_margin_bottom = 12.0
+bg_color = Color(0.988, 0.969, 0.914, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.949, 0.749, 0.243, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="ShopWindow"]
+content_margin_left = 24.0
+content_margin_top = 20.0
+content_margin_right = 24.0
+content_margin_bottom = 18.0
+bg_color = Color(0.969, 0.937, 0.867, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.878, 0.659, 0, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+
+[resource]
+default_font = ExtResource("1_body")
+default_font_size = 20
+ShopActionButton/base_type = &"Button"
+ShopActionButton/colors/font_color = Color(1, 1, 1, 1)
+ShopActionButton/colors/font_disabled_color = Color(0.322, 0.208, 0.114, 1)
+ShopActionButton/font_sizes/font_size = 20
+ShopActionButton/fonts/font = ExtResource("2_display")
+ShopActionButton/styles/disabled = SubResource("ShopButtonDisabled")
+ShopActionButton/styles/focus = SubResource("NavyButton")
+ShopActionButton/styles/hover = SubResource("NavyButtonHover")
+ShopActionButton/styles/normal = SubResource("NavyButton")
+ShopActionButton/styles/pressed = SubResource("NavyButton")
+ShopConfirmBody/base_type = &"Label"
+ShopConfirmBody/colors/font_color = Color(0.322, 0.208, 0.114, 1)
+ShopConfirmBody/font_sizes/font_size = 20
+ShopConfirmBody/fonts/font = ExtResource("1_body")
+ShopConfirmTitle/base_type = &"Label"
+ShopConfirmTitle/colors/font_color = Color(0.322, 0.208, 0.114, 1)
+ShopConfirmTitle/font_sizes/font_size = 27
+ShopConfirmTitle/fonts/font = ExtResource("2_display")
+ShopItemBody/base_type = &"Label"
+ShopItemBody/colors/font_color = Color(0.322, 0.208, 0.114, 1)
+ShopItemBody/font_sizes/font_size = 19
+ShopItemBody/fonts/font = ExtResource("1_body")
+ShopItemCard/base_type = &"PanelContainer"
+ShopItemCard/styles/panel = SubResource("ShopCard")
+ShopItemPrice/base_type = &"Label"
+ShopItemPrice/colors/font_color = Color(0.322, 0.208, 0.114, 1)
+ShopItemPrice/font_sizes/font_size = 19
+ShopItemPrice/fonts/font = ExtResource("2_display")
+ShopItemStatus/base_type = &"Label"
+ShopItemStatus/colors/font_color = Color(0.24, 0.48, 0.24, 1)
+ShopItemStatus/font_sizes/font_size = 17
+ShopItemStatus/fonts/font = ExtResource("1_body")
+ShopItemTitle/base_type = &"Label"
+ShopItemTitle/colors/font_color = Color(0.322, 0.208, 0.114, 1)
+ShopItemTitle/font_sizes/font_size = 25
+ShopItemTitle/fonts/font = ExtResource("2_display")
+ShopItemWarning/base_type = &"Label"
+ShopItemWarning/colors/font_color = Color(0.62, 0.2, 0.16, 1)
+ShopItemWarning/font_sizes/font_size = 17
+ShopItemWarning/fonts/font = ExtResource("1_body")
+StarsShopBalance/base_type = &"Label"
+StarsShopBalance/colors/font_color = Color(0.322, 0.208, 0.114, 1)
+StarsShopBalance/font_sizes/font_size = 22
+StarsShopBalance/fonts/font = ExtResource("1_body")
+StarsShopTitle/base_type = &"Label"
+StarsShopTitle/colors/font_color = Color(0.322, 0.208, 0.114, 1)
+StarsShopTitle/font_sizes/font_size = 36
+StarsShopTitle/fonts/font = ExtResource("2_display")
+StarsShopWindow/base_type = &"PanelContainer"
+StarsShopWindow/styles/panel = SubResource("ShopWindow")

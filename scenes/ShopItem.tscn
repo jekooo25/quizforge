@@ -1,0 +1,71 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/screens/ShopItem.gd" id="1_item_script"]
+[ext_resource type="Script" path="res://scripts/creature_sprite.gd" id="2_creature"]
+[ext_resource type="Theme" path="res://assets/themes/stars_shop.tres" id="3_theme"]
+
+[node name="ShopItem" type="PanelContainer"]
+theme = ExtResource("3_theme")
+theme_type_variation = &"ShopItemCard"
+script = ExtResource("1_item_script")
+
+[node name="CardPadding" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="CardRow" type="HBoxContainer" parent="CardPadding"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="CreaturePreview" type="Control" parent="CardPadding/CardRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(92, 92)
+layout_mode = 2
+script = ExtResource("2_creature")
+
+[node name="Details" type="VBoxContainer" parent="CardPadding/CardRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="ItemTitle" type="Label" parent="CardPadding/CardRow/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"ShopItemTitle"
+text = "Azure Emberpup"
+
+[node name="ItemDescription" type="Label" parent="CardPadding/CardRow/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"ShopItemBody"
+text = "A cool blue color variation."
+autowrap_mode = 3
+
+[node name="CardFooter" type="HBoxContainer" parent="CardPadding/CardRow/Details"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ItemStatus" type="Label" parent="CardPadding/CardRow/Details/CardFooter"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"ShopItemStatus"
+text = "AVAILABLE"
+vertical_alignment = 1
+
+[node name="ItemPrice" type="Label" parent="CardPadding/CardRow/Details/CardFooter"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"ShopItemPrice"
+text = "35 Stars"
+vertical_alignment = 1
+
+[node name="ActionButton" type="Button" parent="CardPadding/CardRow/Details/CardFooter"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(138, 48)
+layout_mode = 2
+theme_type_variation = &"ShopActionButton"
+text = "BUY"

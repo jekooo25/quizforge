@@ -80,7 +80,7 @@ static func validate(questions: Array) -> Array[String]:
 
 
 ## Saves in the battle's shape. Returns false if the file can't be written.
-static func save(title: String, questions: Array) -> bool:
+static func save(title: String, questions: Array, library_id := "") -> bool:
 	var clean: Array = []
 	for q in questions:
 		var choices: Array = []
@@ -99,6 +99,7 @@ static func save(title: String, questions: Array) -> bool:
 		"version": int(SaveManager.VERSIONS["quiz"]),
 		"title": title,
 		"saved_at": Time.get_datetime_string_from_system(),
+		"library_id": library_id,
 		"questions": clean,
 	}
 	return SaveManager.write_json(SAVE_PATH, data, "quiz")
@@ -117,7 +118,7 @@ static func exists() -> bool:
 static func load_saved() -> Dictionary:
 	var result := SaveManager.read_json(SAVE_PATH, "quiz")
 	if not result["ok"]:
-		return {"title": "", "questions": [], "status": result["status"]}
+		return {"title": "", "questions": [], "library_id": "", "status": result["status"]}
 
 	var parsed: Variant = result["data"]
 	var raw: Array = []
@@ -132,7 +133,7 @@ static func load_saved() -> Dictionary:
 		# accept a bare array too, so a hand-written set still loads
 		raw.assign(parsed)
 	else:
-		return {"title": "", "questions": [], "status": SaveManager.STATUS_CORRUPT}
+		return {"title": "", "questions": [], "library_id": "", "status": SaveManager.STATUS_CORRUPT}
 
 	var out: Array = []
 	for item in raw:
@@ -146,4 +147,9 @@ static func load_saved() -> Dictionary:
 			"page": int(item.get("page", 0)),
 			"source_quote": str(item.get("source_quote", "")),
 		})
-	return {"title": title, "questions": out, "status": result["status"]}
+	return {
+		"title": title,
+		"questions": out,
+		"library_id": str(parsed.get("library_id", "")) if typeof(parsed) == TYPE_DICTIONARY else "",
+		"status": result["status"],
+	}

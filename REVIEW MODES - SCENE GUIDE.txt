@@ -1,0 +1,42 @@
+REVIEW MODE SELECTION — GODOT SCENE GUIDE
+
+HOW TO OPEN
+Main Menu > Play Quizzes > REVIEW beside a saved quiz.
+Choose Start Quiz Battle or Start Word Bank.
+The quiz's (...) menu also has Choose review mode.
+
+SCENE TO EDIT
+scenes/ReviewModeSelect.tscn
+
+ReviewModeSelect
+  Background — navy background colour
+  SafeArea / Scroll / Content
+    Header / BackButton — My Quizzes navigation
+    Header / Heading — Choose Review Mode title
+    QuizTitle — selected saved quiz name
+    Status — guidance and errors
+    ModeCards
+      BattleCard / Content
+        BattleTitle, BattleDescription, BattleCount, BattleReason, BattleButton
+      SpellCard / Content
+        SpellTitle, SpellDescription, SpellCount, SpellReason, SpellButton
+
+All permanent UI elements are in the scene tree.
+The script fills in title/counts, enables buttons, and navigates to existing mode scenes.
+The scroll container accommodates unusually long quiz titles and explanations.
+Android safe-area insets are applied at runtime.
+
+AVAILABILITY
+Battle: every saved question must pass the existing quiz validation.
+The count is the total saved playable MCQ count; each battle uses up to five.
+Word Bank: count comes from the same source-supported card builder used by Complete the Spell.
+Each word-bank round uses up to five eligible sentences.
+Unsupported modes show a reason and cannot be launched.
+Older quizzes without saved source quotes can still be used for Quiz Battle.
+Choosing a mode does not generate new questions or spend Stars.
+The selected battle quiz is written only when Start Quiz Battle is pressed.
+
+CONNECTED SCENES
+scenes/battle.tscn
+scenes/CompleteTheSpell.tscn
+scenes/my_quizzes.tscn

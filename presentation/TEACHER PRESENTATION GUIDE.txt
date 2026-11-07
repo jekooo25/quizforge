@@ -1,0 +1,49 @@
+TEACHER PRESENTATION WALKTHROUGH
+
+Start the sharing server, then reopen the Teacher and Student game windows.
+
+1. TEACHER DASHBOARD
+Review submissions: new quizzes awaiting approval.
+Quiz library: approved, published and returned quizzes.
+Published quizzes: active quizzes, join codes and student results.
+Counts update when you open the dashboard or press Refresh.
+
+2. REVIEW A STUDENT QUIZ
+Open Review submissions. Use Search to find a title or creator.
+Press Review quiz to read one question at a time with the correct answer,
+explanation and source quote. Use Next question / Previous to navigate.
+Approve quiz makes it ready for publishing. Request changes returns it.
+Edit revision opens the existing private-revision editor.
+
+3. PUBLISH
+Open Library, then Publish quiz on the approved card.
+Choose Private draft, Code-only or Public. The leaderboard is available
+for Public quizzes. Press Save publication.
+
+4. SHARE AND VIEW RESULTS
+Open Published. Press Copy code and paste it into the Student join screen.
+Student results opens reports for that exact quiz version.
+Visibility changes who can find the quiz.
+More contains Edit new revision and Close sharing when available.
+Closing sharing prevents new joins and keeps existing reports.
+
+5. DEMONSTRATE THE LEARNING LOOP
+Have the student join and finish a Quiz Battle or Word Bank round.
+In Teacher, open Student results and Refresh.
+Show first-attempt accuracy, practice recall and remaining concepts.
+If a result is missing, Student > Shared quizzes > Send saved results.
+
+EDITABLE SCENE FILES
+scenes/TeacherMenu.tscn - dashboard and counts
+scenes/TeacherReviewers.tscn - tabs, search, empty state and student joining
+scenes/ReviewerCard.tscn - compact quiz card and More actions
+scenes/TeacherQuizReview.tscn - question review and approval
+scenes/TeacherResults.tscn and TeacherResultCard.tscn - reports
+scenes/PublishReview.tscn - publication options
+scenes/TeacherTheme.tres - shared teacher colours, spacing and button styles
+
+TESTED
+Real mouse interactions at 800x360, 1280x562 and 1920x1080.
+Approval, publication, code copying, student download, search and navigation.
+Android safe-area handling is included; physical Android testing is still needed.
+The sharing service is a laptop demo with local roles and client-reported scores.

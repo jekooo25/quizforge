@@ -15,6 +15,11 @@ func _ready() -> void:
 
 
 func set_creature(creature: Creature) -> void:
+	# Replays reuse these nodes after the knockout animation.
+	modulate = Color.WHITE
+	rotation = 0.0
+	_flash = 0.0
+	_squash = 0.0
 	body_color = creature.color
 	horns = creature.horns
 	queue_redraw()
@@ -81,15 +86,16 @@ func _draw() -> void:
 	draw_polyline(pts, Color(0.10, 0.10, 0.14, 0.85), maxf(1.5, radius * 0.055), true)
 
 
-func play_attack(lunge_towards: int) -> void:
+func play_attack(lunge_towards: int) -> Tween:
 	var home := position
 	var tween := create_tween()
 	tween.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 	tween.tween_property(self, "position", home + Vector2(46.0 * lunge_towards, -14.0), 0.12)
 	tween.tween_property(self, "position", home, 0.22)
+	return tween
 
 
-func play_hit() -> void:
+func play_hit() -> Array[Tween]:
 	var tween := create_tween()
 	tween.tween_method(_set_flash, 1.0, 0.0, 0.34)
 	tween.parallel().tween_method(_set_squash, 0.18, 0.0, 0.34)
@@ -100,13 +106,15 @@ func play_hit() -> void:
 		shake.tween_property(self, "position", home + Vector2(10.0 - i * 4.0, -4.0), 0.04)
 		shake.tween_property(self, "position", home - Vector2(10.0 - i * 4.0, -4.0), 0.04)
 	shake.tween_property(self, "position", home, 0.05)
+	return [tween, shake]
 
 
-func play_faint() -> void:
+func play_faint() -> Tween:
 	var tween := create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(self, "modulate:a", 0.25, 0.5)
 	tween.tween_property(self, "rotation", 0.35, 0.5)
+	return tween
 
 
 func _set_flash(v: float) -> void:
@@ -117,3 +125,11 @@ func _set_flash(v: float) -> void:
 func _set_squash(v: float) -> void:
 	_squash = v
 	queue_redraw()
+
+
+func play_recover() -> Tween:
+	var tween := create_tween()
+	tween.tween_property(self, "modulate", Color(0.45, 1.0, 0.65), 0.18)
+	tween.parallel().tween_method(_set_squash, -0.12, 0.0, 0.35)
+	tween.tween_property(self, "modulate", Color.WHITE, 0.28)
+	return tween
