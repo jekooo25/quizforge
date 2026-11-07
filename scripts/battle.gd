@@ -17,10 +17,9 @@ const BattleAudio := preload("res://scripts/ui/battle_audio.gd")
 
 const ROUND_TIME := 45.0
 const SHIELD_COMBO := 3
-const TARGET_CORRECT_RATIO := 0.70
-const DEMO_PLAYER_HP := 3
-const DEMO_ENEMY_DAMAGE := 1
-const DEMO_PLAYER_DAMAGE := 1
+const DEMO_PLAYER_HP := 100
+const DEMO_ENEMY_HP := 100
+const STANDARD_PLAYER_DAMAGE := 45
 const SCORE_PER_CORRECT_ANSWER := 75
 const STARS_PER_CORRECT_ANSWER := 1
 const STARS_FOR_WIN := 2
@@ -262,13 +261,11 @@ func _start_battle() -> void:
 		question["_learning_id"] = i
 		question["_source_index"] = _all_questions.find(_questions[i])
 		_turns.append({"question": question, "recall": false})
-	var enemy_hp := _questions.size() if _practice_mode else maxi(1, int(ceil(float(_questions.size()) * TARGET_CORRECT_RATIO)))
-	# Short encounters leave room to spend a correct answer on recovery.
-	if not _practice_mode and encounter_size > 0 and enemy_hp > 1:
-		enemy_hp -= 1
-	player = Creature.new("Emberpup", DEMO_PLAYER_HP, DEMO_PLAYER_DAMAGE,
+	var enemy_hp: int = _questions.size() if _practice_mode else DEMO_ENEMY_HP
+	var damage_per_answer: int = maxi(1, int(100.0 / float(maxi(1, _questions.size()))))
+	player = Creature.new("Emberpup", DEMO_PLAYER_HP, damage_per_answer,
 		ShopManager.equipped_body_color(), ShopManager.has_equipped_horns())
-	enemy = Creature.new("Mudlet", enemy_hp, DEMO_ENEMY_DAMAGE, Color(0.42, 0.62, 0.96), true)
+	enemy = Creature.new("Mudlet", enemy_hp, STANDARD_PLAYER_DAMAGE, Color(0.42, 0.62, 0.96), true)
 	streak = 0
 	_best_streak = 0
 	_shield_ready = false
