@@ -15,6 +15,8 @@ const MIN_TOUCH := Vector2(0, 48)
 @onready var upload_reviewer_button: Button = get_node("SafeMargin/RootColumn/MainContent/RightColumn/UploadReviewerButton")
 @onready var quiz_library_button: Button = get_node("SafeMargin/RootColumn/MainContent/RightColumn/QuizLibraryButton")
 @onready var daily_tasks_button: Button = get_node("SafeMargin/RootColumn/BottomNav/DailyTasksButton")
+@onready var recent_list: VBoxContainer = get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard/Padding/JoinColumn/RecentScroll/RecentList")
+@onready var recent_label: Label = get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard/Padding/JoinColumn/RecentLabel")
 @onready var profile_button: Button = get_node("SafeMargin/RootColumn/TopBar/ProfileButton")
 @onready var settings_button: Button = get_node("SafeMargin/RootColumn/TopBar/SettingsButton")
 
@@ -34,6 +36,7 @@ func _ready() -> void:
 	daily_tasks_button.pressed.connect(_open_daily_tasks)
 	profile_button.pressed.connect(_show_profile_hint)
 	settings_button.pressed.connect(_open_settings)
+	_refresh_recent_quizzes()
 	stars_shop_button.text = "%d Stars | Shop" % TaskManager.stars_balance()
 	if OS.get_name() == "Android":
 		get_tree().quit_on_go_back = false
@@ -85,10 +88,9 @@ func _configure_schoolyard_cards() -> void:
 	portal_frame.visible = true
 	join_card.add_theme_stylebox_override("panel", cream_panel)
 	portal_frame.add_theme_stylebox_override("panel", cream_panel)
-	get_node("SafeMargin/RootColumn/MainContent/LeftColumn/RecentLabel").visible = true
-	get_node("SafeMargin/RootColumn/MainContent/LeftColumn/RecentScroll").visible = true
-	get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/PortalLabel").text = "Quizforge portal"
-	get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/Pedestal/PedestalLabel").text = "Start battle"
+	recent_label.visible = true
+	recent_list.get_parent().visible = true
+	get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/PortalLabel").text = "Ready for your next battle?"
 	start_battle_button.text = "Start battle"
 	upload_reviewer_button.text = "Upload reviewer"
 	quiz_library_button.text = "My quiz library"
@@ -133,9 +135,41 @@ func _add_pixel_icon(button: Button, kind: String) -> void:
 func _start_quiz() -> void:
 	var quizzes: Array = QuizLibrary.all()
 	if quizzes.is_empty():
-		status_label.text = "Save a quiz first, then start your battle here."
+		status_label.text = "Upload a reviewer first"
 		return
-	_open_library()
+	var picker: Control = load("res://scenes/QuizDetails.tscn").instantiate()
+	picker.library_id = str(quizzes[0].get("id", ""))
+	Nav.show_screen(picker)
+
+
+func _refresh_recent_quizzes() -> void:
+	for child: Node in recent_list.get_children():
+		recent_list.remove_child(child)
+		child.queue_free()
+	var quizzes: Array = QuizLibrary.all()
+	if quizzes.is_empty():
+		var empty: Label = UITheme.sans("No saved quizzes yet. Upload a reviewer to make one.", 20, UITheme.INK)
+		empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		recent_list.add_child(empty)
+		return
+	var count: int = mini(3, quizzes.size())
+	for index: int in count:
+		var quiz: Dictionary = quizzes[index]
+		var row: Button = Button.new()
+		row.text = str(quiz.get("title", "Untitled quiz"))
+		row.custom_minimum_size = Vector2(0, 48)
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_theme_stylebox_override("normal", UITheme.box(UITheme.CREAM, UITheme.WOOD_LIGHT, 1, 8))
+		row.add_theme_color_override("font_color", UITheme.INK)
+		var quiz_id: String = str(quiz.get("id", ""))
+		row.pressed.connect(_open_recent.bind(quiz_id))
+		recent_list.add_child(row)
+
+
+func _open_recent(quiz_id: String) -> void:
+	var picker: Control = load("res://scenes/QuizDetails.tscn").instantiate()
+	picker.library_id = quiz_id
+	Nav.show_screen(picker)
 
 
 func _open_upload() -> void:
