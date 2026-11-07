@@ -14,20 +14,13 @@ func _ready() -> void:
  %Count.get_line_edit().add_theme_font_size_override("font_size",26)
  %Heading.text="Create a quiz"
  %Course.add_item("Choose the subject")
- var courses_reply: Dictionary = await SharingService.api("/courses")
- if courses_reply.get("ok", false):
-  for course_value: Variant in courses_reply.get("courses", []):
-   var course: Dictionary = course_value as Dictionary
-   %Course.add_item("%s · %s" % [str(course.get("code", "")), str(course.get("title", "Course"))])
-   %Course.set_item_metadata(%Course.item_count - 1, str(course.get("id", "")))
-   if str(Nav.user.get("course_id", "")) == str(course.get("id", "")):
-	%Course.select(%Course.item_count - 1)
- else:
-  var seeded: Array = [{"id":"BIO101","code":"BIO101","title":"Biology 101"},{"id":"HIST201","code":"HIST201","title":"World History"},{"id":"MATH120","code":"MATH120","title":"College Algebra"},{"id":"CHEM110","code":"CHEM110","title":"General Chemistry"}]
-  for course_value: Variant in seeded:
-   var course: Dictionary = course_value as Dictionary
-   %Course.add_item("%s · %s" % [str(course.get("code", "")), str(course.get("title", "Course"))])
-   %Course.set_item_metadata(%Course.item_count - 1, str(course.get("id", "")))
+ var seeded: Array = [{"id":"BIO101","code":"BIO101","title":"Biology 101"},{"id":"HIST201","code":"HIST201","title":"World History"},{"id":"MATH120","code":"MATH120","title":"College Algebra"},{"id":"CHEM110","code":"CHEM110","title":"General Chemistry"}]
+ for course_value: Variant in seeded:
+  var course: Dictionary = course_value as Dictionary
+  %Course.add_item("%s · %s" % [str(course.get("code", "")), str(course.get("title", "Course"))])
+  %Course.set_item_metadata(%Course.item_count - 1, str(course.get("id", "")))
+  if str(Nav.user.get("course_id", "")) == str(course.get("id", "")):
+   %Course.select(%Course.item_count - 1)
  %Mode.add_item("Quiz Battle · Multiple choice")
  %Mode.add_item("Word Bank · Fill in the blanks")
  %Mode.select(1 if Nav.user.get("generation_mode","battle")=="word_bank" else 0)
