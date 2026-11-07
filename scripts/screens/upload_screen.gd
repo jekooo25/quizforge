@@ -50,25 +50,25 @@ func _on_file_selected(path: String) -> void:
  %Status.text="Ready to generate. You'll preview and edit before saving."
  _continue.disabled=false
 func _range_pair() -> Vector2i:
-    var text := _range.text.strip_edges()
-    if text == "":
-        return Vector2i.ZERO
-    var re := RegEx.new()
-    var err := re.compile("(?i)^(?:pdf\\s+)?(?:pages?|pp?\\.?)?\\s*(\\d+)\\s*(?:(?:-|\\.\\.|to)\\s*(\\d+))?$")
-    if err != OK:
-        return Vector2i(-1, -1)
-    var m := re.search(text)
-    if m == null:
-        return Vector2i(-1, -1)
-    var low := int(m.get_string(1))
-    var high := int(m.get_string(2)) if m.get_string(2) != "" else low
-    if low < 1:
-        return Vector2i(-1, -1)
-    if high < low:
-        var swap := low
-        low = high
-        high = swap
-    return Vector2i(low, high)
+	var text := _range.text.strip_edges()
+	if text == "":
+		return Vector2i.ZERO
+	var re := RegEx.new()
+	var err := re.compile("(?i)^(?:pdf\\s+)?(?:pages?|pp?\\.?)?\\s*(\\d+)\\s*(?:(?:-|\\.\\.|to)\\s*(\\d+))?$")
+	if err != OK:
+		return Vector2i(-1, -1)
+	var m := re.search(text)
+	if m == null:
+		return Vector2i(-1, -1)
+	var low := int(m.get_string(1))
+	var high := int(m.get_string(2)) if m.get_string(2) != "" else low
+	if low < 1:
+		return Vector2i(-1, -1)
+	if high < low:
+		var swap := low
+		low = high
+		high = swap
+	return Vector2i(low, high)
 
 
 func _on_continue() -> void:
@@ -83,7 +83,7 @@ func _on_continue() -> void:
 	Nav.user["course_id"]=str(%Course.get_item_metadata(%Course.selected))
  Nav.show_screen(load("res://scenes/GenerateQuiz.tscn").instantiate())
 func back() -> void:
- Nav.show_screen(load("res://scenes/HomeScreen.tscn").instantiate())
+	Nav.call_deferred("show_screen", load("res://scenes/HomeScreen.tscn").instantiate())
 func _safe_area() -> void:
  if OS.get_name()!="Android":return
  var safe:=DisplayServer.get_display_safe_area();var window:=Vector2(DisplayServer.window_get_size())

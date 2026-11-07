@@ -81,7 +81,7 @@ func _review_questions() -> void:
  preview.review_mode=str(Nav.user.get("generation_mode","battle"))
  Nav.show_screen(preview)
 func choose_file() -> void:
- Nav.show_screen(load("res://scenes/UploadReviewer.tscn").instantiate())
+	Nav.call_deferred("show_screen", load("res://scenes/UploadReviewer.tscn").instantiate())
 func _safe_area() -> void:
  if OS.get_name()!="Android":return
  var safe:=DisplayServer.get_display_safe_area();var window:=Vector2(DisplayServer.window_get_size())

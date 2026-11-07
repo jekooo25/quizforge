@@ -5,7 +5,7 @@ var busy:=false
 func _ready() -> void:
  resized.connect(_apply_safe_area)
  _apply_safe_area.call_deferred()
- %Back.pressed.connect(func()->void:Nav.show_screen(load("res://scenes/PublicQuizzes.tscn").instantiate()))
+	%Back.pressed.connect(func()->void:Nav.call_deferred("show_screen",load("res://scenes/PublicQuizzes.tscn").instantiate()))
  %Refresh.pressed.connect(refresh)
  refresh()
 func refresh() -> void:
