@@ -540,6 +540,12 @@ func _advance_turn() -> void:
 	next_button.visible = false
 	if not _practice_mode and not _combat_finished and (enemy.is_down() or player.is_down()):
 		_combat_finished = true
+		if player.is_down():
+			_end_battle(false)
+			return
+		if enemy.is_down():
+			_end_battle(true)
+			return
 		var rest := _turns.slice(_turn_index + 1).filter(func(turn: Dictionary) -> bool: return bool(turn["recall"]))
 		_turns = _turns.slice(0, _turn_index + 1) + rest
 	_begin_round()
