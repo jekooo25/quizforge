@@ -79,7 +79,7 @@ func _refresh_keyboard_inset() -> void:
 func _configure_schoolyard_cards() -> void:
 	_add_pixel_icon(profile_button, "profile")
 	_add_pixel_icon(settings_button, "gear")
-	var cream_panel: StyleBoxFlat = UITheme.box(UITheme.PAPER, UITheme.WOOD_LIGHT, 2, 12)
+	var cream_panel: StyleBoxFlat = UITheme.box(Color(0.96, 0.90, 0.78, 0.88), UITheme.WOOD_LIGHT, 2, 12)
 	var cream_button: StyleBoxFlat = UITheme.box(UITheme.CREAM, UITheme.WOOD_LIGHT, 2, 10)
 	var navy_button: StyleBoxFlat = UITheme.box(UITheme.NAVY, UITheme.NAVY_HOT, 2, 10)
 	var join_card: PanelContainer = get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard")
@@ -91,6 +91,7 @@ func _configure_schoolyard_cards() -> void:
 	recent_label.visible = true
 	recent_list.get_parent().visible = true
 	get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/PortalLabel").text = "Ready for your next battle?"
+	get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/Pedestal").visible = false
 	start_battle_button.text = "Start battle"
 	upload_reviewer_button.text = "Upload reviewer"
 	quiz_library_button.text = "My quiz library"
