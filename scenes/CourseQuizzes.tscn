@@ -64,6 +64,23 @@ text = "Available quizzes for this enrolled course"
 theme_override_font_sizes/font_size = 22
 theme_override_colors/font_color = Color(0.32,0.21,0.11,1)
 
+[node name="SearchRow" type="HBoxContainer" parent="Margin/Column"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Search" type="LineEdit" parent="Margin/Column/SearchRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Search quizzes or reviewers"
+custom_minimum_size = Vector2(0,56)
+
+[node name="SearchButton" type="Button" parent="Margin/Column/SearchRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Search"
+custom_minimum_size = Vector2(120,56)
+
 [node name="Scroll" type="ScrollContainer" parent="Margin/Column"]
 layout_mode = 2
 size_flags_vertical = 3
@@ -80,3 +97,10 @@ layout_mode = 2
 text = "No quizzes are available for this course yet."
 theme_override_font_sizes/font_size = 24
 theme_override_colors/font_color = Color(0.32,0.21,0.11,1)
+
+[node name="UploadReviewer" type="Button" parent="Margin/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Upload reviewer for this course"
+custom_minimum_size = Vector2(0,64)
+visible = false
