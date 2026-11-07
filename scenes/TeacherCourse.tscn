@@ -36,6 +36,39 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Sections"
 theme_override_font_sizes/font_size = 24
+
+[node name="UploadReviewer" type="Button" parent="Margin/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Upload reviewer for this course"
+custom_minimum_size = Vector2(0,60)
+
+[node name="PublishRow" type="HBoxContainer" parent="Margin/Column"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Scope" type="OptionButton" parent="Margin/Column/PublishRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0,56)
+text = "Publish to all sections"
+[node name="Deadline" type="LineEdit" parent="Margin/Column/PublishRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Deadline (e.g. Dec 10, 11:59 PM)"
+custom_minimum_size = Vector2(0,56)
+[node name="Publish" type="Button" parent="Margin/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Publish generated quiz"
+custom_minimum_size = Vector2(0,60)
+[node name="Status" type="Label" parent="Margin/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+text = ""
+theme_override_font_sizes/font_size = 20
 [node name="Items" type="VBoxContainer" parent="Margin/Column"]
 unique_name_in_owner = true
 layout_mode = 2
