@@ -21,6 +21,7 @@ const MIN_TOUCH := Vector2(0, 48)
 @onready var join_button: Button = get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard/Padding/JoinColumn/JoinButton")
 @onready var profile_button: Button = get_node("SafeMargin/RootColumn/TopBar/ProfileButton")
 @onready var settings_button: Button = get_node("SafeMargin/RootColumn/TopBar/SettingsButton")
+@onready var course_list: VBoxContainer = get_node("SafeMargin/RootColumn/MainContent/LeftColumn/CoursePanel/CourseColumn/CourseList")
 
 
 func _ready() -> void:
@@ -42,6 +43,7 @@ func _ready() -> void:
 	join_button.pressed.connect(_join_code)
 	code_input.text_changed.connect(_on_code_changed)
 	_refresh_recent_quizzes()
+	_refresh_courses()
 	stars_shop_button.text = "%d Stars | Shop" % TaskManager.stars_balance()
 	stars_shop_button.add_theme_color_override("font_color", UITheme.INK)
 	stars_shop_button.add_theme_font_size_override("font_size", 22)
@@ -229,6 +231,27 @@ func _refresh_recent_quizzes() -> void:
 		var quiz_id: String = str(quiz.get("id", ""))
 		row.pressed.connect(_open_recent.bind(quiz_id))
 		recent_list.add_child(row)
+
+
+func _refresh_courses() -> void:
+	for child: Node in course_list.get_children():
+		course_list.remove_child(child)
+		child.queue_free()
+	var reply: Dictionary = await SharingService.api("/courses")
+	if not reply.get("ok", false):
+		var unavailable: Label = UITheme.sans("Courses unavailable right now", 18, UITheme.INK)
+		course_list.add_child(unavailable)
+		return
+	var courses: Array = reply.get("courses", [])
+	if courses.is_empty():
+		var empty: Label = UITheme.sans("No enrolled courses yet", 18, UITheme.INK)
+		course_list.add_child(empty)
+		return
+	for course_value: Variant in courses:
+		var course: Dictionary = course_value as Dictionary
+		var label: Label = UITheme.sans("%s · %s" % [str(course.get("code", "")), str(course.get("title", "Course"))], 18, UITheme.INK)
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		course_list.add_child(label)
 
 
 func _open_recent(quiz_id: String) -> void:

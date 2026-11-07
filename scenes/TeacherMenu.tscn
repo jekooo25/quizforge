@@ -206,6 +206,26 @@ custom_minimum_size = Vector2(0,72)
 [node name="Footer" type="HBoxContainer" parent="Margin/Column"]
 layout_mode = 2
 
+[node name="CoursePanel" type="PanelContainer" parent="Margin/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="CourseColumn" type="VBoxContainer" parent="Margin/Column/CoursePanel"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="CourseHeading" type="Label" parent="Margin/Column/CoursePanel/CourseColumn"]
+layout_mode = 2
+text = "Your courses"
+theme_override_font_sizes/font_size = 24
+
+[node name="CourseList" type="VBoxContainer" parent="Margin/Column/CoursePanel/CourseColumn"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 3
+
 
 [node name="Connection" type="Label" parent="Margin/Column/Footer"]
 unique_name_in_owner = true

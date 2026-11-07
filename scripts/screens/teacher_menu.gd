@@ -10,9 +10,26 @@ func _ready() -> void:
  %Refresh.pressed.connect(refresh)
  %Settings.pressed.connect(open_settings)
  %Profile.pressed.connect(_on_profile)
+ %CoursePanel.add_theme_stylebox_override("panel", UITheme.box(Color(0.05,0.12,0.2,0.96), Color(0.2,0.45,0.7,1.0), 2, 12))
  resized.connect(_apply_safe_area)
  _apply_safe_area()
  refresh()
+ refresh_courses()
+
+func refresh_courses() -> void:
+ var reply: Dictionary=await SharingService.api("/courses")
+ if not is_inside_tree():return
+ for child: Node in %CourseList.get_children():
+  %CourseList.remove_child(child)
+  child.queue_free()
+ if not reply.get("ok",false):
+  %CourseList.add_child(UITheme.sans("Courses unavailable right now",20,UITheme.CREAM))
+  return
+ var courses: Array=reply.get("courses",[])
+ for course_value: Variant in courses:
+  var course: Dictionary=course_value as Dictionary
+  var label: Label=UITheme.sans("%s · %s" % [str(course.get("code","")),str(course.get("title","Course"))],20,UITheme.CREAM)
+  %CourseList.add_child(label)
 func refresh() -> void:
  if busy:return
  busy=true
