@@ -54,8 +54,14 @@ func _add_course_buttons(courses: Array) -> void:
   button.text="%s · %s" % [str(course.get("code","")),str(course.get("title","Course"))]
   button.custom_minimum_size=Vector2(0,48)
   button.size_flags_horizontal=Control.SIZE_EXPAND_FILL
-  button.pressed.connect(open_panel.bind("list"))
+  button.pressed.connect(_open_course.bind(str(course.get("id", "")), str(course.get("title", "Course"))))
   get_node("Margin/MobileScroll/Column/CoursePanel/CourseColumn/CourseList").add_child(button)
+
+func _open_course(course_id: String, title: String) -> void:
+ var screen: Control = load("res://scenes/TeacherCourse.tscn").instantiate()
+ screen.course_id=course_id
+ screen.course_title=title
+ Nav.call_deferred("show_screen",screen)
 func refresh() -> void:
  if busy:return
  busy=true
