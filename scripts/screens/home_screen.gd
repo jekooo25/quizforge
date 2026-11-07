@@ -83,22 +83,22 @@ func _refresh_keyboard_inset() -> void:
 func _configure_schoolyard_cards() -> void:
 	_add_pixel_icon(profile_button, "profile")
 	_add_pixel_icon(settings_button, "gear")
-	_add_pixel_icon(start_battle_button, "target")
 	var cream_panel: StyleBoxFlat = UITheme.box(Color(0.96, 0.90, 0.78, 1.0), UITheme.WOOD_LIGHT, 2, 12)
 	var cream_button: StyleBoxFlat = UITheme.box(UITheme.CREAM, UITheme.WOOD_LIGHT, 2, 10)
 	var navy_button: StyleBoxFlat = UITheme.box(UITheme.NAVY, UITheme.NAVY_HOT, 2, 10)
 	var join_card: PanelContainer = get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard")
-	var portal_frame: PanelContainer = get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame")
+	var portal_frame: Control = get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame")
 	join_card.visible = true
 	portal_frame.visible = true
 	join_card.add_theme_stylebox_override("panel", cream_panel)
-	portal_frame.add_theme_stylebox_override("panel", cream_panel)
+	portal_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	recent_label.visible = true
 	recent_list.get_parent().visible = true
 	var portal_label: Label = get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/PortalLabel")
 	portal_label.text = "Ready for your next battle?"
 	portal_label.add_theme_color_override("font_color", UITheme.INK)
 	portal_label.add_theme_font_size_override("font_size", 28)
+	portal_label.add_theme_stylebox_override("normal", UITheme.box(Color(0.96, 0.90, 0.78, 0.82), UITheme.WOOD_LIGHT, 1, 8))
 	var pedestal: TextureRect = get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/Pedestal")
 	pedestal.visible = true
 	get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/Pedestal/PedestalLabel").text = Nav.display_name()

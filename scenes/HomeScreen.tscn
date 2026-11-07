@@ -129,7 +129,7 @@ size_flags_horizontal = 3
 size_flags_stretch_ratio = 1.15
 theme_override_constants/separation = 6
 
-[node name="PortalFrame" type="PanelContainer" parent="SafeMargin/RootColumn/MainContent/CenterColumn"]
+[node name="PortalFrame" type="Control" parent="SafeMargin/RootColumn/MainContent/CenterColumn"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
