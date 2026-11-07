@@ -38,9 +38,9 @@ func save_draft() -> void:
    add_child(dialog)
    busy=false
    return
-	var details: Control=load("res://scenes/QuizDetails.tscn").instantiate()
-	details.library_id=id
-	Nav.call_deferred("show_screen", details)
+ var details: Control=load("res://scenes/QuizDetails.tscn").instantiate()
+ details.library_id=id
+ Nav.call_deferred("show_screen", details)
 func leave() -> void:
  Nav.call_deferred("show_screen", load("res://scenes/UploadReviewer.tscn").instantiate())
 
