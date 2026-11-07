@@ -714,7 +714,7 @@ func _on_my_quizzes() -> void:
 
 
 func _on_return_to_menu() -> void:
-	Nav.show_screen(load("res://scripts/screens/menu_screen.gd").new())
+	Nav.show_screen(load("res://scenes/HomeScreen.tscn").instantiate())
 
 
 # ---------------------------------------------------------------- presentation

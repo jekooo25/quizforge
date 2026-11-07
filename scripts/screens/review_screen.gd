@@ -104,7 +104,7 @@ func _build_top_bar() -> Control:
 	var back := UITheme.button("←", "cream", 38)
 	back.custom_minimum_size = Vector2(48, 38)
 	back.pressed.connect(func() -> void:
-		Nav.show_screen(load("res://scripts/screens/menu_screen.gd").new()))
+		Nav.show_screen(load("res://scenes/HomeScreen.tscn").instantiate()))
 	bar.add_child(back)
 
 	var title := UITheme.script(_title_text(), 24, UITheme.WOOD_DARK)

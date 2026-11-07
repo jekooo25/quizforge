@@ -61,7 +61,7 @@ func _ready() -> void:
 	back.offset_bottom = -26.0
 	add_child(back)
 	back.pressed.connect(func() -> void:
-		Nav.show_screen(load("res://scripts/screens/menu_screen.gd").new()))
+		Nav.show_screen(load("res://scenes/HomeScreen.tscn").instantiate()))
 
 	_add_version_label()
 

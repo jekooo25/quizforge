@@ -74,7 +74,7 @@ func _on_continue() -> void:
  Nav.user["generation_count"]=int(%Count.value)
  Nav.show_screen(load("res://scenes/GenerateQuiz.tscn").instantiate())
 func back() -> void:
- Nav.show_screen(load("res://scripts/screens/menu_screen.gd").new())
+ Nav.show_screen(load("res://scenes/HomeScreen.tscn").instantiate())
 func _safe_area() -> void:
  if OS.get_name()!="Android":return
  var safe:=DisplayServer.get_display_safe_area();var window:=Vector2(DisplayServer.window_get_size())

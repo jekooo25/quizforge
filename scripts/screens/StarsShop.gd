@@ -96,4 +96,4 @@ func _cancel_purchase() -> void:
 
 
 func _on_close_pressed() -> void:
-	Nav.show_screen(load("res://scripts/screens/menu_screen.gd").new())
+	Nav.show_screen(load("res://scenes/HomeScreen.tscn").instantiate())

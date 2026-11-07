@@ -43,7 +43,7 @@ func _ready() -> void:
 	var back := UITheme.script_button("← back to menu", 20)
 	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	back.pressed.connect(func() -> void:
-		Nav.show_screen(load("res://scripts/screens/menu_screen.gd").new()))
+		Nav.show_screen(load("res://scenes/HomeScreen.tscn").instantiate()))
 	board.content.add_child(back)
 
 	_select_tab("progress")

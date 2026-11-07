@@ -20,7 +20,7 @@ func _ready() -> void:
  %Nickname.text=str(Nav.user.get("leaderboard_nickname",""))
  %Nickname.text_changed.connect(func(value: String)->void:Nav.user["leaderboard_nickname"]=value)
  %BrowsePublic.pressed.connect(func()->void:Nav.show_screen(load("res://scenes/PublicQuizzes.tscn").instantiate()))
- %Back.pressed.connect(func()->void:Nav.show_screen(load("res://scripts/screens/menu_screen.gd").new()))
+ %Back.pressed.connect(func()->void:Nav.show_screen(load("res://scenes/HomeScreen.tscn").instantiate()))
  %Refresh.pressed.connect(refresh)
  %PendingTab.pressed.connect(set_filter.bind("pending"))
  %LibraryTab.pressed.connect(set_filter.bind("list"))
@@ -152,7 +152,7 @@ func _apply_safe_area() -> void:
 func _unhandled_key_input(event: InputEvent) -> void:
  if event.is_action_pressed("ui_cancel"):
   get_viewport().set_input_as_handled()
-  Nav.show_screen(load("res://scripts/screens/menu_screen.gd").new())
+  Nav.show_screen(load("res://scenes/HomeScreen.tscn").instantiate())
 func _notification(what: int) -> void:
  if what==NOTIFICATION_WM_GO_BACK_REQUEST and is_node_ready():
-  Nav.show_screen(load("res://scripts/screens/menu_screen.gd").new())
+  Nav.show_screen(load("res://scenes/HomeScreen.tscn").instantiate())
