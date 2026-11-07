@@ -1,4 +1,4 @@
-param([ValidateSet('server','teacher','student')][string]$Mode)
+param([ValidateSet('server','teacher','student','student2')][string]$Mode)
 $project = Split-Path -Parent $PSScriptRoot
 if ($Mode -eq 'server') {
     $python = Join-Path $env:USERPROFILE 'Tools\qfenv\Scripts\python.exe'
@@ -16,5 +16,7 @@ $env:APPDATA = Join-Path $PSScriptRoot ('sessions\' + $Mode)
 if ($Mode -eq 'teacher') {
     & $godot --path $project --resolution 800x360 --position 40,80 --max-fps 60 res://presentation/demo.tscn -- --teacher
 } else {
-    & $godot --path $project --resolution 800x360 --position 160,180 --max-fps 60 res://presentation/demo.tscn
+    $extra = @()
+    if ($Mode -eq 'student2') { $extra = @('--student-2') }
+    & $godot --path $project --resolution 800x360 --position 160,180 --max-fps 60 res://presentation/demo.tscn -- $extra
 }

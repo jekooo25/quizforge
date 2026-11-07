@@ -54,8 +54,9 @@ def connect():
     db.execute("INSERT OR IGNORE INTO courses(id,title,professor) VALUES(?,?,?)", (course_id,title,professor))
     db.execute("INSERT OR IGNORE INTO syllabi(course_id,text) VALUES(?,?)", (course_id,syllabus))
     db.execute("INSERT OR IGNORE INTO course_settings(course_id,auto_publish) VALUES(?,0)", (course_id,))
-   for course_id,_,_,_ in demo_courses[:4]:
-    db.execute("INSERT OR IGNORE INTO enrollments(course_id,student,section) VALUES(?,?,?)", (course_id,"Demo Student","A"))
+   for student in ("Demo Student", "Demo Student 2"):
+    for course_id,_,_,_ in demo_courses[:4]:
+     db.execute("INSERT OR IGNORE INTO enrollments(course_id,student,section) VALUES(?,?,?)", (course_id,student,"A"))
   with db:
    yield db
  finally:
