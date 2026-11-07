@@ -8,6 +8,9 @@ func _ready() -> void:
  %BackButton.pressed.connect(back)
  %BattleButton.pressed.connect(open_battle)
  %SpellButton.pressed.connect(open_spell)
+	var is_teacher: bool = str(Nav.user.get("role", "student")) == "teacher"
+	%PublishSettings.visible = is_teacher
+	%PublishSettings.pressed.connect(_open_publish_settings)
  var quiz := QuizLibrary.get_quiz(library_id)
  var questions: Variant = quiz.get("questions",[])
  if quiz.is_empty() or not questions is Array or questions.is_empty():
@@ -45,6 +48,15 @@ func open_battle() -> void:
   %Status.text = "This quiz could not be saved for battle. Try again."
   return
  Nav.show_screen(load("res://scenes/battle.tscn").instantiate())
+
+func _open_publish_settings() -> void:
+	var review_id: String = str(SharingService.state.get("submissions", {}).get(library_id, ""))
+	if review_id == "":
+		%Status.text = "Submit this quiz for teacher review before publishing it."
+		return
+	var dialog: Control = preload("res://scenes/PublishReview.tscn").instantiate()
+	dialog.review_id = review_id
+	add_child(dialog)
 func open_spell() -> void:
  if %SpellButton.disabled: return
  var mode: Control = load("res://scenes/CompleteTheSpell.tscn").instantiate()
