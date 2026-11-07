@@ -6,4 +6,4 @@ func _ready() -> void:
  get_window().title = "Quizforge · %s · Laptop presentation demo" % Nav.user.role
  if not teacher and QuizLibrary.count() == 0:
   QuizLibrary.add("DEMO · General Knowledge",QuizData.sample(),"demo","presentation-sample")
- Nav.show_screen(load("res://scripts/screens/menu_screen.gd").new())
+ Nav.show_screen(load("res://scenes/HomeScreen.tscn").instantiate())
