@@ -23,9 +23,24 @@ func save_draft() -> void:
  var id:=QuizLibrary.add(%QuizTitle.text.strip_edges(),questions,"generated")
  if id=="":busy=false;%Status.text="Could not save. Try again.";return
  saved_id=id;dirty=false
- var details: Control=load("res://scenes/QuizDetails.tscn").instantiate()
- details.library_id=id
- Nav.call_deferred("show_screen", details)
+	if str(Nav.user.get("role", "student")) == "teacher":
+		var submitted: Dictionary = await SharingService.submit_quiz(id)
+		if not submitted.get("ok", false) and not submitted.get("duplicate", false):
+			busy=false
+			%Status.text=str(submitted.get("error", "Saved locally, but teacher review submission failed."))
+			return
+		var review_id: String = str(SharingService.state.get("submissions", {}).get(id, ""))
+		if review_id == "" and submitted.get("review") is Dictionary:
+			review_id = str(submitted.review.get("id", ""))
+		if review_id != "":
+			var dialog: Control = preload("res://scenes/PublishReview.tscn").instantiate()
+			dialog.review_id = review_id
+			add_child(dialog)
+			busy=false
+			return
+	var details: Control=load("res://scenes/QuizDetails.tscn").instantiate()
+	details.library_id=id
+	Nav.call_deferred("show_screen", details)
 func leave() -> void:
  Nav.call_deferred("show_screen", load("res://scenes/UploadReviewer.tscn").instantiate())
 
