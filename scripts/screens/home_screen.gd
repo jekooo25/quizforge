@@ -92,10 +92,15 @@ func _configure_schoolyard_cards() -> void:
 	var cream_button: StyleBoxFlat = UITheme.box(UITheme.CREAM, UITheme.WOOD_LIGHT, 2, 10)
 	var navy_button: StyleBoxFlat = UITheme.box(UITheme.NAVY, UITheme.NAVY_HOT, 2, 10)
 	var join_card: PanelContainer = get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard")
+	var course_panel: PanelContainer = get_node("SafeMargin/RootColumn/MainContent/LeftColumn/CoursePanel")
 	var portal_frame: Control = get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame")
 	join_card.visible = true
 	portal_frame.visible = true
 	join_card.add_theme_stylebox_override("panel", cream_panel)
+	course_panel.add_theme_stylebox_override("panel", cream_panel)
+	var course_heading: Label = get_node("SafeMargin/RootColumn/MainContent/LeftColumn/CoursePanel/CourseColumn/CourseHeading")
+	course_heading.add_theme_color_override("font_color", UITheme.INK)
+	course_heading.add_theme_font_size_override("font_size", 22)
 	portal_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	recent_label.visible = true
 	recent_list.get_parent().visible = true
@@ -228,6 +233,9 @@ func _refresh_recent_quizzes() -> void:
 		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_theme_stylebox_override("normal", UITheme.box(UITheme.CREAM, UITheme.WOOD_LIGHT, 1, 8))
 		row.add_theme_color_override("font_color", UITheme.INK)
+		row.add_theme_stylebox_override("normal", cream_button)
+		row.add_theme_stylebox_override("hover", UITheme.box(UITheme.PAPER, UITheme.YELLOW_DEEP, 2, 8))
+		row.add_theme_stylebox_override("pressed", UITheme.box(UITheme.PAPER, UITheme.WOOD, 2, 8))
 		var quiz_id: String = str(quiz.get("id", ""))
 		row.pressed.connect(_open_recent.bind(quiz_id))
 		recent_list.add_child(row)

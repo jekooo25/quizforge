@@ -247,7 +247,8 @@ text = "Leaderboards"
 [node name="CoursePanel" type="PanelContainer" parent="SafeMargin/RootColumn/MainContent/LeftColumn"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_vertical = 3
+size_flags_vertical = 0
+custom_minimum_size = Vector2(0, 150)
 
 [node name="CourseColumn" type="VBoxContainer" parent="SafeMargin/RootColumn/MainContent/LeftColumn/CoursePanel"]
 unique_name_in_owner = true
