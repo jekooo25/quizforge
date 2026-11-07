@@ -26,6 +26,7 @@ func _ready() -> void:
  %LibraryTab.pressed.connect(set_filter.bind("list"))
  %PublishedTab.pressed.connect(set_filter.bind("shared"))
  %Search.text_changed.connect(func(_text: String)->void:render())
+ %SearchButton.pressed.connect(render)
  %Join.pressed.connect(join_quiz)
  %Send.pressed.connect(send_results)
  %OpenQuizzes.pressed.connect(func()->void:Nav.show_screen(load("res://scenes/my_quizzes.tscn").instantiate()))
