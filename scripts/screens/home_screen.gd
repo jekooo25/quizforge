@@ -3,6 +3,7 @@ extends Control
 ## edited in Godot's scene tree instead of being assembled in code.
 
 const MIN_TOUCH := Vector2(0, 48)
+const Cat = preload("res://scripts/ui/cat_mascot.gd")
 
 @onready var safe_margin: MarginContainer = get_node("SafeMargin")
 @onready var status_label: Label = get_node("SafeMargin/RootColumn/StatusLabel")
@@ -29,6 +30,15 @@ func _ready() -> void:
 	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(backdrop)
 	move_child(backdrop, 0)
+	var cat: Control = Cat.new()
+	cat.name = "HomeMascot"
+	cat.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	cat.offset_left = -220.0
+	cat.offset_right = -16.0
+	cat.offset_top = 58.0
+	cat.offset_bottom = 220.0
+	cat.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(cat)
 	_configure_schoolyard_cards()
 	_apply_safe_area()
 	resized.connect(_apply_safe_area)
@@ -83,7 +93,7 @@ func _refresh_keyboard_inset() -> void:
 func _configure_schoolyard_cards() -> void:
 	_add_pixel_icon(profile_button, "profile")
 	_add_pixel_icon(settings_button, "gear")
-	var cream_panel: StyleBoxFlat = UITheme.box(Color(0.96, 0.90, 0.78, 0.88), UITheme.WOOD_LIGHT, 2, 12)
+	var cream_panel: StyleBoxFlat = UITheme.box(Color(0.96, 0.90, 0.78, 0.96), UITheme.WOOD_LIGHT, 2, 12)
 	var cream_button: StyleBoxFlat = UITheme.box(UITheme.CREAM, UITheme.WOOD_LIGHT, 2, 10)
 	var navy_button: StyleBoxFlat = UITheme.box(UITheme.NAVY, UITheme.NAVY_HOT, 2, 10)
 	var join_card: PanelContainer = get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard")
@@ -115,7 +125,18 @@ func _configure_schoolyard_cards() -> void:
 	join_button.visible = true
 	join_button.disabled = true
 	join_button.text = "↗ Join"
-	get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard/Padding/JoinColumn/EnterCodeLabel").text = "Join with code"
+	join_button.disabled = false
+	join_button.add_theme_stylebox_override("normal", navy_button)
+	join_button.add_theme_stylebox_override("hover", navy_button)
+	join_button.add_theme_color_override("font_color", UITheme.CREAM)
+	code_input.add_theme_color_override("font_color", UITheme.INK)
+	code_input.add_theme_color_override("font_placeholder_color", UITheme.WOOD)
+	recent_label.add_theme_color_override("font_color", UITheme.INK)
+	recent_label.add_theme_font_size_override("font_size", 24)
+	var join_label: Label = get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard/Padding/JoinColumn/EnterCodeLabel")
+	join_label.text = "Join with code"
+	join_label.add_theme_color_override("font_color", UITheme.INK)
+	join_label.add_theme_font_size_override("font_size", 24)
 	if not OS.get_cmdline_user_args().has("--show-wip"):
 		get_node("SafeMargin/RootColumn/BottomNav/InventoryButton").visible = false
 		get_node("SafeMargin/RootColumn/BottomNav/LeaderboardsButton").visible = false
