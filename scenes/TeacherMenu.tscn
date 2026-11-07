@@ -78,17 +78,18 @@ autowrap_mode = 3
 theme_override_font_sizes/font_size = 25
 theme_override_colors/font_color = Color(0.67,0.77,0.83,1)
 
-[node name="TeacherCards" type="VBoxContainer" parent="Margin/Column"]
+[node name="TeacherCards" type="GridContainer" parent="Margin/Column"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 8
+columns = 2
 
 [node name="Pending" type="PanelContainer" parent="Margin/Column/TeacherCards"]
 layout_mode = 2
 mouse_filter = 2
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 150)
+custom_minimum_size = Vector2(0, 118)
 
 [node name="Content" type="VBoxContainer" parent="Margin/Column/TeacherCards/Pending"]
 layout_mode = 2
@@ -118,20 +119,21 @@ autowrap_mode = 3
 theme_override_font_sizes/font_size = 18
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(0.67,0.77,0.83,1)
+visible = false
 
 [node name="Pending" type="Button" parent="Margin/Column/TeacherCards/Pending/Content"]
 theme_type_variation = &"Primary"
 unique_name_in_owner = true
 layout_mode = 2
 text = "Review pending"
-custom_minimum_size = Vector2(0,52)
+custom_minimum_size = Vector2(0,48)
 
 
 [node name="Library" type="PanelContainer" parent="Margin/Column/TeacherCards"]
 layout_mode = 2
 mouse_filter = 2
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 150)
+custom_minimum_size = Vector2(0, 118)
 
 [node name="Content" type="VBoxContainer" parent="Margin/Column/TeacherCards/Library"]
 layout_mode = 2
@@ -161,19 +163,20 @@ autowrap_mode = 3
 theme_override_font_sizes/font_size = 18
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(0.67,0.77,0.83,1)
+visible = false
 
 [node name="Library" type="Button" parent="Margin/Column/TeacherCards/Library/Content"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Open library"
-custom_minimum_size = Vector2(0,52)
+custom_minimum_size = Vector2(0,48)
 
 
 [node name="Published" type="PanelContainer" parent="Margin/Column/TeacherCards"]
 layout_mode = 2
 mouse_filter = 2
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 150)
+custom_minimum_size = Vector2(0, 118)
 
 [node name="Content" type="VBoxContainer" parent="Margin/Column/TeacherCards/Published"]
 layout_mode = 2
@@ -203,12 +206,13 @@ autowrap_mode = 3
 theme_override_font_sizes/font_size = 18
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(0.67,0.77,0.83,1)
+visible = false
 
 [node name="Published" type="Button" parent="Margin/Column/TeacherCards/Published/Content"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "View published"
-custom_minimum_size = Vector2(0,52)
+custom_minimum_size = Vector2(0,48)
 
 
 [node name="Footer" type="HBoxContainer" parent="Margin/Column"]
