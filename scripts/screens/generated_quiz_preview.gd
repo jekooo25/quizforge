@@ -5,6 +5,9 @@ func _ready() -> void:
  super._ready()
  %Submit.hide()
  %Save.text="Save quiz"
+ if %Save.pressed.is_connected(save_draft):
+  %Save.pressed.disconnect(save_draft)
+ %Save.pressed.connect(save_draft)
  get_node("Margin/Column/Header/Title").text="3 / 3 · Preview & edit"
  %Status.text="Review the wording and correct answers. Nothing is saved yet."
  %Source.pressed.connect(show_source)
@@ -23,6 +26,7 @@ func save_draft() -> void:
  var id:=QuizLibrary.add(%QuizTitle.text.strip_edges(),questions,"generated")
  if id=="":busy=false;%Status.text="Could not save. Try again.";return
  saved_id=id;dirty=false
+	%Status.text="Quiz saved. Preparing publication settings..."
  if str(Nav.user.get("role", "student")) == "teacher":
   var submitted: Dictionary = await SharingService.submit_quiz(id)
   if not submitted.get("ok", false) and not submitted.get("duplicate", false):
