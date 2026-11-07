@@ -8,7 +8,16 @@ func _ready() -> void:
 	_refresh()
 
 func _back() -> void:
-	Nav.show_screen(load("res://scenes/HomeScreen.tscn").instantiate())
+	Nav.call_deferred("show_screen", load("res://scenes/HomeScreen.tscn").instantiate())
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel") and not event.is_echo():
+		get_viewport().set_input_as_handled()
+		_back()
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
+		_back()
 
 func _refresh() -> void:
 	var reply: Dictionary = await SharingService.api("/courses/%s/quizzes" % course_id)

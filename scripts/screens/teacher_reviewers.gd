@@ -20,7 +20,7 @@ func _ready() -> void:
  %Nickname.text=str(Nav.user.get("leaderboard_nickname",""))
  %Nickname.text_changed.connect(func(value: String)->void:Nav.user["leaderboard_nickname"]=value)
  %BrowsePublic.pressed.connect(func()->void:Nav.show_screen(load("res://scenes/PublicQuizzes.tscn").instantiate()))
- %Back.pressed.connect(func()->void:Nav.show_screen(load("res://scenes/TeacherMenu.tscn").instantiate()) if teacher else Nav.show_screen(load("res://scenes/HomeScreen.tscn").instantiate()))
+ %Back.pressed.connect(func()->void:Nav.call_deferred("show_screen",load("res://scenes/TeacherMenu.tscn").instantiate()) if teacher else Nav.call_deferred("show_screen",load("res://scenes/HomeScreen.tscn").instantiate()))
  %Refresh.pressed.connect(refresh)
  %PendingTab.pressed.connect(set_filter.bind("pending"))
  %LibraryTab.pressed.connect(set_filter.bind("list"))
