@@ -38,6 +38,7 @@ func _ready() -> void:
 	daily_tasks_button.pressed.connect(_open_daily_tasks)
 	profile_button.pressed.connect(_show_profile_hint)
 	settings_button.pressed.connect(_open_settings)
+	stars_shop_button.pressed.connect(_open_shop)
 	join_button.pressed.connect(_join_code)
 	code_input.text_changed.connect(_on_code_changed)
 	_refresh_recent_quizzes()
@@ -281,7 +282,12 @@ func _open_settings() -> void:
 
 
 func _show_profile_hint() -> void:
-	status_label.text = "Profile options are available from Settings."
+	var profile: AcceptDialog = AcceptDialog.new()
+	profile.title = "Profile"
+	profile.dialog_text = "Username: %s\nSchool: %s" % [Nav.display_name(), str(Nav.user.get("school", "Not set"))]
+	add_child(profile)
+	profile.popup_centered()
+	profile.confirmed.connect(profile.queue_free)
 
 
 func _notification(what: int) -> void:
