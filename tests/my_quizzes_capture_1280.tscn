@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tests/capture.gd" id="1_capture"]
+
+[node name="CaptureMyQuizzes1280" type="Node"]
+script = ExtResource("1_capture")
+output_path = "C:/Users/myles/Documents/Codex/2026-11-05/hel/outputs/my_quizzes_1280x562.png"
+delay = 0.4
+scene_path = "res://scenes/my_quizzes.tscn"
+capture_size = Vector2i(1280, 562)

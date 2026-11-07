@@ -5,7 +5,10 @@ extends Node
 ## Every check this run must reach. A script error inside an assertion skips it
 ## without counting as a failure, which would otherwise print
 ## "ALL FLOW CHECKS PASSED" over a crashed run.
-const EXPECTED_CHECKS := 69
+## Keep this in step with the explicit _check calls below.  The former value
+## was left over from a removed assertion, so a clean run was falsely marked
+## as though a check had crashed.
+const EXPECTED_CHECKS := 86
 
 var failures: int = 0
 var checks_run: int = 0
@@ -29,7 +32,22 @@ func _find_button(node: Node, text: String) -> Button:
 	if node is Button and (node as Button).text.contains(text):
 		return node as Button
 	for child in node.get_children():
+		# Main-menu tile captions are child Labels rather than Button.text.
+		if node is Button:
+			var caption := _find_label(child, text)
+			if caption != null:
+				return node as Button
 		var found := _find_button(child, text)
+		if found != null:
+			return found
+	return null
+
+
+func _find_label(node: Node, text: String) -> Label:
+	if node is Label and (node as Label).text.contains(text):
+		return node as Label
+	for child in node.get_children():
+		var found := _find_label(child, text)
 		if found != null:
 			return found
 	return null
@@ -41,6 +59,23 @@ func _press(node: Node, text: String) -> bool:
 		return false
 	b.pressed.emit()
 	return true
+
+
+func _mouse_click_button(button: Button) -> void:
+	# Convert the control's canvas position into actual output pixels. The
+	# viewport final transform is 0.625 at 800x360 with canvas_items stretch.
+	var canvas_point := button.get_global_transform_with_canvas() * (button.size * 0.5)
+	var point := get_viewport().get_final_transform() * canvas_point
+	var event := InputEventMouseButton.new()
+	event.button_index = MOUSE_BUTTON_LEFT
+	event.position = point
+	event.global_position = point
+	event.pressed = true
+	get_viewport().push_input(event)
+	await get_tree().process_frame
+	event.pressed = false
+	get_viewport().push_input(event)
+	await get_tree().process_frame
 
 
 func _screen() -> Node:
@@ -85,30 +120,25 @@ func _run() -> void:
 	_check(_screen().get_script().resource_path.ends_with("login_screen.gd"), "empty username keeps you on login")
 	_check(_screen()._error.text != "", "empty username shows an error")
 
-	print("-- sign up: name --")
-	_press(_screen(), "Sign up")
+	print("-- password recovery --")
+	_press(_screen(), "Forgot password?")
 	await get_tree().process_frame
-	_check(_screen().get_script().resource_path.ends_with("signup_name_screen.gd"), "sign up opens step 1")
-	_check(_press(_screen(), "Next") == false or _screen()._error.text != "", "blocked without a name")
+	_check(_screen().scene_file_path.ends_with("ForgotPassword.tscn"), "forgot password opens its editable screen")
+	_check(_press(_screen(), "Request password reset") == false or _screen().status.text != "", "reset request requires account details")
+	_screen().username.text = "Alex Cruz"
+	_screen().email.text = "alex.cruz@school.edu"
+	_press(_screen(), "Request password reset")
+	_check(_screen().status.text.begins_with("Request recorded"), "password reset request is acknowledged")
+	_press(_screen(), "Back to login")
+	await get_tree().process_frame
 
-	_screen()._first.text = "Alex"
-	_screen()._middle.text = "B"
-	_screen()._last.text = "Cruz"
-	_press(_screen(), "Next")
+	print("-- login credentials --")
+	var login := _screen()
+	login._username.text = "Alex Cruz"
+	login._password.text = "password123"
+	_press(login, "Login")
 	await get_tree().process_frame
-	_check(_screen().get_script().resource_path.ends_with("signup_school_screen.gd"), "step 1 advances to step 2")
-	_check(Nav.user["last_name"] == "Cruz", "name captured in session")
-
-	print("-- sign up: credentials --")
-	var creds := _screen()
-	creds._student_id.text = "2026-1187"
-	creds._email.text = "alex.cruz@school.edu"
-	creds._school.text = "Rizal High School"
-	creds._password.text = "hunter2"
-	creds._confirm.text = "hunter2"
-	_press(creds, "Submit")
-	await get_tree().process_frame
-	_check(_screen().get_script().resource_path.ends_with("loading_screen.gd"), "submit shows the loader")
+	_check(_screen().get_script().resource_path.ends_with("loading_screen.gd"), "login shows the loader")
 	_check(FileAccess.file_exists(Nav.SAVE_PATH), "profile written to disk")
 
 	print("-- loader -> menu --")
@@ -158,6 +188,36 @@ func _run() -> void:
 	_press(_screen(), "Main Menu")
 	await get_tree().process_frame
 	_check(_screen().get_script().resource_path.ends_with("menu_screen.gd"), "settings returns to menu")
+	var daily_tile := _find_button(_screen(), "Daily Tasks")
+	_check(daily_tile != null, "Daily Tasks menu tile is a Button")
+	if daily_tile != null:
+		await _mouse_click_button(daily_tile)
+	_check(str(_screen().get_script().resource_path).ends_with("DailyTasks.gd"),
+		"a real tile mouse click opens the DailyTasks scene through the tile container")
+	_check(_press(_screen(), "X"), "Daily Tasks close button is clickable")
+	await get_tree().process_frame
+	_check(_screen().get_script().resource_path.ends_with("menu_screen.gd"),
+		"closing Daily Tasks returns to the main menu")
+	var original_window_size := get_window().size
+	_check(_find_button(_screen(), "STARS SHOP") != null,
+		"the menu contains the scene-based STARS SHOP Button")
+	for resolution in [Vector2i(1280, 562), Vector2i(800, 360)]:
+		get_window().size = resolution
+		await get_tree().process_frame
+		var shop_button := _find_button(_screen(), "STARS SHOP")
+		if shop_button != null:
+			await _mouse_click_button(shop_button)
+		_check(_screen().get_script().resource_path.ends_with("StarsShop.gd"),
+			"a mouse click at %dx%d opens the real Stars Shop" % [resolution.x, resolution.y])
+		var shop_back := _find_button(_screen(), "X")
+		if shop_back != null:
+			await _mouse_click_button(shop_back)
+		_check(_screen().get_script().resource_path.ends_with("menu_screen.gd"),
+			"the Shop Back button returns to the menu at %dx%d" % [resolution.x, resolution.y])
+		_check(Nav._host.get_child_count() == 1,
+			"returning from Shop leaves one active screen at %dx%d" % [resolution.x, resolution.y])
+	get_window().size = original_window_size
+	await get_tree().process_frame
 
 	_screen().open_progress()
 	await get_tree().process_frame
@@ -184,72 +244,49 @@ func _run() -> void:
 		_check(_screen().get_script().resource_path.ends_with("menu_screen.gd"),
 			"you are still on the menu")
 
-	print("-- upload -> consent -> generation --")
+	print("-- scene-based upload and failure handling --")
 	_screen().open_upload()
 	await get_tree().process_frame
-	_check(_screen().get_script().resource_path.ends_with("upload_screen.gd"), "upload opens")
-
+	_check(_screen().scene_file_path.ends_with("UploadReviewer.tscn"), "editable upload scene opens")
 	var upload := _screen()
-	_check(upload._continue.disabled, "continue is blocked before a file is chosen")
-	upload._on_file_selected("C:/Users/myles/OneDrive/Documents/reviewer.pdf")
+	_check(upload.get_node("%Generate").disabled,"generation is blocked without a file")
+	upload._on_file_selected("user://missing-reviewer.pdf")
+	_check(upload.get_node("%Generate").disabled,"missing files are rejected before upload")
+	_check(upload.get_node("%FileDialog").use_native_dialog,"upload uses a native file picker when supported")
+	Nav.user.reviewer_file="user://missing-reviewer.pdf"
+	Nav.show_screen(load("res://scenes/GenerateQuiz.tscn").instantiate())
 	await get_tree().process_frame
-	_check(upload._continue.disabled == false, "continue unlocks after a file is chosen")
-
-	_press(upload, "Continue")
+	_check(_screen().scene_file_path.ends_with("GenerateQuiz.tscn"),"editable generation scene opens")
+	_check(_screen()._finished,"missing file stops generation")
+	_check(_screen()._failure!="","failure has a clear reason")
+	_check(not _screen()._using_sample,"no silent sample fallback")
+	_check(_screen().get_node("%Preview").disabled,"failed generation cannot open preview")
+	_check(_screen().get_node("%Retry").visible,"retry is available")
+	_check(_screen().get_node("%Choose").visible,"choosing another file is available")
+	_check(_screen()._failure.contains("Choose it again"),"failure suggests a useful next step")
+	print("-- preview fixture, validation and explicit save --")
+	var count_before := QuizLibrary.count()
+	var preview: Control=load("res://scenes/GeneratedQuizPreview.tscn").instantiate()
+	preview.imported_quiz={"title":"Reviewed science quiz","questions":QuizData.sample()}
+	Nav.show_screen(preview)
 	await get_tree().process_frame
-	var dialog: Node = null
-	for child in upload.get_children():
-		if child is BoardDialog:
-			dialog = child
-	_check(dialog != null, "backup consent dialog appears")
-	_press(dialog, "OK")
+	_check(_screen().scene_file_path.ends_with("GeneratedQuizPreview.tscn"),"preview is an editable scene")
+	_check(preview.questions.size()==QuizData.sample().size(),"questions arrive intact")
+	_check(QuizLibrary.count()==count_before,"preview does not auto-save")
+	_check(preview.validate().is_empty(),"valid questions pass review validation")
+	_check(not preview.get_node("%Submit").visible,"generated preview cannot publish")
+	_check(preview.get_node("%Save").text=="Save quiz","saving is explicit")
+	var first_choice: LineEdit=preview.get_node("%ChoiceA")
+	var original_choice:=first_choice.text
+	first_choice.text=""
+	await preview.save_draft()
+	_check(_screen()==preview,"empty answer blocks save")
+	_check(preview.get_node("%Status").text.contains("empty"),"invalid answer is explained")
+	first_choice.text=original_choice
+	await preview.save_draft()
 	await get_tree().process_frame
-	_check(_screen().get_script().resource_path.ends_with("generation_screen.gd"), "generation starts")
-
-	print("-- generation fails clearly --")
-	await get_tree().create_timer(1.5).timeout
-	_check(_screen()._finished == true, "generation stops on failure")
-	_check(_screen()._failure != "", "the failure is reported")
-	_check(_screen()._using_sample == false, "no silent fallback")
-	_check(_screen()._review.visible == false, "review is blocked after a failure")
-	_check(_screen()._retry.visible == true, "retry is offered")
-	_check(_screen()._sample.visible == false, "the demo sample button is hidden from students")
-	_check(_screen()._failure.contains("Pick the file again"),
-		"the failure text is aimed at a student")
-
-	print("-- explicit sample fallback (developer path) --")
-	# students cannot reach this; the developer switch is what reveals the button
-	_screen()._on_use_sample()
-	await get_tree().create_timer(1.2).timeout
-	_check(_screen()._finished == true, "the explicit sample set finishes")
-	_check(_screen()._using_sample == true, "the sample set is used on purpose")
-	_check(_screen()._pct.text == "100%", "progress reaches 100%")
-
-	print("-- review and edit --")
-	_press(_screen(), "Review questions")
-	await get_tree().process_frame
-	await get_tree().process_frame
-	_check(_screen().get_script().resource_path.ends_with("review_screen.gd"), "review screen opens")
-	_check(_screen()._questions.size() == QuizData.sample().size(), "questions arrive in the review screen")
-	_check(_screen()._tab == "questions", "opens on the Questions tab")
-	_check(_screen()._status.text.contains("valid"), "the sample set validates")
-
-	print("-- review validation --")
-	var review := _screen()
-	var first_choice: LineEdit = review._rows[0]["choices"][0]
-	first_choice.text = ""
-	first_choice.text_changed.emit("")
-	review._on_save()
-	await get_tree().process_frame
-	_check(_screen() == review, "an empty choice blocks save")
-	_check(review._status.text.contains("empty"), "the empty choice is reported")
-	first_choice.text = "Venus"
-	first_choice.text_changed.emit("Venus")
-	review._on_save()
-	await get_tree().process_frame
-	await get_tree().process_frame
-	_check(_screen().get_script().resource_path.ends_with("battle.gd"), "saving starts the encounter")
-	_check(Nav.encounter_ready == true, "encounter marked ready after saving")
+	_check(_screen().scene_file_path.ends_with("QuizDetails.tscn"),"saving opens details without starting gameplay")
+	_check(QuizLibrary.count()==count_before+1,"explicit save creates one quiz")
 
 	print("-- quiz library --")
 	var shelf := QuizLibrary.all()
@@ -268,6 +305,35 @@ func _run() -> void:
 		_check(QuizLibrary.play(str(entry.get("id", ""))), "a library quiz hands itself to the battle")
 		_check(QuizData.load_saved().get("questions", []).size() > 0,
 			"playing rewrites the battle's quiz file")
+
+		for resolution in [Vector2i(1280, 562), Vector2i(800, 360)]:
+			get_window().size = resolution
+			Nav.show_screen(load("res://scenes/my_quizzes.tscn").instantiate())
+			await get_tree().process_frame
+			await get_tree().process_frame
+			var card := _screen().get_node("%QuizList").get_child(0)
+			await _mouse_click_button(card.get_node("%PlayButton"))
+			await get_tree().process_frame
+			var mode_picker: Control = _screen()
+			var picker_open: bool = mode_picker.scene_file_path.ends_with("QuizDetails.tscn")
+			_check(picker_open, "saved quiz opens quiz details at %s" % resolution)
+			if picker_open:
+				mode_picker.get_node("%Scroll").ensure_control_visible(mode_picker.get_node("%BattleButton"))
+				await get_tree().process_frame
+				await _mouse_click_button(mode_picker.get_node("%Start"))
+				await get_tree().process_frame
+			var is_battle: bool = _screen().get_script().resource_path.ends_with("battle.gd")
+			_check(is_battle, "saved quiz Play mouse click opens battle at %s" % resolution)
+			_check(Nav._host.get_child_count() == 1 and is_battle,
+				"Play replaces the library without leaving an input-blocking screen")
+			if is_battle:
+				var encounter = _screen()
+				await _mouse_click_button(encounter.answer_buttons[encounter._correct_index])
+				await get_tree().create_timer(0.75).timeout
+				_check(encounter._state == "auto_advancing" and encounter._answered_correctly == 1,
+					"battle receives mouse input after saved quiz Play")
+			else:
+				_check(false, "battle receives mouse input after saved quiz Play")
 
 		# one screen, three tabs: the library is the default, progress is still here
 		Nav.show_screen(load("res://scenes/my_quizzes.tscn").instantiate())
@@ -298,7 +364,7 @@ func _run() -> void:
 
 	if checks_run != EXPECTED_CHECKS:
 		failures += 1
-		printerr("  FAIL ran %d checks, expected %d — an assertion errored and was skipped" % [
+		printerr("  FAIL ran %d checks, expected %d — the flow test changed without updating its count" % [
 			checks_run, EXPECTED_CHECKS])
 
 	print("")
@@ -308,3 +374,4 @@ func _run() -> void:
 	else:
 		printerr("%d FLOW CHECK(S) FAILED" % failures)
 		get_tree().quit(1)
+

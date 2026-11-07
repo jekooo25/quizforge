@@ -1,15 +1,17 @@
 extends Node
 ## Screenshot harness for the whole app.
-## godot --path . res://tests/capture.tscn -- --screen res://scripts/screens/menu_screen.gd --out shot.png --delay 1.0
+## godot --path . res://tests/capture.tscn -- --scene res://scenes/my_quizzes.tscn --out shot.png --size 1280x562
 
-var _out_path := "user://shot.png"
-var _delay := 1.0
+@export var output_path := "user://shot.png"
+@export var delay := 1.0
 var _screen := ""
+@export var scene_path := ""
 var _payload := ""
 var _tab := ""
 var _call := ""
-var _size := Vector2i.ZERO
-var _no_stretch := false
+@export var capture_size := Vector2i.ZERO
+@export var no_stretch := false
+var _battle_sample := false
 
 
 func _ready() -> void:
@@ -18,13 +20,16 @@ func _ready() -> void:
 		match args[i]:
 			"--out":
 				if i + 1 < args.size():
-					_out_path = args[i + 1]
+					output_path = args[i + 1]
 			"--delay":
 				if i + 1 < args.size():
-					_delay = float(args[i + 1])
+					delay = float(args[i + 1])
 			"--screen":
 				if i + 1 < args.size():
 					_screen = args[i + 1]
+			"--scene":
+				if i + 1 < args.size():
+					scene_path = args[i + 1]
 			"--payload":
 				if i + 1 < args.size():
 					_payload = args[i + 1]
@@ -38,22 +43,43 @@ func _ready() -> void:
 				if i + 1 < args.size():
 					var parts := args[i + 1].split("x")
 					if parts.size() == 2:
-						_size = Vector2i(int(parts[0]), int(parts[1]))
+						capture_size = Vector2i(int(parts[0]), int(parts[1]))
 			"--no-stretch":
-				_no_stretch = true
+				no_stretch = true
+			"--battle-sample":
+				_battle_sample = true
 
 	# A real phone width, laid out instead of scaled down. Without --no-stretch
 	# the project's canvas_items stretch shrinks the 1280x562 design instead.
-	if _size != Vector2i.ZERO:
-		if _no_stretch:
+	if capture_size != Vector2i.ZERO:
+		if no_stretch:
 			get_window().content_scale_mode = Window.CONTENT_SCALE_MODE_DISABLED
-		get_window().size = _size
+		get_window().size = capture_size
 		await get_tree().process_frame
 
 	var main_scene: Node = load("res://scenes/main.tscn").instantiate()
 	add_child(main_scene)
+	if _battle_sample:
+		QuizData.save("Battle Preview", QuizData.sample())
 
-	if _screen != "":
+	if scene_path != "":
+		await get_tree().process_frame
+		var packed_scene := load(scene_path) as PackedScene
+		if packed_scene == null:
+			printerr("could not load scene: ", scene_path)
+			get_tree().quit(1)
+			return
+		var screen := packed_scene.instantiate() as Control
+		if screen == null:
+			printerr("scene root is not a Control: ", scene_path)
+			get_tree().quit(1)
+			return
+		Nav.show_screen(screen)
+		if _tab != "" and screen.has_method("show_tab"):
+			screen.call("show_tab", _tab)
+		if _call != "" and screen.has_method(_call):
+			screen.call(_call)
+	elif _screen != "":
 		await get_tree().process_frame
 		var script: GDScript = load(_screen)
 		if script == null:
@@ -73,13 +99,13 @@ func _ready() -> void:
 		if _call != "" and screen.has_method(_call):
 			screen.call(_call)
 
-	await get_tree().create_timer(_delay).timeout
+	await get_tree().create_timer(delay).timeout
 	await RenderingServer.frame_post_draw
 
 	var image := get_viewport().get_texture().get_image()
-	var err := image.save_png(_out_path)
+	var err := image.save_png(output_path)
 	if err != OK:
 		printerr("capture failed: ", err)
 	else:
-		print("captured ", _out_path, " ", image.get_size())
+		print("captured ", output_path, " ", image.get_size())
 	get_tree().quit()

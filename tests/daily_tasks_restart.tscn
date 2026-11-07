@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://c3s227x631a4s"]
+
+[ext_resource type="Script" uid="uid://beuihulr2x0k0" path="res://tests/daily_tasks_restart_test.gd" id="1_test"]
+
+[node name="DailyTasksRestartTest" type="Node" unique_id=1334565429]
+script = ExtResource("1_test")
