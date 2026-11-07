@@ -134,8 +134,8 @@ func request_back() -> void:
  else:leave()
 func leave() -> void:
  if review_id!="":
-  var panel: Control=load("res://scenes/TeacherReviewers.tscn").instantiate();panel.filter="pending";Nav.show_screen(panel)
- else:Nav.show_screen(load("res://scenes/my_quizzes.tscn").instantiate())
+	var panel: Control=load("res://scenes/TeacherReviewers.tscn").instantiate();panel.filter="pending";Nav.call_deferred("show_screen",panel)
+	else:Nav.call_deferred("show_screen",load("res://scenes/my_quizzes.tscn").instantiate())
 
 func _apply_safe_area() -> void:
  if OS.get_name()!="Android":return
