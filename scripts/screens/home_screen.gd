@@ -83,6 +83,9 @@ func _refresh_keyboard_inset() -> void:
 func _configure_schoolyard_cards() -> void:
 	_add_pixel_icon(profile_button, "profile")
 	_add_pixel_icon(settings_button, "gear")
+	_add_button_icon(upload_reviewer_button, "upload")
+	_add_button_icon(quiz_library_button, "library")
+	_add_button_icon(daily_tasks_button, "clipboard")
 	var cream_panel: StyleBoxFlat = UITheme.box(Color(0.96, 0.90, 0.78, 1.0), UITheme.WOOD_LIGHT, 2, 12)
 	var cream_button: StyleBoxFlat = UITheme.box(UITheme.CREAM, UITheme.WOOD_LIGHT, 2, 10)
 	var navy_button: StyleBoxFlat = UITheme.box(UITheme.NAVY, UITheme.NAVY_HOT, 2, 10)
@@ -122,6 +125,7 @@ func _configure_schoolyard_cards() -> void:
 	join_button.visible = true
 	join_button.disabled = true
 	join_button.text = "↗ Join"
+	_add_button_icon(join_button, "upload")
 	join_button.disabled = false
 	join_button.add_theme_stylebox_override("normal", navy_button)
 	join_button.add_theme_stylebox_override("hover", navy_button)
@@ -155,6 +159,19 @@ func _add_pixel_icon(button: Button, kind: String) -> void:
 	icon.offset_top = 10
 	icon.offset_right = -10
 	icon.offset_bottom = -10
+
+
+func _add_button_icon(button: Button, kind: String) -> void:
+	var original_text: String = button.text
+	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	button.text = "    " + original_text
+	var icon: Control = preload("res://scripts/ui/pixel_icons.gd").new()
+	icon.kind = kind
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	button.add_child(icon)
+	icon.set_anchors_preset(Control.PRESET_CENTER_LEFT)
+	icon.position = Vector2(12, 12)
+	icon.size = Vector2(32, 32)
 
 
 func _start_quiz() -> void:
