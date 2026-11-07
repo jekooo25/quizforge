@@ -171,7 +171,12 @@ def validate_course_content(course_id):
   return jsonify(ok=True,verdict="approved" if valid else "rejected",reason=reason)
 
 def annotated_reviews(db):
- rows=[rowdict(r) for r in db.execute("SELECT * FROM reviews ORDER BY rowid DESC")]
+ rows=[]
+ for raw in db.execute("SELECT r.*,c.title AS course_title,c.id AS course_code FROM reviews r LEFT JOIN courses c ON c.id=r.course_id ORDER BY r.rowid DESC"):
+  item=rowdict(raw)
+  item["course_title"]=raw["course_title"] or "Unassigned"
+  item["course_code"]=raw["course_code"] or ""
+  rows.append(item)
  canonical={}
  # Prefer an existing publication/approval, then the earliest pending submission.
  for row in sorted(reversed(rows),key=lambda r:{"shared":0,"approved":1,"pending":2,"changes":3}.get(r["status"],4)):

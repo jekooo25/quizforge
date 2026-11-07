@@ -47,6 +47,14 @@ autowrap_mode = 3
 theme_override_font_sizes/font_size = 23
 theme_override_colors/font_color = Color(0.67,0.77,0.83,1)
 
+[node name="Course" type="Label" parent="Panel/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Course"
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(1,0.80,0.32,1)
+
 [node name="ShareRow" type="HBoxContainer" parent="Panel/Content"]
 unique_name_in_owner = true
 layout_mode = 2

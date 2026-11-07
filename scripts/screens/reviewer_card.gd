@@ -16,6 +16,7 @@ func configure(row: Dictionary) -> void:
  var visibility:=str(row.get("visibility","private"))
  %Title.text=str(row.title)
  %Meta.text="%s · %d questions · v%d" % [row.author,row.questions.size(),int(row.get("review_version",1))]
+	%Course.text="Course: %s%s" % [str(row.get("course_title","Unassigned")), (" ("+str(row.get("course_code",""))+")") if str(row.get("course_code",""))!="" else ""]
  %Status.text={"pending":"Needs approval","approved":"Ready to publish","changes":"Changes requested","shared":"Published"}.get(row.status,str(row.status).capitalize())
  if row.status=="shared":%Status.text+=" · "+("Public" if visibility=="public" else "Code-only")
  %ShareRow.visible=row.status=="shared" and visibility!="private"

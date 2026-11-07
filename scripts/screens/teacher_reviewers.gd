@@ -52,7 +52,7 @@ func render() -> void:
   if filter=="list" and row.status=="pending":continue
   if filter=="shared" and row.status!="shared":continue
   var query: String=%Search.text.strip_edges().to_lower()
-  if query!="" and not (str(row.title)+" "+str(row.author)).to_lower().contains(query):continue
+	if query!="" and not (str(row.title)+" "+str(row.author)+" "+str(row.get("course_title",""))+" "+str(row.get("course_code",""))).to_lower().contains(query):continue
   add_review(row)
   shown+=1
  %PendingTab.text="Pending · %d" % pending
