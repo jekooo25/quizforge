@@ -2,6 +2,7 @@ extends "res://scripts/screens/menu_screen.gd"
 var busy:=false
 func _ready() -> void:
  if OS.get_name()=="Android":get_tree().quit_on_go_back=false
+ _make_mobile_scroll()
  _content=%Margin
  %Greeting.text=str(Nav.user.get("username","")).strip_edges()
  %Pending.pressed.connect(open_panel.bind("pending"))
@@ -15,6 +16,20 @@ func _ready() -> void:
  _apply_safe_area()
  refresh()
  refresh_courses()
+
+func _make_mobile_scroll() -> void:
+ var margin: MarginContainer = get_node("Margin")
+ var column: VBoxContainer = get_node("Margin/Column")
+ var scroll: ScrollContainer = ScrollContainer.new()
+ scroll.name = "MobileScroll"
+ scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+ scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+ scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+ margin.remove_child(column)
+ margin.add_child(scroll)
+ scroll.add_child(column)
+ column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+ column.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 
 func refresh_courses() -> void:
  var reply: Dictionary=await SharingService.api("/courses")
