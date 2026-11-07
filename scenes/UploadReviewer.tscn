@@ -123,6 +123,7 @@ visible = false
 [node name="Options" type="HBoxContainer" parent="Margin/Column/Scroll/Fields"]
 unique_name_in_owner = true
 layout_mode = 2
+visible = false
 theme_override_constants/separation = 18
 
 [node name="Mode" type="OptionButton" parent="Margin/Column/Scroll/Fields/Options"]

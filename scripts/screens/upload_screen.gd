@@ -22,8 +22,7 @@ func _ready() -> void:
   if str(Nav.user.get("course_id", "")) == str(course.get("id", "")):
    %Course.select(%Course.item_count - 1)
  %Mode.add_item("Quiz Battle · Multiple choice")
- %Mode.add_item("Word Bank · Fill in the blanks")
- %Mode.select(1 if Nav.user.get("generation_mode","battle")=="word_bank" else 0)
+ %Mode.select(0)
  %Mode.item_selected.connect(update_mode)
  %Pick.pressed.connect(func()->void:%FileDialog.popup_centered_clamped(Vector2i(760,460),0.9))
  %FileDialog.file_selected.connect(_on_file_selected)
@@ -79,7 +78,7 @@ func _on_continue() -> void:
  if pair.x<0:%Status.text="Enter PDF pages like 4-10, or leave the field empty.";return
  Nav.user["reviewer_file"]=_chosen_path
  Nav.user["page_range"]="" if pair==Vector2i.ZERO else "%d-%d" % [pair.x,pair.y]
- Nav.user["generation_mode"]="battle" if %Mode.selected==0 else "word_bank"
+ Nav.user["generation_mode"]="battle"
  Nav.user["generation_count"]=int(%Count.value)
  Nav.user["course_id"]=str(%Course.get_item_metadata(%Course.selected))
  Nav.show_screen(load("res://scenes/GenerateQuiz.tscn").instantiate())
