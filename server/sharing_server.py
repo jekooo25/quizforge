@@ -112,6 +112,15 @@ def courses():
   else: rows=db.execute("SELECT c.* FROM courses c JOIN enrollments e ON e.course_id=c.id WHERE lower(e.student)=lower(?)", (name,)).fetchall()
   return jsonify(ok=True,courses=[dict(r) for r in rows])
 
+@app.get("/courses/<course_id>/quizzes")
+def course_quizzes(course_id):
+ with connect() as db:
+  if request.headers.get("X-Demo-Role") != "student": return error("Student role required.",403)
+  student=request.headers.get("X-Demo-User", "")
+  if not enrolled(db, course_id, student): return error("You are not enrolled in this course.",403)
+  rows=db.execute("SELECT id,title,questions,status,visibility,author,code FROM reviews WHERE course_id=? AND status IN ('approved','shared') ORDER BY rowid DESC",(course_id,)).fetchall()
+  return jsonify(ok=True,quizzes=[{"id":r["id"],"title":r["title"],"count":len(json.loads(r["questions"])),"questions":json.loads(r["questions"]),"status":r["status"],"visibility":r["visibility"],"author":r["author"],"code":r["code"]} for r in rows])
+
 @app.post("/courses")
 def create_course():
  if not teacher(): return error("Teacher role required.",403)

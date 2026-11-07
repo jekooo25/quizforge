@@ -249,9 +249,20 @@ func _refresh_courses() -> void:
 		return
 	for course_value: Variant in courses:
 		var course: Dictionary = course_value as Dictionary
-		var label: Label = UITheme.sans("%s · %s" % [str(course.get("code", "")), str(course.get("title", "Course"))], 18, UITheme.INK)
-		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		course_list.add_child(label)
+		var row: Button = Button.new()
+		row.text = "%s · %s" % [str(course.get("code", "")), str(course.get("title", "Course"))]
+		row.custom_minimum_size = Vector2(0, 48)
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_theme_color_override("font_color", UITheme.INK)
+		row.pressed.connect(_open_course.bind(str(course.get("id", "")), str(course.get("title", "Course"))))
+		course_list.add_child(row)
+
+
+func _open_course(course_id: String, title: String) -> void:
+	var screen: Control = load("res://scenes/CourseQuizzes.tscn").instantiate()
+	screen.course_id = course_id
+	screen.course_title = title
+	Nav.show_screen(screen)
 
 
 func _open_recent(quiz_id: String) -> void:

@@ -28,7 +28,7 @@ func submit_quiz(id: String) -> Dictionary:
  var quiz := QuizLibrary.get_quiz(id)
  if quiz.is_empty(): return {"ok":false,"error":"Quiz could not be opened."}
  if QuizLibrary.is_shared({"id":id,"source":quiz.get("source","")}): return {"ok":false,"error":"This is a shared quiz. Edit a private draft to create your own revision."}
- var reply := await api("/reviews",HTTPClient.METHOD_POST,{"source_id":id,"author":Nav.user.get("username","Student"),"title":quiz.title,"questions":questions_payload(quiz.questions),"parent_review_id":quiz.get("parent_review_id",""),"parent_source_id":quiz.get("parent_library_id","")})
+ var reply := await api("/reviews",HTTPClient.METHOD_POST,{"source_id":id,"author":Nav.user.get("username","Student"),"title":quiz.title,"questions":questions_payload(quiz.questions),"course_id":str(Nav.user.get("course_id","")),"parent_review_id":quiz.get("parent_review_id",""),"parent_source_id":quiz.get("parent_library_id","")})
  if reply.get("ok",false):
   if not state.has("submissions"): state["submissions"] = {}
   state.submissions[id] = reply.review.id
