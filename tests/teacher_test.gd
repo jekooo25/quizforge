@@ -36,7 +36,7 @@ func _ready() -> void:
   check(cards != null and cards.get_child_count()==3,"three teacher panels")
   if cards != null:
    for card: Control in cards.get_children():
-    check(get_viewport().get_visible_rect().encloses(Rect2(card.global_position,card.size)),"teacher card fits viewport")
+ check(get_viewport().get_visible_rect().encloses(Rect2(card.global_position,card.size)),"teacher card fits viewport")
   if not OS.get_cmdline_user_args().is_empty() and DisplayServer.get_name() != "headless":
    await RenderingServer.frame_post_draw
    get_viewport().get_texture().get_image().save_png(OS.get_cmdline_user_args()[0].path_join("teacher-menu-%d.png" % resolution.x))
