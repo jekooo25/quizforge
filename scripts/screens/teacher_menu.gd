@@ -6,12 +6,6 @@ func _ready() -> void:
  _content=%Margin
  var teacher_name: String=str(Nav.user.get("username","")).strip_edges()
  %Greeting.text=teacher_name if teacher_name!="" else "Teacher dashboard"
- get_node("Margin/Column/TeacherCards/Pending/Content/Pending").pressed.connect(open_panel.bind("pending"))
- get_node("Margin/Column/TeacherCards/Library/Content/Library").pressed.connect(open_panel.bind("list"))
- get_node("Margin/Column/TeacherCards/Published/Content/Published").pressed.connect(open_panel.bind("shared"))
- get_node("Margin/Column/Header/Refresh").pressed.connect(refresh)
- get_node("Margin/Column/Header/Settings").pressed.connect(_open_teacher_settings)
- get_node("Margin/Column/Header/Profile").pressed.connect(_on_profile)
  %CoursePanel.add_theme_stylebox_override("panel", UITheme.box(Color(0.05,0.12,0.2,0.96), Color(0.2,0.45,0.7,1.0), 2, 12))
  resized.connect(_apply_safe_area)
  _apply_safe_area()
@@ -88,6 +82,15 @@ func refresh() -> void:
 
 func _open_teacher_settings() -> void:
  Nav.show_screen(load("res://scripts/screens/settings_screen.gd").new())
+
+func _on_pending_pressed() -> void:
+ open_panel("pending")
+
+func _on_library_pressed() -> void:
+ open_panel("list")
+
+func _on_published_pressed() -> void:
+ open_panel("shared")
 func open_panel(value: String) -> void:
  var panel: Control=load("res://scenes/TeacherReviewers.tscn").instantiate()
  panel.filter=value
