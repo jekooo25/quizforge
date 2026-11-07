@@ -101,8 +101,8 @@ func _configure_schoolyard_cards() -> void:
 	portal_label.add_theme_stylebox_override("normal", UITheme.box(Color(0.96, 0.90, 0.78, 0.82), UITheme.WOOD_LIGHT, 1, 8))
 	var pedestal: TextureRect = get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/Pedestal")
 	pedestal.visible = true
-	get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/Pedestal/PedestalLabel").text = Nav.display_name()
-	get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/Pedestal/PedestalLabel").add_theme_color_override("font_color", UITheme.CREAM)
+	get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/PedestalLabel").text = Nav.display_name()
+	get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/PedestalLabel").add_theme_color_override("font_color", UITheme.CREAM)
 	start_battle_button.text = "Start battle"
 	upload_reviewer_button.text = "Upload reviewer"
 	quiz_library_button.text = "My quiz library"

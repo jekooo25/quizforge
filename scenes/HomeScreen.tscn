@@ -128,11 +128,13 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 1.15
 theme_override_constants/separation = 6
+alignment = 1
 
 [node name="PortalFrame" type="Control" parent="SafeMargin/RootColumn/MainContent/CenterColumn"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
+custom_minimum_size = Vector2(0, 300)
 
 [node name="Stage" type="Control" parent="SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame"]
 layout_mode = 2
@@ -161,7 +163,7 @@ anchor_bottom = 0.5
 offset_left = -96.0
 offset_top = -112.0
 offset_right = 96.0
-offset_bottom = 20.0
+offset_bottom = 0.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
@@ -190,7 +192,7 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -120.0
-offset_top = 10.0
+offset_top = 0.0
 offset_right = 120.0
 offset_bottom = 70.0
 grow_horizontal = 2
@@ -201,12 +203,18 @@ expand_mode = 1
 stretch_mode = 5
 texture_filter = 1
 
-[node name="PedestalLabel" type="Label" parent="SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/Pedestal"]
+[node name="PedestalLabel" type="Label" parent="SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage"]
 unique_name_in_owner = true
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = 72.0
+offset_right = 100.0
+offset_bottom = 110.0
 grow_horizontal = 2
 grow_vertical = 2
 text = ""
