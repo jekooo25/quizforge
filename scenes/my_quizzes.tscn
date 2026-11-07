@@ -170,7 +170,7 @@ alignment = 1
 [node name="BrowseSharedState" type="Label" parent="ContentMargin/SurfacePanel/MainColumn/BrowseSharedPane" unique_id=783625804]
 layout_mode = 2
 theme_type_variation = &"MyQuizzesEmpty"
-text = "Browse shared quizzes is coming soon."
+text = "No shared quizzes available yet."
 horizontal_alignment = 1
 
 [node name="ProgressPane" type="VBoxContainer" parent="ContentMargin/SurfacePanel/MainColumn" unique_id=2072321329]

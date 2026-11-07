@@ -34,10 +34,8 @@ var _pending_delete_id := ""
 
 func _ready() -> void:
 	_show_wip = OS.get_cmdline_user_args().has("--show-wip")
-	browse_shared_tab.visible = _show_wip
-	%SharedJoin.visible = _show_wip
-	if not _show_wip and initial_tab == "browse":
-		initial_tab = "quizzes"
+	browse_shared_tab.visible = true
+	%SharedJoin.visible = true
 	sort_option.add_item("Recent")
 	sort_option.add_item("A–Z")
 	search_box.text_changed.connect(_on_filter_changed)

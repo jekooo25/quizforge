@@ -17,6 +17,8 @@ const MIN_TOUCH := Vector2(0, 48)
 @onready var daily_tasks_button: Button = get_node("SafeMargin/RootColumn/BottomNav/DailyTasksButton")
 @onready var recent_list: VBoxContainer = get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard/Padding/JoinColumn/RecentScroll/RecentList")
 @onready var recent_label: Label = get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard/Padding/JoinColumn/RecentLabel")
+@onready var code_input: LineEdit = get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard/Padding/JoinColumn/CodeInput")
+@onready var join_button: Button = get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard/Padding/JoinColumn/JoinButton")
 @onready var profile_button: Button = get_node("SafeMargin/RootColumn/TopBar/ProfileButton")
 @onready var settings_button: Button = get_node("SafeMargin/RootColumn/TopBar/SettingsButton")
 
@@ -36,6 +38,8 @@ func _ready() -> void:
 	daily_tasks_button.pressed.connect(_open_daily_tasks)
 	profile_button.pressed.connect(_show_profile_hint)
 	settings_button.pressed.connect(_open_settings)
+	join_button.pressed.connect(_join_code)
+	code_input.text_changed.connect(_on_code_changed)
 	_refresh_recent_quizzes()
 	stars_shop_button.text = "%d Stars | Shop" % TaskManager.stars_balance()
 	if OS.get_name() == "Android":
@@ -107,9 +111,11 @@ func _configure_schoolyard_cards() -> void:
 		button.add_theme_color_override("font_color", UITheme.CREAM)
 	var code_input: LineEdit = get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard/Padding/JoinColumn/CodeInput")
 	var join_button: Button = get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard/Padding/JoinColumn/JoinButton")
-	code_input.visible = false
-	join_button.visible = false
-	get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard/Padding/JoinColumn/EnterCodeLabel").text = "Join with code (coming soon)"
+	code_input.visible = true
+	join_button.visible = true
+	join_button.disabled = true
+	join_button.text = "↗ Join"
+	get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard/Padding/JoinColumn/EnterCodeLabel").text = "Join with code"
 	if not OS.get_cmdline_user_args().has("--show-wip"):
 		get_node("SafeMargin/RootColumn/BottomNav/InventoryButton").visible = false
 		get_node("SafeMargin/RootColumn/BottomNav/LeaderboardsButton").visible = false
@@ -171,6 +177,30 @@ func _open_recent(quiz_id: String) -> void:
 	var picker: Control = load("res://scenes/QuizDetails.tscn").instantiate()
 	picker.library_id = quiz_id
 	Nav.show_screen(picker)
+
+
+func _on_code_changed(value: String) -> void:
+	code_input.text = value.to_upper().strip_edges()
+	code_input.caret_column = code_input.text.length()
+	join_button.disabled = code_input.text.length() < 4
+
+
+func _join_code() -> void:
+	join_button.disabled = true
+	status_label.text = "Connecting..."
+	var health: Dictionary = await SharingService.api("/health")
+	if not health.get("ok", false):
+		status_label.text = "Can't reach the server. Check your connection and try again."
+		join_button.disabled = false
+		return
+	var reply: Dictionary = await SharingService.join_quiz(code_input.text)
+	if not reply.get("ok", false):
+		status_label.text = "Can't reach the server. Check your connection and try again." if str(reply.get("error", "")).to_lower().contains("reach") else str(reply.get("error", "Could not join that quiz."))
+		join_button.disabled = false
+		return
+	code_input.clear()
+	status_label.text = "Quiz joined. It is now in My Quiz Library."
+	join_button.disabled = true
 
 
 func _open_upload() -> void:
