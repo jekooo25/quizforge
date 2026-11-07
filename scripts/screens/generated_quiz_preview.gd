@@ -23,11 +23,11 @@ func save_draft() -> void:
  var id:=QuizLibrary.add(%QuizTitle.text.strip_edges(),questions,"generated")
  if id=="":busy=false;%Status.text="Could not save. Try again.";return
  saved_id=id;dirty=false
-	var details: Control=load("res://scenes/QuizDetails.tscn").instantiate()
-	details.library_id=id
-	Nav.call_deferred("show_screen", details)
+ var details: Control=load("res://scenes/QuizDetails.tscn").instantiate()
+ details.library_id=id
+ Nav.call_deferred("show_screen", details)
 func leave() -> void:
-	Nav.call_deferred("show_screen", load("res://scenes/UploadReviewer.tscn").instantiate())
+ Nav.call_deferred("show_screen", load("res://scenes/UploadReviewer.tscn").instantiate())
 
 func show_question() -> void:
  super.show_question()
