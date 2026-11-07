@@ -109,6 +109,24 @@ layout_mode = 2
 text = "Search"
 custom_minimum_size = Vector2(0,56)
 
+[node name="ApprovalSettings" type="HBoxContainer" parent="Margin/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Course" type="OptionButton" parent="Margin/Column/ApprovalSettings"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0,56)
+text = "Choose course"
+
+[node name="AutoApprove" type="CheckButton" parent="Margin/Column/ApprovalSettings"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "AI auto-approve valid quizzes"
+custom_minimum_size = Vector2(0,56)
+
 [node name="Status" type="Label" parent="Margin/Column"]
 unique_name_in_owner = true
 layout_mode = 2

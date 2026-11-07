@@ -335,6 +335,15 @@ def result():
    return jsonify(ok=True,updated=True)
   db.execute("INSERT INTO results(attempt_id,join_id,correct,answered,score,recall_correct,recall_attempted,won,review_mode,revision,remaining,updated,leaderboard_eligible) VALUES(?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,?)",(attempt,token,*fields,won,mode,revision,encoded,int(mode=="battle" and joined["status"]=="shared" and joined["visibility"]=="public" and joined["leaderboard_enabled"])))
   return jsonify(ok=True)
+
+@app.get("/courses/<course_id>")
+def course_detail(course_id):
+ with connect() as db:
+  course=course_professor(db, course_id)
+  if not course:return error("Course not found.",404)
+  if request.headers.get("X-Demo-Role") == "teacher" and str(course["professor"]).lower()!=str(request.headers.get("X-Demo-User","")).lower(): return error("Teacher role required.",403)
+  setting=db.execute("SELECT auto_publish FROM course_settings WHERE course_id=?",(course_id,)).fetchone()
+  return jsonify(ok=True,course=dict(course),auto_publish=bool(setting[0]) if setting else False)
 @app.get("/reviews/<id>/results")
 def results(id):
  if not teacher(): return error("Teacher role required.",403)

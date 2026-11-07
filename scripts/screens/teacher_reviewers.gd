@@ -27,12 +27,38 @@ func _ready() -> void:
  %PublishedTab.pressed.connect(set_filter.bind("shared"))
  %Search.text_changed.connect(func(_text: String)->void:render())
  %SearchButton.pressed.connect(render)
+ %Course.item_selected.connect(_course_selected)
+ %AutoApprove.toggled.connect(_set_auto_approve)
  %Join.pressed.connect(join_quiz)
  %Send.pressed.connect(send_results)
  %OpenQuizzes.pressed.connect(func()->void:Nav.show_screen(load("res://scenes/my_quizzes.tscn").instantiate()))
  resized.connect(_apply_safe_area)
  _apply_safe_area.call_deferred()
  refresh()
+ _load_course_settings()
+
+func _load_course_settings() -> void:
+ var reply: Dictionary=await SharingService.api("/courses")
+ if not is_inside_tree() or not reply.get("ok",false):
+  %ApprovalSettings.visible=false
+  return
+ for course_value: Variant in reply.get("courses",[]):
+  var course: Dictionary=course_value as Dictionary
+  %Course.add_item("%s · %s" % [str(course.get("code","")),str(course.get("title","Course"))])
+  %Course.set_item_metadata(%Course.item_count-1,str(course.get("id","")))
+ %ApprovalSettings.visible=%Course.item_count>0
+ if %Course.item_count>0: _course_selected(0)
+
+func _course_selected(index: int) -> void:
+ if index<=0 and %Course.item_count==0:return
+ var course_id: String=str(%Course.get_item_metadata(index))
+ var reply: Dictionary=await SharingService.api("/courses/%s" % course_id)
+ if reply.get("ok",false):%AutoApprove.set_pressed_no_signal(bool(reply.get("auto_publish",false)))
+
+func _set_auto_approve(enabled: bool) -> void:
+ if %Course.selected<0:return
+ var course_id: String=str(%Course.get_item_metadata(%Course.selected))
+ await SharingService.api("/courses/%s/settings" % course_id,HTTPClient.METHOD_POST,{"auto_publish":enabled})
 func set_filter(value: String) -> void:
  filter=value
  render()
