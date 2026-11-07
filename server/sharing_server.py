@@ -16,12 +16,18 @@ def connect():
  db.row_factory = sqlite3.Row
  db.executescript("""CREATE TABLE IF NOT EXISTS reviews(id TEXT PRIMARY KEY, author TEXT, source_id TEXT, title TEXT, questions TEXT, status TEXT, code TEXT UNIQUE);
  CREATE TABLE IF NOT EXISTS joins(id TEXT PRIMARY KEY, review_id TEXT, student TEXT);
- CREATE TABLE IF NOT EXISTS results(attempt_id TEXT PRIMARY KEY, join_id TEXT, correct INTEGER, answered INTEGER, score INTEGER, recall_correct INTEGER, recall_attempted INTEGER, won INTEGER, created TEXT DEFAULT CURRENT_TIMESTAMP);""")
+ CREATE TABLE IF NOT EXISTS results(attempt_id TEXT PRIMARY KEY, join_id TEXT, correct INTEGER, answered INTEGER, score INTEGER, recall_correct INTEGER, recall_attempted INTEGER, won INTEGER, created TEXT DEFAULT CURRENT_TIMESTAMP);
+ CREATE TABLE IF NOT EXISTS courses(id TEXT PRIMARY KEY, title TEXT NOT NULL, professor TEXT NOT NULL);
+ CREATE TABLE IF NOT EXISTS enrollments(course_id TEXT, student TEXT, section TEXT NOT NULL DEFAULT 'A', PRIMARY KEY(course_id,student));
+ CREATE TABLE IF NOT EXISTS syllabi(course_id TEXT PRIMARY KEY, text TEXT NOT NULL, updated TEXT DEFAULT CURRENT_TIMESTAMP);
+ CREATE TABLE IF NOT EXISTS course_settings(course_id TEXT PRIMARY KEY, auto_publish INTEGER NOT NULL DEFAULT 0);
+ CREATE TABLE IF NOT EXISTS validations(review_id TEXT PRIMARY KEY, course_id TEXT NOT NULL, verdict TEXT NOT NULL, reason TEXT NOT NULL);""")
  try:
   # Additive migration: retain all existing publications, joins and battle reports.
   with db:
    db.execute("BEGIN IMMEDIATE")
    review_columns={r[1] for r in db.execute("PRAGMA table_info(reviews)")}
+   if "course_id" not in review_columns: db.execute("ALTER TABLE reviews ADD COLUMN course_id TEXT")
    if "visibility" not in review_columns:
     db.execute("ALTER TABLE reviews ADD COLUMN visibility TEXT NOT NULL DEFAULT 'private'")
     db.execute("UPDATE reviews SET visibility='code_only' WHERE status='shared'")
@@ -34,6 +40,22 @@ def connect():
    for name,definition in [("review_mode","TEXT NOT NULL DEFAULT 'battle'"),("revision","INTEGER NOT NULL DEFAULT 0"),("remaining","TEXT DEFAULT NULL"),("updated","TEXT"),("leaderboard_eligible","INTEGER NOT NULL DEFAULT 0")]:
     if name not in columns: db.execute(f"ALTER TABLE results ADD COLUMN {name} {definition}")
    db.execute("UPDATE results SET updated=created WHERE updated IS NULL")
+   demo_courses=[
+    ("BIO101","Biology 101","Demo Teacher","cells genetics ecosystems"),
+    ("HIST201","World History","Demo Teacher","empires trade revolutions"),
+    ("MATH120","College Algebra","Demo Teacher","functions equations polynomials"),
+    ("CHEM110","General Chemistry","Demo Teacher","atoms bonding reactions"),
+    ("PHYS130","Physics I","Demo Teacher","motion forces energy"),
+    ("ENG105","Academic Writing","Demo Teacher","thesis evidence citations"),
+    ("CS115","Programming Fundamentals","Demo Teacher","variables loops functions"),
+    ("PSY101","Introduction to Psychology","Demo Teacher","memory learning behavior"),
+   ]
+   for course_id,title,professor,syllabus in demo_courses:
+    db.execute("INSERT OR IGNORE INTO courses(id,title,professor) VALUES(?,?,?)", (course_id,title,professor))
+    db.execute("INSERT OR IGNORE INTO syllabi(course_id,text) VALUES(?,?)", (course_id,syllabus))
+    db.execute("INSERT OR IGNORE INTO course_settings(course_id,auto_publish) VALUES(?,0)", (course_id,))
+   for course_id,_,_,_ in demo_courses[:4]:
+    db.execute("INSERT OR IGNORE INTO enrollments(course_id,student,section) VALUES(?,?,?)", (course_id,"Demo Student","A"))
   with db:
    yield db
  finally:
@@ -66,6 +88,78 @@ def content_key(questions):
 
 def same_student(a,b): return str(a).strip().casefold()==str(b).strip().casefold()
 
+def course_professor(db, course_id):
+ return db.execute("SELECT * FROM courses WHERE id=?", (course_id,)).fetchone()
+
+def enrolled(db, course_id, student):
+ return db.execute("SELECT 1 FROM enrollments WHERE course_id=? AND lower(student)=lower(?)", (course_id, student)).fetchone() is not None
+
+def semantic_validate(db, course_id, questions):
+ syllabus=db.execute("SELECT text FROM syllabi WHERE course_id=?", (course_id,)).fetchone()
+ if not syllabus or not str(syllabus[0]).strip(): return False, "This course has no syllabus yet."
+ source_words={w for w in str(syllabus[0]).lower().split() if len(w)>=5}
+ content=" ".join(str(q.get("q", "")) + " " + " ".join(q.get("choices", [])) for q in questions).lower()
+ overlap=sum(1 for word in source_words if word in content)
+ if overlap < 2: return False, "This material does not match the selected course syllabus."
+ return True, "Course-aligned material."
+
+@app.get("/courses")
+def courses():
+ with connect() as db:
+  role=request.headers.get("X-Demo-Role", "student"); name=request.headers.get("X-Demo-User", "")
+  if role == "teacher": rows=db.execute("SELECT * FROM courses WHERE lower(professor)=lower(?)", (name,)).fetchall()
+  else: rows=db.execute("SELECT c.* FROM courses c JOIN enrollments e ON e.course_id=c.id WHERE lower(e.student)=lower(?)", (name,)).fetchall()
+  return jsonify(ok=True,courses=[dict(r) for r in rows])
+
+@app.post("/courses")
+def create_course():
+ if not teacher(): return error("Teacher role required.",403)
+ data=payload(); course_id=str(data.get("id", "")).strip()[:80]; title=str(data.get("title", "")).strip()[:160]
+ if not course_id or not title: return error("Course ID and title are required.")
+ with connect() as db:
+  db.execute("INSERT OR REPLACE INTO courses(id,title,professor) VALUES(?,?,?)", (course_id,title,request.headers.get("X-Demo-User", "Teacher")))
+  db.execute("INSERT OR IGNORE INTO course_settings(course_id,auto_publish) VALUES(?,0)", (course_id,))
+  return jsonify(ok=True,course=dict(db.execute("SELECT * FROM courses WHERE id=?", (course_id,)).fetchone()))
+
+@app.post("/courses/<course_id>/enroll")
+def enroll_student(course_id):
+ if not teacher(): return error("Teacher role required.",403)
+ student=str(payload().get("student", "")).strip()[:80]
+ with connect() as db:
+  if not course_professor(db, course_id): return error("Course not found.",404)
+  db.execute("INSERT OR REPLACE INTO enrollments(course_id,student,section) VALUES(?,?,?)", (course_id,student,str(payload().get("section", "A"))[:20]))
+  return jsonify(ok=True)
+
+@app.post("/courses/<course_id>/syllabus")
+def save_syllabus(course_id):
+ if not teacher(): return error("Teacher role required.",403)
+ text=str(payload().get("text", "")).strip()
+ with connect() as db:
+  course=course_professor(db, course_id)
+  if not course: return error("Course not found.",404)
+  if str(course["professor"]).casefold()!=request.headers.get("X-Demo-User", "").casefold(): return error("Only the course professor can edit its syllabus.",403)
+  db.execute("INSERT OR REPLACE INTO syllabi(course_id,text,updated) VALUES(?,?,CURRENT_TIMESTAMP)", (course_id,text))
+  return jsonify(ok=True)
+
+@app.post("/courses/<course_id>/settings")
+def course_settings(course_id):
+ if not teacher(): return error("Teacher role required.",403)
+ with connect() as db:
+  course=course_professor(db, course_id)
+  if not course: return error("Course not found.",404)
+  enabled=bool(payload().get("auto_publish", False))
+  db.execute("INSERT OR REPLACE INTO course_settings(course_id,auto_publish) VALUES(?,?)", (course_id,int(enabled)))
+  return jsonify(ok=True,auto_publish=enabled)
+
+@app.post("/courses/<course_id>/validate")
+def validate_course_content(course_id):
+ data=payload(); student=str(data.get("student", "")).strip(); questions=data.get("questions", [])
+ if request.headers.get("X-Demo-Role") != "student": return error("Submit from the Student role.",403)
+ with connect() as db:
+  if not enrolled(db, course_id, student): return error("You are not enrolled in this course.",403)
+  valid,reason=semantic_validate(db, course_id, questions)
+  return jsonify(ok=True,verdict="approved" if valid else "rejected",reason=reason)
+
 def annotated_reviews(db):
  rows=[rowdict(r) for r in db.execute("SELECT * FROM reviews ORDER BY rowid DESC")]
  canonical={}
@@ -90,6 +184,11 @@ def reviews():
   if issue: return error(issue)
   author=str(data.get("author","")).strip()[:80]; source=str(data.get("source_id",""))[:200]
   if not author or not source: return error("Student name and quiz ID are required.")
+  course_id=str(data.get("course_id", "")).strip()[:80]
+  if course_id:
+   if not enrolled(db, course_id, author): return error("You are not enrolled in this course.",403)
+   valid,reason=semantic_validate(db, course_id, questions)
+   if not valid: return error(reason,422)
   db.execute("BEGIN IMMEDIATE")
   candidates=[r for r in db.execute("SELECT * FROM reviews ORDER BY rowid DESC") if same_student(r["author"],author)]
   key=content_key(questions)
@@ -110,7 +209,10 @@ def reviews():
   id=uuid.uuid4().hex
   root=parent["root_id"] if parent else id
   version=db.execute("SELECT COALESCE(MAX(review_version),0)+1 FROM reviews WHERE root_id=?",(root,)).fetchone()[0]
-  db.execute("INSERT INTO reviews(id,author,source_id,title,questions,status,code,parent_id,root_id,review_version) VALUES(?,?,?,?,?,'pending',NULL,?,?,?)",(id,author,source,str(data.get("title","Untitled"))[:200],json.dumps(questions),parent["id"] if parent else None,root,version))
+  status="pending"
+  if course_id and db.execute("SELECT auto_publish FROM course_settings WHERE course_id=?", (course_id,)).fetchone()[0]: status="shared"
+  db.execute("INSERT INTO reviews(id,author,source_id,title,questions,status,code,parent_id,root_id,review_version,course_id) VALUES(?,?,?,?,? ,?,NULL,?,?,?,?)",(id,author,source,str(data.get("title","Untitled"))[:200],json.dumps(questions),status,parent["id"] if parent else None,root,version,course_id or None))
+  if course_id: db.execute("INSERT OR REPLACE INTO validations(review_id,course_id,verdict,reason) VALUES(?,?,?,?)", (id,course_id,"approved","Course-aligned material."))
   return jsonify(ok=True,review=rowdict(db.execute("SELECT * FROM reviews WHERE id=?",(id,)).fetchone()))
 @app.post("/reviews/<id>/status")
 def transition(id):

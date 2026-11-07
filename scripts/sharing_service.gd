@@ -13,7 +13,7 @@ func api(path: String, method := HTTPClient.METHOD_GET, data: Dictionary = {}) -
  http.timeout = 5.0
  add_child(http)
  var role := str(Nav.user.get("role","student"))
- var error := http.request(base_url + path,["Content-Type: application/json","X-Demo-Role: " + role],method,JSON.stringify(data) if method != HTTPClient.METHOD_GET else "")
+ var error := http.request(base_url + path,["Content-Type: application/json","X-Demo-Role: " + role,"X-Demo-User: " + str(Nav.user.get("username", ""))],method,JSON.stringify(data) if method != HTTPClient.METHOD_GET else "")
  if error != OK:
   http.queue_free()
   return {"ok":false,"error":"Start the laptop sharing server and try again."}
