@@ -1,0 +1,73 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/quiz_card.gd" id="1_card"]
+
+[node name="QuizCard" type="PanelContainer"]
+mouse_filter = 1
+custom_minimum_size = Vector2(0, 148)
+layout_mode = 3
+theme_type_variation = &"MyQuizCardPanel"
+script = ExtResource("1_card")
+
+[node name="CardRow" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="OpenArea" type="Button" parent="CardRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0,118)
+mouse_filter = 1
+flat = true
+
+[node name="TextColumn" type="VBoxContainer" parent="CardRow/OpenArea"]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_override_constants/separation = 1
+
+[node name="QuizTitle" type="Label" parent="CardRow/OpenArea/TextColumn"]
+max_lines_visible = 2
+text_overrun_behavior = 3
+theme_override_font_sizes/font_size = 28
+autowrap_mode = 3
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"MyQuizTitle"
+text = "Quiz title"
+
+[node name="QuizDetails" type="Label" parent="CardRow/OpenArea/TextColumn"]
+max_lines_visible = 1
+text_overrun_behavior = 3
+autowrap_mode = 3
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"MyQuizDetails"
+text = "0 questions · Nov 4, 2026"
+
+[node name="QuizScore" type="Label" parent="CardRow/OpenArea/TextColumn"]
+autowrap_mode = 3
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"MyQuizScore"
+text = "Not played yet"
+
+[node name="PlayButton" type="Button" parent="CardRow"]
+mouse_filter = 1
+size_flags_vertical = 4
+unique_name_in_owner = true
+custom_minimum_size = Vector2(176, 72)
+layout_mode = 2
+theme_type_variation = &"MyQuizPlayButton"
+text = "Open quiz"
+
+[node name="MenuButton" type="MenuButton" parent="CardRow"]
+mouse_filter = 1
+size_flags_vertical = 4
+unique_name_in_owner = true
+custom_minimum_size = Vector2(72, 72)
+layout_mode = 2
+theme_type_variation = &"MyQuizMenuButton"
+text = "..."

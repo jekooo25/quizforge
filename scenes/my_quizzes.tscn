@@ -1,0 +1,201 @@
+[gd_scene format=3 uid="uid://pick2702uh4r"]
+
+[ext_resource type="PackedScene" path="res://scenes/SharedQuizJoin.tscn" id="3_join"]
+
+[ext_resource type="Script" uid="uid://iqrkicufojx1" path="res://scripts/screens/my_quizzes_screen.gd" id="1_screen"]
+[ext_resource type="Texture2D" uid="uid://dxdg1x3vhid41" path="res://assets/backgrounds/LoginBackground.jpg" id="2_courtyard"]
+
+[node name="MyQuizzes" type="Control" unique_id=2067328031]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_screen")
+
+[node name="CourtyardBackground" type="TextureRect" parent="." unique_id=1040541910]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_courtyard")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="ContentMargin" type="MarginContainer" parent="." unique_id=1234084916]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 56
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 56
+theme_override_constants/margin_bottom = 20
+
+[node name="SurfacePanel" type="PanelContainer" parent="ContentMargin" unique_id=898554768]
+layout_mode = 2
+theme_type_variation = &"MyQuizzesSurfacePanel"
+
+[node name="MainColumn" type="VBoxContainer" parent="ContentMargin/SurfacePanel" unique_id=1378846754]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="HeaderRow" type="HBoxContainer" parent="ContentMargin/SurfacePanel/MainColumn" unique_id=1976945009]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="MainMenuButton" type="Button" parent="ContentMargin/SurfacePanel/MainColumn/HeaderRow" unique_id=975652153]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 52)
+layout_mode = 2
+theme_type_variation = &"MyQuizzesMainMenuButton"
+text = "←  Main Menu"
+
+[node name="Heading" type="Label" parent="ContentMargin/SurfacePanel/MainColumn/HeaderRow" unique_id=1563210618]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"MyQuizzesTitle"
+text = "My Quizzes"
+vertical_alignment = 1
+
+[node name="TabRow" type="HBoxContainer" parent="ContentMargin/SurfacePanel/MainColumn" unique_id=762228166]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="MyQuizzesTab" type="Button" parent="ContentMargin/SurfacePanel/MainColumn/TabRow" unique_id=1561061235]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"MyQuizzesActiveTab"
+text = "My quizzes"
+
+[node name="BrowseSharedTab" type="Button" parent="ContentMargin/SurfacePanel/MainColumn/TabRow" unique_id=1020803059]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"MyQuizzesSoonTab"
+text = "Shared quizzes"
+
+[node name="ProgressTab" type="Button" parent="ContentMargin/SurfacePanel/MainColumn/TabRow" unique_id=880492171]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"MyQuizzesTab"
+text = "Progress"
+
+[node name="SharedJoin" parent="ContentMargin/SurfacePanel/MainColumn" instance=ExtResource("3_join")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+
+[node name="MyQuizzesPane" type="VBoxContainer" parent="ContentMargin/SurfacePanel/MainColumn" unique_id=1718233772]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="FilterRow" type="HBoxContainer" parent="ContentMargin/SurfacePanel/MainColumn/MyQuizzesPane" unique_id=1278963902]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SearchBox" type="LineEdit" parent="ContentMargin/SurfacePanel/MainColumn/MyQuizzesPane/FilterRow" unique_id=568086139]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"MyQuizzesSearch"
+placeholder_text = "Search quizzes"
+
+[node name="SortOption" type="OptionButton" parent="ContentMargin/SurfacePanel/MainColumn/MyQuizzesPane/FilterRow" unique_id=2110089804]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 48)
+layout_mode = 2
+theme_type_variation = &"MyQuizzesSort"
+
+[node name="EmptyStateBox" type="VBoxContainer" parent="ContentMargin/SurfacePanel/MainColumn/MyQuizzesPane" unique_id=832445742]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="EmptyState" type="Label" parent="ContentMargin/SurfacePanel/MainColumn/MyQuizzesPane/EmptyStateBox" unique_id=65069388]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"MyQuizzesEmpty"
+text = "No quizzes yet!"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="UploadReviewerButton" type="Button" parent="ContentMargin/SurfacePanel/MainColumn/MyQuizzesPane/EmptyStateBox" unique_id=862297361]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(260, 56)
+layout_mode = 2
+size_flags_horizontal = 8
+theme_type_variation = &"MyQuizzesUploadButton"
+text = "Upload reviewer"
+
+[node name="QuizScroll" type="ScrollContainer" parent="ContentMargin/SurfacePanel/MainColumn/MyQuizzesPane" unique_id=1819957734]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+scroll_deadzone = 12
+
+[node name="QuizList" type="VBoxContainer" parent="ContentMargin/SurfacePanel/MainColumn/MyQuizzesPane/QuizScroll" unique_id=1712293210]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="BrowseSharedPane" type="VBoxContainer" parent="ContentMargin/SurfacePanel/MainColumn" unique_id=1550219145]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+alignment = 1
+
+[node name="BrowseSharedState" type="Label" parent="ContentMargin/SurfacePanel/MainColumn/BrowseSharedPane" unique_id=783625804]
+layout_mode = 2
+theme_type_variation = &"MyQuizzesEmpty"
+text = "Browse shared quizzes is coming soon."
+horizontal_alignment = 1
+
+[node name="ProgressPane" type="VBoxContainer" parent="ContentMargin/SurfacePanel/MainColumn" unique_id=2072321329]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+alignment = 1
+
+[node name="ProgressState" type="Label" parent="ContentMargin/SurfacePanel/MainColumn/ProgressPane" unique_id=1595552095]
+layout_mode = 2
+theme_type_variation = &"MyQuizzesEmpty"
+text = "Play a quiz to start tracking your progress."
+horizontal_alignment = 1
+
+[node name="RenameDialog" type="AcceptDialog" parent="." unique_id=1789071120]
+unique_name_in_owner = true
+title = "Rename Quiz"
+
+[node name="RenameTitle" type="LineEdit" parent="RenameDialog" unique_id=1180038139]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(400, 48)
+size_flags_horizontal = 3
+theme_type_variation = &"MyQuizzesSearch"
+
+[node name="DeleteDialog" type="ConfirmationDialog" parent="." unique_id=1534744041]
+unique_name_in_owner = true
+dialog_text = "Delete this quiz?"

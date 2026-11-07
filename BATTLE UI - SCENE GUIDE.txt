@@ -1,0 +1,32 @@
+BATTLE UI — GODOT SCENE GUIDE
+
+Open scenes/battle.tscn in Godot. The UI is made from scene nodes, not constructed by a script.
+
+Battle
+  Background — overall navy colour
+  SafeArea / BattleColumn
+    HUD — player HP, shield/combo, progress, timer, enemy HP, Pause
+    Battlefield — cream arena, editable platform polygons, existing creature scripts
+      QuestionPanel / QuestionBox
+        QuestionScroll / QuestionLabel — long questions can scroll
+        ExplanationScroll / ReviewContent — question, correct answer, explanation and source
+    FeedbackLabel — correct / incorrect / recall / automatic advance messages
+    AutoAdvanceBar — countdown after correct answers
+    ActionDock — Attack / Recover, action description and score
+    AnswerDock / ChoiceGrid — four neutral answer buttons in a 2x2 grid
+    NextButton — Continue while reviewing a mistake
+  PauseMenu — instance of scenes/BattlePauseMenu.tscn
+
+Open scenes/BattlePauseMenu.tscn to edit Resume, sound volume, Return to Quizzes, and LeaveConfirmation.
+Open scenes/BattleResults.tscn to edit the existing results and learning summary.
+
+The script updates question text, HP, colours, visibility and state. It connects the scene buttons to existing gameplay. Combat effects are temporary nodes; the permanent interface is visible in the scene tree.
+
+Runtime states:
+- Answering: framed question, creatures and platforms, actions, 2x2 answers.
+- Correct: attack/heal effect, coloured answer feedback, next-question progress bar.
+- Incorrect: board expands into scrollable review; Continue remains outside the scroll area.
+- Recall: no combat action controls or HP penalty.
+- Pause: animations, timers and auto-advance stop. Resume continues the same turn.
+
+Scene previews are designed for landscape. Real Android cutouts and touch behaviour still need device testing.

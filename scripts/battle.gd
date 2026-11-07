@@ -1,21 +1,32 @@
 extends Control
 ## Quizmon — a quiz battle slice.
 ##
-## Demo loop: answer each saved question once, review the answer, then choose
-## Next. Correct answers damage the enemy; wrong or timed-out answers damage
-## the player. Knockout or question exhaustion ends the battle.
+## Choose Attack or Recover, answer, and watch the turn resolve. Correct answers
+## advance automatically. Mistakes pause for reading and return as recall checks.
+## Only first attempts affect battle score, task accuracy, and Stars.
+
+signal answer_submitted(is_correct: bool)
+signal battle_completed(score: int)
 
 ## Long enough to read a full question and its four choices at demo pace.
+@export var timed_battle := false
+@export_range(0, 20) var encounter_size := 5
+@export var auto_advance_delay := 1.0
+
+const BattleAudio := preload("res://scripts/ui/battle_audio.gd")
+
 const ROUND_TIME := 45.0
+const SHIELD_COMBO := 3
 const TARGET_CORRECT_RATIO := 0.70
 const DEMO_PLAYER_HP := 3
 const DEMO_ENEMY_DAMAGE := 1
 const DEMO_PLAYER_DAMAGE := 1
+const SCORE_PER_CORRECT_ANSWER := 100
+const STARS_PER_CORRECT_ANSWER := 1
+const STARS_FOR_WIN := 2
 
 const Dev := preload("res://scripts/ui/dev.gd")
 
-const BG := Color(0.078, 0.075, 0.106)
-const PANEL := Color(0.133, 0.122, 0.180)
 const EDGE := Color(0.208, 0.188, 0.290)
 const ACCENT := Color(0.490, 0.839, 0.627)
 const DANGER := Color(0.910, 0.412, 0.373)
@@ -42,38 +53,62 @@ var _questions: Array = []
 var _all_questions: Array = []
 var _missed_questions: Array = []
 var _source: String = ""
+var _quiz_library_id := ""
 var streak: int = 0
+var _best_streak := 0
+var _shield_ready := false
+var _practice_mode := false
+var _turn_effect := ""
 var _state: String = "idle"
+var _turns: Array = []
+var _turn_index := -1
+var _is_recall := false
+var _combat_finished := false
+var _selected_action := "attack"
+var _auto_left := 0.0
+var _recall_attempted := 0
+var _recall_correct := 0
+var _first_misses := 0
+var _run_id := 0
+var _suspended := false
+var _resume_guard := false
+var _audio: Node
+var _paused_by_menu := false
 var _time_left: float = 0.0
 var _correct_index: int = 0
 var _round_number: int = 0
 var _answered_correctly: int = 0
+var _current_score: int = 0
 var _battle_question_count: int = 0
 var _current_question: Dictionary = {}
+var _battle_sequence := 0
+var _battle_stars := 0
 
-var enemy_sprite: CreatureSprite
-var player_sprite: CreatureSprite
-var enemy_hp_bar: ProgressBar
-var enemy_hp_text: Label
-var player_hp_bar: ProgressBar
-var player_hp_text: Label
-var timer_bar: ProgressBar
-var streak_label: Label
-var question_label: Label
-var feedback_label: Label
-var explanation_label: Label
-var explanation_scroll: ScrollContainer
-var next_button: Button
-var answer_buttons: Array[Button] = []
-var battlefield: Control
-var overlay: Control
-var result_title_label: Label
-var result_stats_label: Label
-var result_missed_scroll: ScrollContainer
-var result_missed_list: VBoxContainer
-var retry_missed_button: Button
-var play_again_button: Button
-var my_quizzes_button: Button
+@onready var pause_menu: Control = %PauseMenu
+@onready var attack_button: Button = %AttackButton
+@onready var recover_button: Button = %RecoverButton
+@onready var action_row: HBoxContainer = %ActionRow
+@onready var enemy_sprite: CreatureSprite = %EnemySprite
+@onready var player_sprite: CreatureSprite = %PlayerSprite
+@onready var enemy_hp_bar: ProgressBar = %EnemyHPBar
+@onready var enemy_hp_text: Label = %EnemyHPText
+@onready var player_hp_bar: ProgressBar = %PlayerHPBar
+@onready var player_hp_text: Label = %PlayerHPText
+@onready var timer_toggle: Button = %TimerToggle
+@onready var timer_bar: ProgressBar = %TimerBar
+@onready var streak_label: Label = %StreakLabel
+@onready var score_label: Label = %ScoreLabel
+@onready var question_label: Label = %QuestionLabel
+@onready var feedback_label: Label = %FeedbackLabel
+@onready var explanation_label: Label = %ExplanationLabel
+@onready var explanation_scroll: ScrollContainer = %ExplanationScroll
+@onready var next_button: Button = %NextButton
+@onready var battlefield: Control = %Battlefield
+@onready var safe_area: MarginContainer = %SafeArea
+@onready var answer_buttons: Array[Button] = [
+	%AnswerA as Button, %AnswerB as Button, %AnswerC as Button, %AnswerD as Button]
+var result_layer: Control
+var _battle_reward_id := ""
 
 
 const UNAVAILABLE := "We couldn't open this quiz. Please choose it again from your saved quizzes or make a new one."
@@ -87,6 +122,7 @@ var unavailable_message := ""
 func _ready() -> void:
 	var saved := QuizData.load_saved()
 	var status := str(saved.get("status", SaveManager.STATUS_OK))
+	_quiz_library_id = str(saved.get("library_id", ""))
 	var questions: Variant = saved.get("questions", [])
 	if typeof(questions) == TYPE_ARRAY:
 		_questions.assign(questions)
@@ -112,6 +148,8 @@ func _ready() -> void:
 	print("[battle] file: ", ProjectSettings.globalize_path(QuizData.SAVE_PATH))
 	print("[battle] first question: ", str(_questions[0].get("q", "")) if not _questions.is_empty() else "(none)")
 	_all_questions = _questions.duplicate(true)
+	answer_submitted.connect(TaskManager.record_answer)
+	battle_completed.connect(TaskManager.record_battle)
 	_build_ui()
 	if Dev.overlay_on():
 		_add_debug_label()
@@ -126,42 +164,12 @@ func _show_unavailable(status: String) -> void:
 	_source = "unavailable (%s)" % status
 	print("[battle] quiz unavailable: ", status)
 	print("[battle] file: ", ProjectSettings.globalize_path(QuizData.SAVE_PATH))
-
-	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-
-	var bg := ColorRect.new()
-	bg.color = BG
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(bg)
-
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(center)
-
-	var card := _make_panel(0.0)
-	card.custom_minimum_size = Vector2(560.0, 0.0)
-	center.add_child(card)
-
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 18)
-	card.add_child(column)
-
-	var title := _display_label("No quiz to play", 26, TEXT)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	column.add_child(title)
-
-	var message := _label(UNAVAILABLE, 17, MUTED)
-	message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	column.add_child(message)
-
-	var back := UITheme.button("Back to menu", "navy", 46)
-	back.custom_minimum_size = Vector2(240.0, 46.0)
-	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	back.pressed.connect(func() -> void:
-		Nav.show_screen(load("res://scripts/screens/menu_screen.gd").new()))
-	column.add_child(back)
+	safe_area.visible = false
+	answer_buttons.clear()
+	var unavailable_scene := preload("res://scenes/BattleUnavailable.tscn") as PackedScene
+	var unavailable_view := unavailable_scene.instantiate() as Control
+	add_child(unavailable_view)
+	unavailable_view.connect("return_to_menu", _on_return_to_menu)
 
 
 ## TEMPORARY: says which set the battle is actually playing.
@@ -203,262 +211,223 @@ func _panel_style(bg: Color, edge: Color, radius: int) -> StyleBoxFlat:
 func _label(text: String, font_size: int, color: Color) -> Label:
 	var l := Label.new()
 	l.text = text
+	l.add_theme_font_override("font", UITheme.font_body)
 	l.add_theme_font_size_override("font_size", UITheme.crisp(font_size))
 	l.add_theme_color_override("font_color", color)
 	return l
 
 
-## Banners and names are display text: Monocraft, like the rest of the chrome.
-func _display_label(text: String, font_size: int, color: Color) -> Label:
-	var l := _label(text, font_size, color)
-	l.add_theme_font_override("font", UITheme.font_pixel)
-	return l
-
-
-func _make_panel(min_height: float) -> PanelContainer:
-	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", _panel_style(PANEL, EDGE, 16))
-	panel.custom_minimum_size = Vector2(0.0, min_height)
-	return panel
-
-
-func _style_hp_bar(bar: ProgressBar, fill_color: Color) -> void:
-	var back := StyleBoxFlat.new()
-	back.bg_color = Color(0.06, 0.06, 0.09)
-	back.set_corner_radius_all(6)
-	var fill := StyleBoxFlat.new()
-	fill.bg_color = fill_color
-	fill.set_corner_radius_all(6)
-	bar.add_theme_stylebox_override("background", back)
-	bar.add_theme_stylebox_override("fill", fill)
-	bar.show_percentage = false
-	bar.custom_minimum_size = Vector2(0.0, 14.0)
-
-
+## Banners and names use the shared UI font through the battle scene theme.
 func _build_ui() -> void:
-	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-
-	var bg := ColorRect.new()
-	bg.color = BG
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(bg)
-
-	var margin := MarginContainer.new()
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for side in ["left", "right"]:
-		margin.add_theme_constant_override("margin_" + side, 26)
-	for side in ["top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 6)
-	add_child(margin)
-
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 4)
-	margin.add_child(column)
-
-	# --- enemy status card, right aligned
-	var enemy_row := HBoxContainer.new()
-	column.add_child(enemy_row)
-	var enemy_spacer := Control.new()
-	enemy_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	enemy_row.add_child(enemy_spacer)
-	var enemy_card := _make_panel(60.0)
-	enemy_card.custom_minimum_size = Vector2(390.0, 60.0)
-	enemy_row.add_child(enemy_card)
-	var enemy_box := VBoxContainer.new()
-	enemy_box.add_theme_constant_override("separation", 6)
-	enemy_card.add_child(enemy_box)
-	var enemy_head := HBoxContainer.new()
-	enemy_box.add_child(enemy_head)
-	var enemy_name := _display_label("Mudlet (demo)", 24, TEXT)
-	enemy_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	enemy_head.add_child(enemy_name)
-	enemy_hp_text = _label("60 / 60", 15, MUTED)
-	enemy_head.add_child(enemy_hp_text)
-	enemy_hp_bar = ProgressBar.new()
-	_style_hp_bar(enemy_hp_bar, ACCENT)
-	enemy_box.add_child(enemy_hp_bar)
-
-	# --- battlefield
-	battlefield = Control.new()
-	battlefield.custom_minimum_size = Vector2(0.0, 120.0)
-	battlefield.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	battlefield.clip_contents = false
-	column.add_child(battlefield)
-
-	enemy_sprite = CreatureSprite.new()
-	enemy_sprite.custom_minimum_size = Vector2(120.0, 120.0)
-	enemy_sprite.anchor_left = 1.0
-	enemy_sprite.anchor_right = 1.0
-	enemy_sprite.anchor_top = 0.5
-	enemy_sprite.anchor_bottom = 0.5
-	enemy_sprite.offset_left = -170.0
-	enemy_sprite.offset_right = -50.0
-	enemy_sprite.offset_top = -60.0
-	enemy_sprite.offset_bottom = 60.0
-	battlefield.add_child(enemy_sprite)
-
-	player_sprite = CreatureSprite.new()
-	player_sprite.custom_minimum_size = Vector2(120.0, 120.0)
-	player_sprite.anchor_left = 0.0
-	player_sprite.anchor_right = 0.0
-	player_sprite.anchor_top = 0.5
-	player_sprite.anchor_bottom = 0.5
-	player_sprite.offset_left = 50.0
-	player_sprite.offset_right = 170.0
-	player_sprite.offset_top = -60.0
-	player_sprite.offset_bottom = 60.0
-	battlefield.add_child(player_sprite)
-
-	# --- feedback line
-	feedback_label = _label("", 17, MUTED)
-	feedback_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	column.add_child(feedback_label)
-
-	# --- question card
-	var card := _make_panel(158.0)
-	column.add_child(card)
-	var card_box := VBoxContainer.new()
-	card_box.add_theme_constant_override("separation", 10)
-	card.add_child(card_box)
-
-	question_label = _label("", 28, TEXT)
-	question_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	question_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	card_box.add_child(question_label)
-	explanation_scroll = ScrollContainer.new()
-	explanation_scroll.custom_minimum_size = Vector2(0.0, 76.0)
-	explanation_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	explanation_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	explanation_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	explanation_scroll.visible = false
-	card_box.add_child(explanation_scroll)
-	explanation_label = _label("", 16, MUTED)
-	explanation_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	explanation_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	explanation_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	explanation_scroll.add_child(explanation_label)
-
-	var grid := GridContainer.new()
-	grid.columns = 2
-	grid.add_theme_constant_override("h_separation", 10)
-	grid.add_theme_constant_override("v_separation", 8)
-	card_box.add_child(grid)
-
-	for i in 4:
-		var btn := Button.new()
-		btn.custom_minimum_size = Vector2(0.0, 52.0)
-		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		btn.add_theme_font_size_override("font_size", UITheme.crisp(28))
-		btn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		btn.add_theme_stylebox_override("normal", _panel_style(Color(0.16, 0.15, 0.22), EDGE, 10))
-		btn.add_theme_stylebox_override("hover", _panel_style(Color(0.21, 0.20, 0.29), ACCENT, 10))
-		btn.add_theme_stylebox_override("pressed", _panel_style(Color(0.24, 0.23, 0.33), ACCENT, 10))
-		btn.add_theme_stylebox_override("disabled", _panel_style(Color(0.12, 0.11, 0.16), EDGE, 10))
-		btn.add_theme_color_override("font_color", TEXT)
-		btn.add_theme_color_override("font_disabled_color", MUTED)
-		btn.pressed.connect(_on_answer.bind(i))
-		grid.add_child(btn)
-		answer_buttons.append(btn)
-
-	next_button = UITheme.button("Next", "navy", 44)
-	next_button.custom_minimum_size = Vector2(180.0, 44.0)
-	next_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	next_button.visible = false
-	next_button.pressed.connect(_on_next)
-	column.add_child(next_button)
-
-	# --- player status card
-	var player_card := _make_panel(60.0)
-	column.add_child(player_card)
-	var player_box := VBoxContainer.new()
-	player_box.add_theme_constant_override("separation", 6)
-	player_card.add_child(player_box)
-	var player_head := HBoxContainer.new()
-	player_box.add_child(player_head)
-	var player_name := _display_label("Emberpup (demo)", 24, TEXT)
-	player_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	player_head.add_child(player_name)
-	streak_label = _label("", 15, GOLD)
-	player_head.add_child(streak_label)
-	player_hp_text = _label("60 / 60", 15, MUTED)
-	player_head.add_child(player_hp_text)
-	player_hp_bar = ProgressBar.new()
-	_style_hp_bar(player_hp_bar, ACCENT)
-	player_box.add_child(player_hp_bar)
-
-	timer_bar = ProgressBar.new()
-	_style_hp_bar(timer_bar, GOLD)
-	timer_bar.custom_minimum_size = Vector2(0.0, 8.0)
+	resized.connect(_apply_battle_safe_area)
+	_apply_battle_safe_area.call_deferred()
+	%PauseButton.pressed.connect(_pause_battle)
+	pause_menu.resume_requested.connect(_resume_battle)
+	pause_menu.get_node("%ResumeButton").pressed.connect(_resume_battle)
+	pause_menu.get_node("%ReturnButton").pressed.connect(func() -> void: pause_menu.get_node("%LeaveConfirmation").popup_centered())
+	pause_menu.get_node("%LeaveConfirmation").confirmed.connect(_leave_paused_battle)
+	var slider: HSlider = pause_menu.get_node("%SoundSlider")
+	slider.value = AudioMixer.volume_of(Nav.user,"volume_sfx")
+	slider.value_changed.connect(func(value: float) -> void:
+		Nav.user["volume_sfx"] = int(value)
+		AudioMixer.set_volume_percent(AudioMixer.SFX,int(value))
+		Nav.save_profile())
+	_audio = BattleAudio.new()
+	add_child(_audio)
+	attack_button.pressed.connect(_select_action.bind("attack"))
+	recover_button.pressed.connect(_select_action.bind("recover"))
 	timer_bar.max_value = ROUND_TIME
-	timer_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var timer_row := HBoxContainer.new()
-	timer_row.add_theme_constant_override("separation", 12)
-	column.add_child(timer_row)
-	var timer_caption := _label("TIME", 12, MUTED)
-	timer_caption.custom_minimum_size = Vector2(42.0, 0.0)
-	timer_caption.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	timer_row.add_child(timer_caption)
-	timer_row.add_child(timer_bar)
-
-
+	timer_toggle.pressed.connect(_toggle_timer)
+	for i in answer_buttons.size():
+		var btn := answer_buttons[i]
+		btn.pressed.connect(_on_answer.bind(i))
+	next_button.pressed.connect(_on_next)
 # ---------------------------------------------------------------- game state
 
 func _start_battle() -> void:
-	# Creature names and HP are placeholders for the demo battle, not selected
-	# player/enemy data. One enemy HP represents one correct answer needed.
-	var enemy_hp := maxi(1, int(ceil(float(_questions.size()) * TARGET_CORRECT_RATIO)))
-	player = Creature.new("Emberpup (demo)", DEMO_PLAYER_HP, DEMO_PLAYER_DAMAGE, Color(0.98, 0.55, 0.32), false)
-	enemy = Creature.new("Mudlet (demo)", enemy_hp, DEMO_ENEMY_DAMAGE, Color(0.42, 0.62, 0.96), true)
+	_run_id += 1
+	_auto_left = 0.0
+	_combat_finished = false
+	_recall_attempted = 0
+	_recall_correct = 0
+	_first_misses = 0
+	_turn_index = -1
+	_turns.clear()
+	if not _practice_mode and encounter_size > 0 and _questions.size() > encounter_size:
+		_questions = _questions.duplicate(true)
+		_questions.shuffle()
+		_questions = _questions.slice(0, encounter_size)
+	for i in _questions.size():
+		var question: Dictionary = _questions[i].duplicate(true)
+		question["_learning_id"] = i
+		question["_source_index"] = _all_questions.find(_questions[i])
+		_turns.append({"question": question, "recall": false})
+	var enemy_hp := _questions.size() if _practice_mode else maxi(1, int(ceil(float(_questions.size()) * TARGET_CORRECT_RATIO)))
+	# Short encounters leave room to spend a correct answer on recovery.
+	if not _practice_mode and encounter_size > 0 and enemy_hp > 1:
+		enemy_hp -= 1
+	player = Creature.new("Emberpup", DEMO_PLAYER_HP, DEMO_PLAYER_DAMAGE,
+		ShopManager.equipped_body_color(), ShopManager.has_equipped_horns())
+	enemy = Creature.new("Mudlet", enemy_hp, DEMO_ENEMY_DAMAGE, Color(0.42, 0.62, 0.96), true)
 	streak = 0
+	_best_streak = 0
+	_shield_ready = false
+	_update_streak_label()
 	_round_number = 0
 	_answered_correctly = 0
+	_current_score = 0
 	_battle_question_count = _questions.size()
 	_missed_questions.clear()
+	_battle_sequence += 1
+	_battle_reward_id = "%d_%d_%d" % [get_instance_id(), int(Time.get_unix_time_from_system()), _battle_sequence]
 
 	player_sprite.set_creature(player)
 	player_sprite.facing = 1
 	enemy_sprite.set_creature(enemy)
 	enemy_sprite.facing = -1
 	_refresh_bars(false)
+	score_label.text = "Score 0"
 
-	if overlay != null:
-		overlay.queue_free()
-		overlay = null
+	safe_area.visible = true
+	if is_instance_valid(result_layer):
+		result_layer.queue_free()
+		result_layer = null
 
-	feedback_label.text = "Demo battle — answer correctly to damage the demo enemy."
+	feedback_label.modulate = Color.WHITE
+	feedback_label.text = "PRACTICE — recall the answer. No timer or HP loss." if _practice_mode else "Ember Spark: answer correctly. 3 in a row earns a shield!"
 	next_button.visible = false
 	_begin_round()
 
 
 func _begin_round() -> void:
-	if _round_number >= _questions.size():
-		_end_battle(enemy.is_down())
+	_turn_index += 1
+	if _turn_index >= _turns.size():
+		_end_battle(_missed_questions.is_empty() if _practice_mode else enemy.is_down())
 		return
-	_round_number += 1
-	_current_question = _questions[_round_number - 1]
+	for effect in battlefield.get_children():
+		if effect is Label:
+			effect.queue_free()
+	var turn: Dictionary = _turns[_turn_index]
+	_is_recall = _practice_mode or bool(turn["recall"])
+	_current_question = turn["question"]
+	if not bool(turn["recall"]):
+		_round_number += 1
 	_correct_index = int(_current_question["correct"])
-
-	question_label.text = "%d / %d.  %s" % [_round_number, _questions.size(), _current_question["q"]]
+	_selected_action = "attack"
+	feedback_label.modulate = Color.WHITE
+	feedback_label.text = "RECALL CHECK — no HP loss or timer. Remember the answer?" if _is_recall else "Choose Attack or Recover, then answer. 3 correct earns a shield!"
+	var prefix := "Recall" if _is_recall else "%d / %d" % [_round_number, _battle_question_count]
+	question_label.text = "%s. %s" % [prefix, _current_question["q"]]
+	question_label.modulate.a = 0.0
+	create_tween().tween_property(question_label, "modulate:a", 1.0, 0.18)
+	question_label.visible = true
+	%QuestionScroll.visible = true
+	%QuestionScroll.scroll_vertical = 0
+	%AnswerDock.scroll_vertical = 0
+	%QuestionProgress.text = "Recall" if _is_recall else "%d / %d" % [_round_number,_battle_question_count]
+	%AutoAdvanceBar.visible = false
+	%AnswerDock.visible = true
+	%ActionDock.visible = not _is_recall
+	%PlayerSprite.visible = true
+	%EnemySprite.visible = true
+	%PlayerPlatform.visible = true
+	%EnemyPlatform.visible = true
+	%QuestionPanel.anchor_left = 0.20
+	%QuestionPanel.anchor_right = 0.80
 	explanation_label.text = ""
 	explanation_scroll.visible = false
 	battlefield.visible = true
+	action_row.visible = not _is_recall
+	%ChoiceGrid.visible = true
+	%QuestionPanel.size_flags_vertical = Control.SIZE_FILL
 	var choices: Array = _current_question["choices"]
 	for i in answer_buttons.size():
-		var btn := answer_buttons[i]
-		btn.text = "%s.  %s" % [char(65 + i), choices[i]]
-		btn.disabled = false
-		btn.modulate = Color.WHITE
-
+		var button := answer_buttons[i]
+		button.text = "%s. %s" % [char(65 + i), choices[i]]
+		button.disabled = false
+		button.modulate = Color.WHITE
+		button.remove_theme_stylebox_override("disabled")
 	_time_left = ROUND_TIME
+	_state = "answering"
+	_refresh_timer_mode()
+	_refresh_actions()
 	timer_bar.value = ROUND_TIME
 	timer_bar.modulate = Color.WHITE
-	_state = "answering"
 	next_button.visible = false
+	answer_buttons[0].grab_focus()
+
+
+func _select_action(action: String) -> void:
+	if _state != "answering" or _is_recall:
+		return
+	if action == "recover" and player.hp >= player.max_hp:
+		return
+	_selected_action = action
+	_refresh_actions()
+
+
+func _refresh_actions() -> void:
+	attack_button.disabled = _state != "answering"
+	recover_button.disabled = _state != "answering" or player.hp >= player.max_hp
+	%ActionHint.text = "Correct answer restores 1 HP" if _selected_action == "recover" else "Correct answer deals 1 damage"
+	attack_button.set_pressed_no_signal(_selected_action == "attack")
+	recover_button.set_pressed_no_signal(_selected_action == "recover")
+	recover_button.text = "Recover: HP full" if player.hp >= player.max_hp else "Recover: +1 HP"
+
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		_pause_battle()
+		get_viewport().set_input_as_handled()
+		return
+	if not event is InputEventKey or not event.pressed or event.echo:
+		return
+	if _state == "answering":
+		var index := [KEY_1, KEY_2, KEY_3, KEY_4].find(event.keycode)
+		if index >= 0:
+			get_viewport().set_input_as_handled()
+			_on_answer(index)
+
+
+func _toggle_timer() -> void:
+	if _is_recall or _state != "answering":
+		return
+	timed_battle = not timed_battle
+	_time_left = ROUND_TIME
+	_refresh_timer_mode()
+
+
+func _refresh_timer_mode() -> void:
+	timer_toggle.text = "Untimed recall" if _is_recall else ("Timer: ON" if timed_battle else "Timer: OFF")
+	timer_toggle.disabled = _is_recall
+	timer_bar.visible = timed_battle and not _is_recall
+	timer_bar.get_parent().visible = timer_bar.visible
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
+		if _paused_by_menu: _resume_battle()
+		else: _pause_battle()
+	if what == NOTIFICATION_APPLICATION_PAUSED:
+		_suspended = true
+	elif what == NOTIFICATION_APPLICATION_RESUMED:
+		_suspended = false
+		_resume_guard = true
 
 
 func _process(delta: float) -> void:
-	if _state != "answering":
+	if _suspended or _paused_by_menu:
+		return
+	if _resume_guard:
+		_resume_guard = false
+		return
+	if _state == "auto_advancing":
+		_auto_left -= delta
+		%AutoAdvanceBar.value = _auto_left
+		if _auto_left <= 0.0:
+			_advance_turn()
+		return
+	if _state != "answering" or _is_recall or not timed_battle:
 		return
 	_time_left -= delta
 	timer_bar.value = maxf(_time_left, 0.0)
@@ -469,219 +438,271 @@ func _process(delta: float) -> void:
 
 
 func _on_answer(index: int) -> void:
-	if _state != "answering":
+	if _state != "answering" or index < -1 or index >= answer_buttons.size():
 		return
 	_state = "resolving"
-	for btn in answer_buttons:
-		btn.disabled = true
-
-	var speed_ratio := clampf(_time_left / ROUND_TIME, 0.0, 1.0)
-	var answered_right := index == _correct_index
-
-	answer_buttons[_correct_index].add_theme_stylebox_override(
-		"disabled", _panel_style(Color(0.10, 0.26, 0.17), ACCENT, 10))
-
-	if answered_right:
-		_answered_correctly += 1
-		await _resolve_hit(speed_ratio)
+	var run := _run_id
+	timer_toggle.disabled = true
+	_refresh_actions()
+	for button in answer_buttons:
+		button.disabled = true
+	_turn_effect = ""
+	var correct := index == _correct_index
+	answer_buttons[_correct_index].text = "Correct · " + str(_current_question["choices"][_correct_index])
+	if not correct and index >= 0:
+		answer_buttons[index].text = "Incorrect · " + str(_current_question["choices"][index])
+	var verdict := "CORRECT!" if correct else ("TIME UP!" if index == -1 else "INCORRECT")
+	feedback_label.text = verdict + (" Recover!" if correct and _selected_action == "recover" and not _is_recall else (" Ember Spark!" if correct else " Read the explanation."))
+	feedback_label.modulate = ACCENT if correct else DANGER
+	if not _is_recall:
+		answer_submitted.emit(correct)
+	elif not _practice_mode:
+		_recall_attempted += 1
+	answer_buttons[_correct_index].add_theme_stylebox_override("disabled", _panel_style(Color(0.10, 0.26, 0.17), ACCENT, 10))
+	if correct:
+		if not _is_recall or _practice_mode:
+			_answered_correctly += 1
+			_current_score += SCORE_PER_CORRECT_ANSWER
+			score_label.text = ("Practice %d" if _practice_mode else "Score %d") % _current_score
+		if _is_recall and not _practice_mode:
+			_recall_correct += 1
+			var id: int = _current_question["_learning_id"]
+			_missed_questions = _missed_questions.filter(func(q: Dictionary) -> bool: return int(q["_learning_id"]) != id)
+		await _resolve_hit()
 	else:
 		if index >= 0:
-			answer_buttons[index].add_theme_stylebox_override(
-				"disabled", _panel_style(Color(0.30, 0.11, 0.11), DANGER, 10))
-		_missed_questions.append(_current_question.duplicate(true))
+			answer_buttons[index].add_theme_stylebox_override("disabled", _panel_style(Color(0.30, 0.11, 0.11), DANGER, 10))
+		if not _is_recall or _practice_mode:
+			_missed_questions.append(_current_question.duplicate(true))
+			if not _practice_mode:
+				_first_misses += 1
+				# Two intervening questions when available; one bounded retry per error.
+				var recall := _shuffle_question(_current_question)
+				_turns.insert(mini(_turn_index + 3, _turns.size()), {"question": recall, "recall": true})
 		await _resolve_miss()
-
-	var correct_text := str(answer_buttons[_correct_index].text)
-	feedback_label.text = "Correct answer: %s" % correct_text
-	var details: Array[String] = []
+	if run != _run_id or not is_inside_tree():
+		return
+	var correct_text := str(_current_question["choices"][_correct_index])
+	feedback_label.text = "%s %s Answer: %s" % [verdict, _turn_effect, correct_text]
+	if correct:
+		feedback_label.text += " · Next question..."
+		%AutoAdvanceBar.max_value = auto_advance_delay
+		%AutoAdvanceBar.value = auto_advance_delay
+		%AutoAdvanceBar.visible = true
+		_state = "auto_advancing"
+		_auto_left = auto_advance_delay
+		next_button.visible = false
+		return
+	# Put all reading material in one expanding scroll area, including long questions.
+	feedback_label.text = "%s %s" % [verdict, _turn_effect]
+	question_label.visible = false
+	%QuestionScroll.visible = false
+	%AnswerDock.visible = false
+	%ActionDock.visible = false
+	%PlayerSprite.visible = false
+	%EnemySprite.visible = false
+	%PlayerPlatform.visible = false
+	%EnemyPlatform.visible = false
+	%QuestionPanel.anchor_left = 0.02
+	%QuestionPanel.anchor_right = 0.98
+	%ReviewQuestion.text = question_label.text
+	var details: Array[String] = ["Correct answer: %s" % correct_text]
 	var explanation := str(_current_question.get("explanation", "")).strip_edges()
 	var page := int(_current_question.get("page", 0))
 	var quote := str(_current_question.get("source_quote", "")).strip_edges()
 	if explanation != "":
-		details.append(explanation)
+		details.append("Why: " + explanation)
+	elif quote == "":
+		details.append("Recall this: %s — %s.\nNo explanation was saved; check your reviewer for the reasoning." % [_current_question["q"], correct_text])
 	if page > 0:
-		details.append("Source: page %d" % page)
+		details.append("Reviewer source: page %d" % page)
 	if quote != "":
 		details.append("“%s”" % quote)
 	explanation_label.text = "\n".join(details)
 	explanation_scroll.scroll_vertical = 0
-	explanation_scroll.visible = not details.is_empty()
-	battlefield.visible = details.is_empty()
+	explanation_scroll.visible = true
+	battlefield.visible = true
+	%ChoiceGrid.visible = false
+	%QuestionPanel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_state = "revealed"
-	next_button.text = "Finish" if _round_number >= _questions.size() or enemy.is_down() or player.is_down() else "Next"
+	next_button.text = "Continue"
 	next_button.visible = true
+	next_button.grab_focus()
 
 
 func _on_next() -> void:
-	if _state != "revealed":
+	if _state == "revealed":
+		_advance_turn()
+
+
+func _advance_turn() -> void:
+	# Change state immediately so repeated taps cannot advance twice.
+	if _state not in ["revealed", "auto_advancing"]:
 		return
-	for btn in answer_buttons:
-		btn.remove_theme_stylebox_override("disabled")
-		btn.add_theme_stylebox_override("disabled", _panel_style(Color(0.12, 0.11, 0.16), EDGE, 10))
-	if enemy.is_down():
-		_end_battle(true)
-	elif player.is_down():
-		_end_battle(false)
-	elif _round_number >= _questions.size():
-		_end_battle(false)
-	else:
-		_begin_round()
+	_state = "advancing"
+	next_button.visible = false
+	if not _practice_mode and not _combat_finished and (enemy.is_down() or player.is_down()):
+		_combat_finished = true
+		var rest := _turns.slice(_turn_index + 1).filter(func(turn: Dictionary) -> bool: return bool(turn["recall"]))
+		_turns = _turns.slice(0, _turn_index + 1) + rest
+	_begin_round()
 
 
-func _resolve_hit(speed_ratio: float) -> void:
+func _shuffle_question(question: Dictionary) -> Dictionary:
+	var result := question.duplicate(true)
+	var choices: Array = result["choices"]
+	var original: int = result["correct"]
+	var order: Array = range(choices.size())
+	order.shuffle()
+	if order.find(original) == original:
+		var other := (original + 1) % order.size()
+		var swap: int = order[original]
+		order[original] = order[other]
+		order[other] = swap
+	var shuffled: Array = []
+	for i: int in order:
+		shuffled.append(choices[i])
+	result["choices"] = shuffled
+	result["correct"] = order.find(original)
+	return result
+
+
+func _resolve_hit() -> void:
+	if _is_recall:
+		_turn_effect = "Recalled in practice."
+		player_sprite.play_recover()
+		_audio.play_cue("recover")
+		await get_tree().create_timer(0.55, false).timeout
+		return
 	streak += 1
-	var crit := speed_ratio > 0.72
-	var dealt: int = enemy.take_damage(1)
+	_best_streak = maxi(_best_streak, streak)
+	if not _practice_mode and streak % SHIELD_COMBO == 0 and not _shield_ready:
+		_shield_ready = true
+		_turn_effect = "Shield earned!"
+	if _selected_action == "recover":
+		var restored := mini(1, player.max_hp - player.hp)
+		player.hp += restored
+		_turn_effect += " +%d HP." % restored
+		player_sprite.play_recover()
+		_audio.play_cue("recover")
+		_float_number(battlefield, player_sprite.position + Vector2(60, 40), "+%d HP" % restored, ACCENT, 32)
+		_refresh_bars(true)
+		_update_streak_label()
+		await get_tree().create_timer(0.69, false).timeout
+		return
+	var dealt: int = enemy.take_damage(player.atk)
+	_turn_effect += " -%d enemy HP." % dealt
+	_audio.play_cue("attack")
 
 	player_sprite.play_attack(1)
-	await get_tree().create_timer(0.13).timeout
+	_play_ember_spark()
+	await get_tree().create_timer(0.13, false).timeout
 	enemy_sprite.play_hit()
 	_float_number(battlefield, enemy_sprite.position + Vector2(110.0, 40.0), "-%d" % dealt,
-		GOLD if crit else TEXT, 38 if crit else 32)
+		GOLD, 32)
 	_refresh_bars(true)
+	# Let the lunge, impact flash, shake, and bar tween finish before Next appears.
+	await get_tree().create_timer(0.56, false).timeout
 
-	feedback_label.text = "Correct — %s deals %d demo damage." % [player.display_name, dealt]
 	_update_streak_label()
 
 
 func _resolve_miss() -> void:
 	streak = 0
 	_update_streak_label()
-	var dealt: int = player.take_damage(DEMO_ENEMY_DAMAGE)
+	if _is_recall:
+		_turn_effect = "Read the explanation below."
+		await get_tree().create_timer(0.25, false).timeout
+		return
+	var blocked := _shield_ready
+	_shield_ready = false
+	var dealt: int = 0 if blocked else player.take_damage(enemy.atk)
+	_turn_effect = "Shield blocked the hit!" if blocked else "-%d HP. You can review this later." % dealt
+	_update_streak_label()
 
+	_audio.play_cue("shield" if blocked else "hit")
 	enemy_sprite.play_attack(-1)
-	await get_tree().create_timer(0.13).timeout
+	await get_tree().create_timer(0.13, false).timeout
 	player_sprite.play_hit()
-	_float_number(battlefield, player_sprite.position + Vector2(110.0, 40.0), "-%d" % dealt,
-		DANGER, 32)
+	_float_number(battlefield, player_sprite.position + Vector2(110.0, 40.0), "BLOCK" if blocked else "-%d" % dealt,
+		GOLD if blocked else DANGER, 32)
 	_refresh_bars(true)
+	await get_tree().create_timer(0.56, false).timeout
 
-	feedback_label.text = "Incorrect — %s deals %d demo damage." % [enemy.display_name, dealt]
 
 
 func _end_battle(won: bool) -> void:
 	if _state == "over":
 		return
 	_state = "over"
+	if _practice_mode:
+		_battle_stars = 0
+		_show_results(won)
+		return
+	var remaining_indices: Array = []
+	for question: Dictionary in _missed_questions:
+		if int(question.get("_source_index",-1))>=0 and not remaining_indices.has(int(question._source_index)): remaining_indices.append(int(question._source_index))
+	SharingService.queue_result(_quiz_library_id, _battle_reward_id, {
+		"review_mode": "battle", "remaining_indices": remaining_indices,
+		"correct": _answered_correctly, "answered": _round_number, "score": _current_score,
+		"recall_correct": _recall_correct, "recall_attempted": _recall_attempted, "won": won})
+	battle_completed.emit(_current_score)
+	if not _quiz_library_id.is_empty():
+		QuizLibrary.record_result(
+			_quiz_library_id,
+			"%d/%d" % [_answered_correctly, _round_number],
+			won,
+			Time.get_datetime_string_from_system())
+	var stars := _answered_correctly * STARS_PER_CORRECT_ANSWER + (STARS_FOR_WIN if won else 0)
+	_battle_stars = stars if TaskManager.award_battle_stars(_battle_reward_id, stars) else 0
 	if won:
+		_audio.play_cue("victory")
 		enemy_sprite.play_faint()
 	else:
-		player_sprite.play_faint()
-
-	await get_tree().create_timer(0.6).timeout
-
-	_show_results(won)
+		if player.is_down():
+			player_sprite.play_faint()
+	var run := _run_id
+	await get_tree().create_timer(0.55, false).timeout
+	if run == _run_id and is_inside_tree():
+		_show_results(won)
 
 
 func _show_results(won: bool) -> void:
-	overlay = ColorRect.new()
-	overlay.color = Color(0.04, 0.04, 0.06, 0.86)
-	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(overlay)
-
-	var panel := _make_panel(0.0)
-	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	panel.offset_left = 48.0
-	panel.offset_top = 24.0
-	panel.offset_right = -48.0
-	panel.offset_bottom = -24.0
-	overlay.add_child(panel)
-
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 8)
-	panel.add_child(box)
-
-	result_title_label = _display_label("Victory" if won else "Defeat", 40, ACCENT if won else DANGER)
-	result_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(result_title_label)
-
-	var accuracy := int(round(100.0 * float(_answered_correctly) / float(maxi(_battle_question_count, 1))))
-	result_stats_label = _label("%d / %d correct  ·  Accuracy %d%%" % [
-		_answered_correctly, _battle_question_count, accuracy], 24, TEXT)
-	result_stats_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(result_stats_label)
-
-	var missed_heading := _display_label("Missed questions", 24, TEXT)
-	box.add_child(missed_heading)
-	result_missed_scroll = ScrollContainer.new()
-	result_missed_scroll.custom_minimum_size = Vector2(0.0, 0.0)
-	result_missed_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	result_missed_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	result_missed_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	box.add_child(result_missed_scroll)
-	result_missed_list = VBoxContainer.new()
-	result_missed_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	result_missed_list.add_theme_constant_override("separation", 8)
-	result_missed_scroll.add_child(result_missed_list)
-	if _missed_questions.is_empty():
-		var perfect := _label("No missed questions — perfect run!", 20, MUTED)
-		perfect.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		result_missed_list.add_child(perfect)
-	else:
-		for i in _missed_questions.size():
-			_add_missed_result(i, _missed_questions[i])
-
-	var actions := HBoxContainer.new()
-	actions.add_theme_constant_override("separation", 10)
-	box.add_child(actions)
-	retry_missed_button = _result_button("Retry missed")
-	retry_missed_button.disabled = _missed_questions.is_empty()
-	retry_missed_button.pressed.connect(_on_retry_missed)
-	actions.add_child(retry_missed_button)
-	play_again_button = _result_button("Play again")
-	play_again_button.pressed.connect(_on_play_again)
-	actions.add_child(play_again_button)
-	my_quizzes_button = _result_button("My quizzes")
-	my_quizzes_button.pressed.connect(_on_my_quizzes)
-	actions.add_child(my_quizzes_button)
-
-
-func _add_missed_result(number: int, question: Dictionary) -> void:
-	var card := _make_panel(0.0)
-	result_missed_list.add_child(card)
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 3)
-	card.add_child(column)
-	var question_text := _label("%d. %s" % [number + 1, str(question.get("q", ""))], 20, TEXT)
-	question_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	column.add_child(question_text)
-	var choices: Array = question.get("choices", [])
-	var correct := int(question.get("correct", -1))
-	var correct_text := str(choices[correct]) if correct >= 0 and correct < choices.size() else "Unavailable"
-	var answer_text := _label("Correct answer: %s" % correct_text, 18, ACCENT)
-	answer_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	column.add_child(answer_text)
-	var explanation := str(question.get("explanation", "")).strip_edges()
-	if explanation != "":
-		var explanation_text := _label(explanation, 18, MUTED)
-		explanation_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		column.add_child(explanation_text)
-	var page := int(question.get("page", 0))
-	var quote := str(question.get("source_quote", "")).strip_edges()
-	if page > 0 or quote != "":
-		var source_text := "Source: page %d" % page if page > 0 else "Source"
-		if quote != "":
-			source_text += " · “%s”" % quote
-		var source_label := _label(source_text, 16, MUTED)
-		source_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		column.add_child(source_label)
-
-
-func _result_button(button_text: String) -> Button:
-	var button := UITheme.button(button_text, "navy", 24)
-	button.custom_minimum_size = Vector2(0.0, 52.0)
-	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	return button
-
-
+	safe_area.visible = false
+	var results_scene := preload("res://scenes/BattleResults.tscn") as PackedScene
+	result_layer = results_scene.instantiate() as Control
+	add_child(result_layer)
+	result_layer.connect("retry_missed", _on_retry_missed)
+	result_layer.connect("play_again", _on_play_again)
+	result_layer.connect("my_quizzes", _on_my_quizzes)
+	result_layer.connect("return_to_menu", _on_return_to_menu)
+	result_layer.call("configure", {
+		"won": won,
+		"shared_quiz": SharingService.state.joins.has(_quiz_library_id),
+		"practice": _practice_mode,
+		"best_streak": _best_streak,
+		"recall_correct": _recall_correct,
+		"recall_attempted": _recall_attempted,
+		"first_misses": _first_misses,
+		"correct": _answered_correctly,
+		"answered": _round_number,
+		"question_count": _questions.size(),
+		"score": _current_score,
+		"stars": _battle_stars,
+		"missed": _missed_questions.duplicate(true),
+	})
 func _on_retry_missed() -> void:
 	if _missed_questions.is_empty():
 		return
+	_practice_mode = true
 	_questions = _missed_questions.duplicate(true)
+	for i in _questions.size():
+		_questions[i] = _shuffle_question(_questions[i])
 	_start_battle()
 
 
 func _on_play_again() -> void:
+	_practice_mode = false
 	_questions = _all_questions.duplicate(true)
 	_start_battle()
 
@@ -692,31 +713,36 @@ func _on_my_quizzes() -> void:
 		Nav.show_screen(quizzes_scene.instantiate() as Control)
 
 
+func _on_return_to_menu() -> void:
+	Nav.show_screen(load("res://scripts/screens/menu_screen.gd").new())
+
+
 # ---------------------------------------------------------------- presentation
 
 func _refresh_bars(animated: bool) -> void:
-	enemy_hp_text.text = "DEMO HP %d / %d" % [enemy.hp, enemy.max_hp]
-	player_hp_text.text = "DEMO HP %d / %d" % [player.hp, player.max_hp]
+	enemy_hp_text.text = "HP %d / %d" % [enemy.hp, enemy.max_hp]
+	player_hp_text.text = "HP %d / %d" % [player.hp, player.max_hp]
 	enemy_hp_bar.max_value = enemy.max_hp
 	player_hp_bar.max_value = player.max_hp
 
 	if animated:
-		var t1 := create_tween()
-		t1.tween_property(enemy_hp_bar, "value", enemy.hp, 0.35)
-		var t2 := create_tween()
-		t2.tween_property(player_hp_bar, "value", player.hp, 0.35)
+		var tween := create_tween()
+		tween.set_parallel(true)
+		tween.tween_property(enemy_hp_bar, "value", enemy.hp, 0.35)
+		tween.tween_property(player_hp_bar, "value", player.hp, 0.35)
 	else:
 		enemy_hp_bar.value = enemy.hp
 		player_hp_bar.value = player.hp
 
 
 func _update_streak_label() -> void:
-	streak_label.text = ("Streak x%d" % streak) if streak >= 2 else ""
+	%ShieldIcon.visible = _shield_ready
+	streak_label.text = "SHIELD READY" if _shield_ready else ("Combo %d/%d" % [streak % SHIELD_COMBO, SHIELD_COMBO] if streak > 0 and not _practice_mode else "")
 
 
 func _float_number(parent: Control, at: Vector2, text: String, color: Color, font_size: int) -> void:
 	var l := _label(text, font_size, color)
-	l.position = at
+	l.position = Vector2(clampf(at.x - 80.0, 0.0, maxf(0.0, parent.size.x - 160.0)), at.y)
 	l.size = Vector2(160.0, 50.0)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -724,6 +750,51 @@ func _float_number(parent: Control, at: Vector2, text: String, color: Color, fon
 
 	var tween := create_tween()
 	tween.set_parallel(true)
-	tween.tween_property(l, "position:y", at.y - 60.0, 0.7).set_ease(Tween.EASE_OUT)
+	tween.tween_property(l, "position:y", l.position.y - 60.0, 0.7).set_ease(Tween.EASE_OUT)
 	tween.tween_property(l, "modulate:a", 0.0, 0.7).set_delay(0.25)
 	tween.chain().tween_callback(l.queue_free)
+
+
+func _play_ember_spark() -> void:
+	# A short projectile joins the existing lunge and impact animations.
+	var spark := Polygon2D.new()
+	spark.polygon = PackedVector2Array([Vector2(-16, 0), Vector2(0, -9), Vector2(18, 0), Vector2(0, 9)])
+	spark.color = GOLD
+	battlefield.add_child(spark)
+	spark.position = player_sprite.position + player_sprite.size * 0.5
+	var tween := create_tween()
+	tween.tween_property(spark, "position", enemy_sprite.position + enemy_sprite.size * 0.5, 0.13)
+	tween.tween_callback(spark.queue_free)
+
+
+func _pause_battle() -> void:
+	if _state == "over" or unavailable: return
+	_paused_by_menu = true
+	pause_menu.visible = true
+	get_tree().paused = true
+	pause_menu.get_node("%ResumeButton").grab_focus()
+
+func _resume_battle() -> void:
+	get_tree().paused = false
+	_paused_by_menu = false
+	pause_menu.visible = false
+
+func _leave_paused_battle() -> void:
+	_resume_battle()
+	_on_my_quizzes()
+
+func _exit_tree() -> void:
+	if _paused_by_menu:
+		get_tree().paused = false
+
+
+func _apply_battle_safe_area() -> void:
+	if OS.get_name() != "Android": return
+	var safe := DisplayServer.get_display_safe_area()
+	var window_size := Vector2(DisplayServer.window_get_size())
+	if not safe.has_area() or window_size.x <= 0 or window_size.y <= 0: return
+	var ratio := size / window_size
+	safe_area.offset_left = 24 + maxf(0,safe.position.x) * ratio.x
+	safe_area.offset_right = -24 - maxf(0,window_size.x-safe.end.x) * ratio.x
+	safe_area.offset_top = 8 + maxf(0,safe.position.y) * ratio.y
+	safe_area.offset_bottom = -8 - maxf(0,window_size.y-safe.end.y) * ratio.y
