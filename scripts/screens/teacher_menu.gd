@@ -41,7 +41,7 @@ func refresh_courses() -> void:
  if courses.is_empty():
   _show_seeded_courses()
   return
-  _add_course_buttons(courses)
+ _add_course_buttons(courses)
 
 func _show_seeded_courses() -> void:
  var courses: Array=[{"id":"BIO101","code":"BIO101","title":"Biology 101"},{"id":"HIST201","code":"HIST201","title":"World History"},{"id":"MATH120","code":"MATH120","title":"College Algebra"},{"id":"CHEM110","code":"CHEM110","title":"General Chemistry"},{"id":"PHYS130","code":"PHYS130","title":"Physics I"},{"id":"ENG105","code":"ENG105","title":"Academic Writing"},{"id":"CS115","code":"CS115","title":"Programming Fundamentals"},{"id":"PSY101","code":"PSY101","title":"Introduction to Psychology"}]
