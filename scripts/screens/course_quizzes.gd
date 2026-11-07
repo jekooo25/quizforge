@@ -38,6 +38,8 @@ func _refresh() -> void:
 		button.text = "%s  ·  %d questions" % [str(quiz.get("title", "Untitled quiz")), int(quiz.get("count", 0))]
 		button.custom_minimum_size = Vector2(0, 64)
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.clip_text = true
+		button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		button.pressed.connect(_open_quiz.bind(quiz))
 		%Items.add_child(button)
 
