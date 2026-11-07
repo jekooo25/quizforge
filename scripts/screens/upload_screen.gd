@@ -20,8 +20,8 @@ func _ready() -> void:
    var course: Dictionary = course_value as Dictionary
    %Course.add_item("%s · %s" % [str(course.get("code", "")), str(course.get("title", "Course"))])
    %Course.set_item_metadata(%Course.item_count - 1, str(course.get("id", "")))
-			if str(Nav.user.get("course_id", "")) == str(course.get("id", "")):
-				%Course.select(%Course.item_count - 1)
+   if str(Nav.user.get("course_id", "")) == str(course.get("id", "")):
+    %Course.select(%Course.item_count - 1)
  %Mode.add_item("Quiz Battle · Multiple choice")
  %Mode.add_item("Word Bank · Fill in the blanks")
  %Mode.select(1 if Nav.user.get("generation_mode","battle")=="word_bank" else 0)
