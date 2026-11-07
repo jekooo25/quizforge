@@ -103,11 +103,11 @@ func _ready() -> void:
 	plaque.add_child(hint)
 
 
-func _text(body: String, font: Font, size: int, color: Color) -> Label:
+func _text(body: String, font: Font, font_size: int, color: Color) -> Label:
 	var label := Label.new()
 	label.text = body
 	label.add_theme_font_override("font", font)
-	label.add_theme_font_size_override("font_size", size)
+	label.add_theme_font_size_override("font_size", font_size)
 	label.add_theme_color_override("font_color", color)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE

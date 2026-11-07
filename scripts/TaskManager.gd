@@ -281,7 +281,7 @@ func _current_week_anchor_day() -> int:
 	var year_of_era := year - era * 400
 	var adjusted_month := month + (-3 if month > 2 else 9)
 	var day_of_year := int((153 * adjusted_month + 2) / 5) + day - 1
-	var day_of_era := year_of_era * 365 + int(year_of_era / 4) - int(year_of_era / 100) + day_of_year
+	var day_of_era: int = year_of_era * 365 + floori(float(year_of_era) / 4.0) - floori(float(year_of_era) / 100.0) + day_of_year
 	var civil_day := era * 146097 + day_of_era - 719468
 	# 1970-01-01 was Thursday; Monday is weekday index zero.
 	var monday_index := posmod(civil_day + 3, 7)

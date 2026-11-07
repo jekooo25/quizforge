@@ -43,8 +43,8 @@ func _draw() -> void:
 		return
 
 	# cover: scale until both dimensions are filled
-	var scale := maxf(size.x / tex_size.x, size.y / tex_size.y)
-	var drawn := tex_size * scale
+	var cover_scale: float = maxf(size.x / tex_size.x, size.y / tex_size.y)
+	var drawn := tex_size * cover_scale
 
 	# centre horizontally, bias the vertical overflow toward the top
 	var offset := Vector2(

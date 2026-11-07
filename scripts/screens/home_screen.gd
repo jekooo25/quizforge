@@ -69,11 +69,11 @@ func _apply_safe_area() -> void:
 		var safe: Rect2 = DisplayServer.get_display_safe_area()
 		var window_size: Vector2 = Vector2(DisplayServer.window_get_size())
 		if safe.has_area() and window_size.x > 0 and window_size.y > 0:
-			var scale := size / window_size
-			left += roundi(maxf(0.0, safe.position.x) * scale.x)
-			top += roundi(maxf(0.0, safe.position.y) * scale.y)
-			right += roundi(maxf(0.0, window_size.x - safe.end.x) * scale.x)
-			bottom += roundi(maxf(0.0, window_size.y - safe.end.y) * scale.y)
+			var safe_scale: Vector2 = size / window_size
+			left += roundi(maxf(0.0, safe.position.x) * safe_scale.x)
+			top += roundi(maxf(0.0, safe.position.y) * safe_scale.y)
+			right += roundi(maxf(0.0, window_size.x - safe.end.x) * safe_scale.x)
+			bottom += roundi(maxf(0.0, window_size.y - safe.end.y) * safe_scale.y)
 	safe_margin.add_theme_constant_override("margin_left", left)
 	safe_margin.add_theme_constant_override("margin_top", top)
 	safe_margin.add_theme_constant_override("margin_right", right)
@@ -131,8 +131,6 @@ func _configure_schoolyard_cards() -> void:
 		button.add_theme_stylebox_override("pressed", navy_button)
 		button.add_theme_color_override("font_color", UITheme.CREAM)
 	start_battle_button.add_theme_color_override("font_color", UITheme.INK)
-	var code_input: LineEdit = get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard/Padding/JoinColumn/CodeInput")
-	var join_button: Button = get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard/Padding/JoinColumn/JoinButton")
 	code_input.visible = true
 	join_button.visible = true
 	join_button.disabled = true

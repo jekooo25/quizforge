@@ -35,7 +35,7 @@ const STATUS_CORRUPT := "corrupt"
 # ------------------------------------------------------------------ writing
 
 ## Writes `data` to `path` atomically and returns false only if it could not.
-func write_json(path: String, data: Variant, kind := "") -> bool:
+func write_json(path: String, data: Variant, _kind := "") -> bool:
 	var dir := path.get_base_dir()
 	if dir != "" and not DirAccess.dir_exists_absolute(dir):
 		DirAccess.make_dir_recursive_absolute(dir)
