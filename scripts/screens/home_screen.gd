@@ -95,7 +95,10 @@ func _configure_schoolyard_cards() -> void:
 	portal_frame.add_theme_stylebox_override("panel", cream_panel)
 	recent_label.visible = true
 	recent_list.get_parent().visible = true
-	get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/PortalLabel").text = "Ready for your next battle?"
+	var portal_label: Label = get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/PortalLabel")
+	portal_label.text = "Ready for your next battle?"
+	portal_label.add_theme_color_override("font_color", UITheme.INK)
+	portal_label.add_theme_font_size_override("font_size", 28)
 	var pedestal: TextureRect = get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/Pedestal")
 	pedestal.visible = true
 	get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/Pedestal/PedestalLabel").text = Nav.display_name()
@@ -113,6 +116,7 @@ func _configure_schoolyard_cards() -> void:
 		button.add_theme_stylebox_override("hover", navy_button)
 		button.add_theme_stylebox_override("pressed", navy_button)
 		button.add_theme_color_override("font_color", UITheme.CREAM)
+	start_battle_button.add_theme_color_override("font_color", UITheme.INK)
 	var code_input: LineEdit = get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard/Padding/JoinColumn/CodeInput")
 	var join_button: Button = get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard/Padding/JoinColumn/JoinButton")
 	code_input.visible = true
