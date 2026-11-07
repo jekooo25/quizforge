@@ -10,7 +10,7 @@ signal battle_completed(score: int)
 
 ## Long enough to read a full question and its four choices at demo pace.
 @export var timed_battle := false
-@export_range(0, 20) var encounter_size := 5
+@export_range(0, 20) var encounter_size := 20
 @export var auto_advance_delay := 1.0
 
 const BattleAudio := preload("res://scripts/ui/battle_audio.gd")
@@ -21,7 +21,7 @@ const TARGET_CORRECT_RATIO := 0.70
 const DEMO_PLAYER_HP := 3
 const DEMO_ENEMY_DAMAGE := 1
 const DEMO_PLAYER_DAMAGE := 1
-const SCORE_PER_CORRECT_ANSWER := 100
+const SCORE_PER_CORRECT_ANSWER := 75
 const STARS_PER_CORRECT_ANSWER := 1
 const STARS_FOR_WIN := 2
 
