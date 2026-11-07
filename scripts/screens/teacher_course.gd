@@ -1,7 +1,7 @@
 extends Control
 var course_id: String = ""
 var course_title: String = "Course"
-var sections: Array = ["Section A · Morning", "Section B · Afternoon"]
+var sections: Array = ["Section 101 · Mon/Wed 8:00–9:30 AM", "Section 202 · Tue/Thu 1:00–2:30 PM"]
 var students: Array = ["Ari Santos", "Mika Reyes", "Jordan Lee", "Sam Rivera", "Taylor Cruz"]
 func _ready() -> void:
 	%Title.text = course_title
