@@ -84,6 +84,7 @@ text = "PDF, TXT, MD, CSV, JSON or images (PNG, JPG, WEBP, BMP, GIF). Up to 20 M
 autowrap_mode = 3
 theme_override_font_sizes/font_size = 24
 theme_override_colors/font_color = Color(0.32,0.21,0.11,1)
+visible = false
 
 [node name="Course" type="OptionButton" parent="Margin/Column/Scroll/Fields"]
 unique_name_in_owner = true
@@ -116,6 +117,7 @@ text = "Choose a readable document or a clear photo of your reviewer."
 autowrap_mode = 3
 theme_override_font_sizes/font_size = 24
 theme_override_colors/font_color = Color(0.32,0.21,0.11,1)
+visible = false
 
 
 [node name="Options" type="HBoxContainer" parent="Margin/Column/Scroll/Fields"]
@@ -139,6 +141,7 @@ value = 10.0
 prefix = "Questions: "
 custom_minimum_size = Vector2(300,64)
 theme_override_font_sizes/font_size = 24
+visible = false
 
 [node name="ModeHint" type="Label" parent="Margin/Column/Scroll/Fields"]
 unique_name_in_owner = true
