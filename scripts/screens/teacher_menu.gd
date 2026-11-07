@@ -3,10 +3,11 @@ var busy:=false
 func _ready() -> void:
  if OS.get_name()=="Android":get_tree().quit_on_go_back=false
  _make_mobile_scroll()
- _content=%Margin
+ _content=get_node("Margin")
  var teacher_name: String=str(Nav.user.get("username","")).strip_edges()
- %Greeting.text=teacher_name if teacher_name!="" else "Teacher dashboard"
- %CoursePanel.add_theme_stylebox_override("panel", UITheme.box(Color(0.05,0.12,0.2,0.96), Color(0.2,0.45,0.7,1.0), 2, 12))
+ var greeting: Label=get_node("Margin/MobileScroll/Column/Greeting")
+ greeting.text=teacher_name if teacher_name!="" else "Teacher dashboard"
+ get_node("Margin/MobileScroll/Column/CoursePanel").add_theme_stylebox_override("panel", UITheme.box(Color(0.05,0.12,0.2,0.96), Color(0.2,0.45,0.7,1.0), 2, 12))
  resized.connect(_apply_safe_area)
  _apply_safe_area()
  refresh()
@@ -29,8 +30,9 @@ func _make_mobile_scroll() -> void:
 func refresh_courses() -> void:
  var reply: Dictionary=await SharingService.api("/courses")
  if not is_inside_tree():return
- for child: Node in %CourseList.get_children():
-  %CourseList.remove_child(child)
+ var course_list: VBoxContainer=get_node("Margin/MobileScroll/Column/CoursePanel/CourseColumn/CourseList")
+ for child: Node in course_list.get_children():
+  course_list.remove_child(child)
   child.queue_free()
  if not reply.get("ok",false):
   _show_seeded_courses()
@@ -39,7 +41,7 @@ func refresh_courses() -> void:
  if courses.is_empty():
   _show_seeded_courses()
   return
- _add_course_buttons(courses)
+  _add_course_buttons(courses)
 
 func _show_seeded_courses() -> void:
  var courses: Array=[{"id":"BIO101","code":"BIO101","title":"Biology 101"},{"id":"HIST201","code":"HIST201","title":"World History"},{"id":"MATH120","code":"MATH120","title":"College Algebra"},{"id":"CHEM110","code":"CHEM110","title":"General Chemistry"},{"id":"PHYS130","code":"PHYS130","title":"Physics I"},{"id":"ENG105","code":"ENG105","title":"Academic Writing"},{"id":"CS115","code":"CS115","title":"Programming Fundamentals"},{"id":"PSY101","code":"PSY101","title":"Introduction to Psychology"}]
@@ -53,19 +55,17 @@ func _add_course_buttons(courses: Array) -> void:
   button.custom_minimum_size=Vector2(0,48)
   button.size_flags_horizontal=Control.SIZE_EXPAND_FILL
   button.pressed.connect(open_panel.bind("list"))
-  %CourseList.add_child(button)
+  get_node("Margin/MobileScroll/Column/CoursePanel/CourseColumn/CourseList").add_child(button)
 func refresh() -> void:
  if busy:return
  busy=true
- %Refresh.disabled=true
- %Connection.text=""
+ get_node("Margin/MobileScroll/Column/Header/Refresh").disabled=true
  var reply: Dictionary=await SharingService.api("/reviews")
  busy=false
  if not is_inside_tree():return
- %Refresh.disabled=false
+ get_node("Margin/MobileScroll/Column/Header/Refresh").disabled=false
  if not reply.get("ok",false):
-  %Connection.text="Courses and quizzes are temporarily unavailable."
-  for field in [%PendingCount,%LibraryCount,%PublishedCount]:field.text="—"
+  for field: Label in [get_node("Margin/MobileScroll/Column/TeacherCards/Pending/Content/PendingCount"),get_node("Margin/MobileScroll/Column/TeacherCards/Library/Content/LibraryCount"),get_node("Margin/MobileScroll/Column/TeacherCards/Published/Content/PublishedCount")]:field.text="—"
   return
  var pending:=0
  var library:=0
@@ -75,10 +75,9 @@ func refresh() -> void:
   if row.status=="pending":pending+=1
   else:library+=1
   if row.status=="shared":shared+=1
- %PendingCount.text=str(pending)+" pending"
- %LibraryCount.text=str(library)+" in library"
- %PublishedCount.text=str(shared)+" published"
- %Connection.text=""
+ get_node("Margin/MobileScroll/Column/TeacherCards/Pending/Content/PendingCount").text=str(pending)+" pending"
+ get_node("Margin/MobileScroll/Column/TeacherCards/Library/Content/LibraryCount").text=str(library)+" in library"
+ get_node("Margin/MobileScroll/Column/TeacherCards/Published/Content/PublishedCount").text=str(shared)+" published"
 
 func _open_teacher_settings() -> void:
  Nav.show_screen(load("res://scripts/screens/settings_screen.gd").new())

@@ -54,7 +54,7 @@ func render() -> void:
   if filter=="list" and row.status=="pending":continue
   if filter=="shared" and row.status!="shared":continue
   var query: String=%Search.text.strip_edges().to_lower()
-	if query!="" and not (str(row.title)+" "+str(row.author)+" "+str(row.get("course_title",""))+" "+str(row.get("course_code",""))).to_lower().contains(query):continue
+  if query!="" and not (str(row.title)+" "+str(row.author)+" "+str(row.get("course_title",""))+" "+str(row.get("course_code",""))).to_lower().contains(query):continue
   var course_name: String = str(row.get("course_title", "Unassigned"))
   if course_name != last_course:
    var heading: Label = Label.new()
