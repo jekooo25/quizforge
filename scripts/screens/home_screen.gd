@@ -89,7 +89,6 @@ func _configure_schoolyard_cards() -> void:
 	_add_pixel_icon(profile_button, "profile")
 	_add_pixel_icon(settings_button, "gear")
 	var cream_panel: StyleBoxFlat = UITheme.box(Color(0.96, 0.90, 0.78, 1.0), UITheme.WOOD_LIGHT, 2, 12)
-	var cream_button: StyleBoxFlat = UITheme.box(UITheme.CREAM, UITheme.WOOD_LIGHT, 2, 10)
 	var navy_button: StyleBoxFlat = UITheme.box(UITheme.NAVY, UITheme.NAVY_HOT, 2, 10)
 	var join_card: PanelContainer = get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard")
 	var course_panel: PanelContainer = get_node("SafeMargin/RootColumn/MainContent/LeftColumn/CoursePanel")
