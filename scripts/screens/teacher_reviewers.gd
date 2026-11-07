@@ -43,6 +43,7 @@ func render() -> void:
  var library:=0
  var shared:=0
  var shown:=0
+ var last_course: String = ""
  for row: Dictionary in rows:
   if row.status=="pending" and row.get("duplicate_of","")!="":continue
   if row.status=="pending":pending+=1
@@ -53,6 +54,14 @@ func render() -> void:
   if filter=="shared" and row.status!="shared":continue
   var query: String=%Search.text.strip_edges().to_lower()
 	if query!="" and not (str(row.title)+" "+str(row.author)+" "+str(row.get("course_title",""))+" "+str(row.get("course_code",""))).to_lower().contains(query):continue
+  var course_name: String = str(row.get("course_title", "Unassigned"))
+  if course_name != last_course:
+   var heading: Label = Label.new()
+   heading.text = course_name + (" (" + str(row.get("course_code", "")) + ")" if str(row.get("course_code", "")) != "" else "")
+   heading.add_theme_font_size_override("font_size", 26)
+   heading.add_theme_color_override("font_color", Color(1.0, 0.80, 0.32, 1.0))
+   %Items.add_child(heading)
+   last_course = course_name
   add_review(row)
   shown+=1
  %PendingTab.text="Pending · %d" % pending

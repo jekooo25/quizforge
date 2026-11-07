@@ -84,6 +84,7 @@ theme_override_constants/separation = 8
 
 [node name="Pending" type="PanelContainer" parent="Margin/Column/TeacherCards"]
 layout_mode = 2
+mouse_filter = 2
 size_flags_horizontal = 3
 custom_minimum_size = Vector2(0, 150)
 
@@ -126,6 +127,7 @@ custom_minimum_size = Vector2(0,52)
 
 [node name="Library" type="PanelContainer" parent="Margin/Column/TeacherCards"]
 layout_mode = 2
+mouse_filter = 2
 size_flags_horizontal = 3
 custom_minimum_size = Vector2(0, 150)
 
@@ -167,6 +169,7 @@ custom_minimum_size = Vector2(0,52)
 
 [node name="Published" type="PanelContainer" parent="Margin/Column/TeacherCards"]
 layout_mode = 2
+mouse_filter = 2
 size_flags_horizontal = 3
 custom_minimum_size = Vector2(0, 150)
 
