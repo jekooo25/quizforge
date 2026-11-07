@@ -85,9 +85,6 @@ func _refresh_keyboard_inset() -> void:
 func _configure_schoolyard_cards() -> void:
 	_add_pixel_icon(profile_button, "profile")
 	_add_pixel_icon(settings_button, "gear")
-	_add_button_icon(upload_reviewer_button, "upload")
-	_add_button_icon(quiz_library_button, "library")
-	_add_button_icon(daily_tasks_button, "clipboard")
 	var cream_panel: StyleBoxFlat = UITheme.box(Color(0.96, 0.90, 0.78, 1.0), UITheme.WOOD_LIGHT, 2, 12)
 	var cream_button: StyleBoxFlat = UITheme.box(UITheme.CREAM, UITheme.WOOD_LIGHT, 2, 10)
 	var navy_button: StyleBoxFlat = UITheme.box(UITheme.NAVY, UITheme.NAVY_HOT, 2, 10)
@@ -113,6 +110,9 @@ func _configure_schoolyard_cards() -> void:
 	start_battle_button.text = "Start battle"
 	upload_reviewer_button.text = "Upload reviewer"
 	quiz_library_button.text = "My quiz library"
+	_add_button_icon(upload_reviewer_button, "upload")
+	_add_button_icon(quiz_library_button, "library")
+	_add_button_icon(daily_tasks_button, "clipboard")
 	start_battle_button.reparent(center_column)
 	upload_reviewer_button.reparent(right_column)
 	quiz_library_button.visible = true
