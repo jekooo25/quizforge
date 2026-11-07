@@ -96,9 +96,8 @@ func _configure_schoolyard_cards() -> void:
 	recent_label.visible = true
 	recent_list.get_parent().visible = true
 	get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/PortalLabel").text = "Ready for your next battle?"
-	var pedestal: Panel = get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/Pedestal")
+	var pedestal: TextureRect = get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/Pedestal")
 	pedestal.visible = true
-	pedestal.add_theme_stylebox_override("panel", UITheme.box(UITheme.WOOD, UITheme.WOOD_LIGHT, 2, 6))
 	get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/Pedestal/PedestalLabel").text = Nav.display_name()
 	get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/Pedestal/PedestalLabel").add_theme_color_override("font_color", UITheme.CREAM)
 	start_battle_button.text = "Start battle"
