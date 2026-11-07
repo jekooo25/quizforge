@@ -50,7 +50,7 @@ func _render() -> void:
 		var quiz: Dictionary = quiz_value as Dictionary
 		if query != "" and not str(quiz.get("title", "")).to_lower().contains(query): continue
 		var button: Button = Button.new()
-		button.text = "%s  ·  %d questions" % [str(quiz.get("title", "Untitled quiz")), int(quiz.get("count", 0))]
+		button.text = "%s  ·  %d questions\n%s  ·  %s" % [str(quiz.get("title", "Untitled quiz")), int(quiz.get("count", 0)), str(quiz.get("created_by", "Student")), str(quiz.get("section", "Section 101 · Mon/Wed 8:00–9:30 AM"))]
 		button.custom_minimum_size = Vector2(0, 64)
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.clip_text = true

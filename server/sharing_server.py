@@ -119,7 +119,7 @@ def course_quizzes(course_id):
   student=request.headers.get("X-Demo-User", "")
   if not enrolled(db, course_id, student): return error("You are not enrolled in this course.",403)
   rows=db.execute("SELECT id,title,questions,status,visibility,author,code FROM reviews WHERE course_id=? AND status IN ('approved','shared') ORDER BY rowid DESC",(course_id,)).fetchall()
-  return jsonify(ok=True,quizzes=[{"id":r["id"],"title":r["title"],"count":len(json.loads(r["questions"])),"questions":json.loads(r["questions"]),"status":r["status"],"visibility":r["visibility"],"author":r["author"],"code":r["code"]} for r in rows])
+  return jsonify(ok=True,quizzes=[{"id":r["id"],"title":r["title"],"count":len(json.loads(r["questions"])),"questions":json.loads(r["questions"]),"status":r["status"],"visibility":r["visibility"],"author":r["author"],"created_by":"Professor" if str(r["author"]).lower()=="demo teacher" else "Student","section":"101 · Mon/Wed 8:00–9:30 AM" if r["course_id"]=="BIO101" else "202 · Tue/Thu 1:00–2:30 PM","code":r["code"]} for r in rows])
 
 @app.post("/courses")
 def create_course():
