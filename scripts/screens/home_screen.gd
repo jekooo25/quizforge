@@ -102,7 +102,10 @@ func _configure_schoolyard_cards() -> void:
 	portal_label.add_theme_color_override("font_color", UITheme.INK)
 	portal_label.add_theme_font_size_override("font_size", 28)
 	portal_label.add_theme_color_override("font_outline_color", UITheme.CREAM)
-	portal_label.add_theme_constant_override("outline_size", 3)
+	portal_label.add_theme_constant_override("outline_size", 4)
+	portal_label.add_theme_color_override("font_shadow_color", UITheme.NAVY)
+	portal_label.add_theme_constant_override("shadow_offset_x", 2)
+	portal_label.add_theme_constant_override("shadow_offset_y", 2)
 	var pedestal: TextureRect = get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/Pedestal")
 	pedestal.visible = true
 	start_battle_button.text = "Start battle"
@@ -164,14 +167,15 @@ func _add_pixel_icon(button: Button, kind: String) -> void:
 func _add_button_icon(button: Button, kind: String) -> void:
 	var original_text: String = button.text
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	button.text = "    " + original_text
+	button.text = "        " + original_text
+	button.clip_text = false
 	var icon: Control = preload("res://scripts/ui/pixel_icons.gd").new()
 	icon.kind = kind
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	button.add_child(icon)
 	icon.set_anchors_preset(Control.PRESET_CENTER_LEFT)
-	icon.position = Vector2(12, 12)
-	icon.size = Vector2(32, 32)
+	icon.position = Vector2(10, 12)
+	icon.size = Vector2(30, 30)
 
 
 func _start_quiz() -> void:

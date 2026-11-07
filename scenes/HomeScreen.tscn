@@ -163,7 +163,7 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = 18.0
+offset_top = 24.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("2_slime")
@@ -176,23 +176,13 @@ pivot_offset_ratio = Vector2(0.5, 1.0)
 [node name="Pedestal" type="TextureRect" parent="SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(300, 78)
+custom_minimum_size = Vector2(330, 78)
 size_flags_horizontal = 4
 mouse_filter = 2
 texture = ExtResource("4_pedestal")
 expand_mode = 1
 stretch_mode = 5
 texture_filter = 1
-
-[node name="PedestalLabel" type="Label" parent="SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage"]
-unique_name_in_owner = true
-layout_mode = 2
-custom_minimum_size = Vector2(200, 46)
-size_flags_horizontal = 4
-visible = false
-text = ""
-horizontal_alignment = 1
-vertical_alignment = 1
 
 [node name="RightColumn" type="VBoxContainer" parent="SafeMargin/RootColumn/MainContent"]
 unique_name_in_owner = true
