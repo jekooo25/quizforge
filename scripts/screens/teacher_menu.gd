@@ -94,4 +94,4 @@ func _on_published_pressed() -> void:
 func open_panel(value: String) -> void:
  var panel: Control=load("res://scenes/TeacherReviewers.tscn").instantiate()
  panel.filter=value
- Nav.show_screen(panel)
+ Nav.call_deferred("show_screen", panel)
