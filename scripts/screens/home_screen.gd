@@ -76,69 +76,45 @@ func _refresh_keyboard_inset() -> void:
 func _configure_schoolyard_cards() -> void:
 	_add_pixel_icon(profile_button, "profile")
 	_add_pixel_icon(settings_button, "gear")
-	var navy_panel: StyleBoxFlat = UITheme.box(Color(0.035, 0.085, 0.14, 0.94), UITheme.NAVY_HOT, 2, 14)
-	var primary_panel: StyleBoxFlat = UITheme.box(Color(0.035, 0.085, 0.14, 0.96), UITheme.YELLOW, 3, 14)
-	var cards: Array[Control] = [left_column, center_column, right_column]
-	get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard").visible = false
-	get_node("SafeMargin/RootColumn/MainContent/LeftColumn/RecentLabel").visible = false
-	get_node("SafeMargin/RootColumn/MainContent/LeftColumn/RecentScroll").visible = false
-	get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame").visible = false
-	for card: Control in cards:
-		card.custom_minimum_size = Vector2(0, 180)
-		card.mouse_filter = Control.MOUSE_FILTER_STOP
-		var wrapper: PanelContainer = PanelContainer.new()
-		wrapper.name = "%sCard" % card.name
-		wrapper.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		wrapper.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		wrapper.size_flags_stretch_ratio = card.size_flags_stretch_ratio
-		wrapper.add_theme_stylebox_override("panel", primary_panel if card == cards[0] else navy_panel)
-		var parent: Node = card.get_parent()
-		var index: int = card.get_index()
-		parent.remove_child(card)
-		main_content.add_child(wrapper)
-		main_content.move_child(wrapper, index)
-		wrapper.add_child(card)
-		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		card.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var primary: Control = left_column
-	primary.add_theme_stylebox_override("panel", primary_panel)
-	var play_label: Label = UITheme.pixel("Play Quizzes", 28, UITheme.YELLOW)
-	var play_subtitle: Label = UITheme.sans("Choose a saved quiz", 20, UITheme.CREAM)
-	left_column.add_child(play_label)
-	left_column.add_child(play_subtitle)
-	var upload_label: Label = UITheme.pixel("Upload Reviewer", 28, UITheme.CREAM)
-	var upload_subtitle: Label = UITheme.sans("Create a new quiz", 20, UITheme.CREAM)
-	center_column.add_child(upload_label)
-	center_column.add_child(upload_subtitle)
-	var daily_label: Label = UITheme.pixel("Daily Tasks", 28, UITheme.CREAM)
-	var daily_subtitle: Label = UITheme.sans("Complete tasks. Earn Stars!", 20, UITheme.CREAM)
-	right_column.add_child(daily_label)
-	right_column.add_child(daily_subtitle)
-	start_battle_button.text = "Play Quizzes"
-	upload_reviewer_button.text = "Upload Reviewer"
-	start_battle_button.reparent(left_column)
-	upload_reviewer_button.reparent(center_column)
-	quiz_library_button.visible = false
+	var cream_panel: StyleBoxFlat = UITheme.box(UITheme.PAPER, UITheme.WOOD_LIGHT, 2, 12)
+	var cream_button: StyleBoxFlat = UITheme.box(UITheme.CREAM, UITheme.WOOD_LIGHT, 2, 10)
+	var navy_button: StyleBoxFlat = UITheme.box(UITheme.NAVY, UITheme.NAVY_HOT, 2, 10)
+	var join_card: PanelContainer = get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard")
+	var portal_frame: PanelContainer = get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame")
+	join_card.visible = true
+	portal_frame.visible = true
+	join_card.add_theme_stylebox_override("panel", cream_panel)
+	portal_frame.add_theme_stylebox_override("panel", cream_panel)
+	get_node("SafeMargin/RootColumn/MainContent/LeftColumn/RecentLabel").visible = true
+	get_node("SafeMargin/RootColumn/MainContent/LeftColumn/RecentScroll").visible = true
+	get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/PortalLabel").text = "Quizforge portal"
+	get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/Pedestal/PedestalLabel").text = "Start battle"
+	start_battle_button.text = "Start battle"
+	upload_reviewer_button.text = "Upload reviewer"
+	quiz_library_button.text = "My quiz library"
+	start_battle_button.reparent(right_column)
+	upload_reviewer_button.reparent(right_column)
+	quiz_library_button.visible = true
+	for button: Button in [start_battle_button, upload_reviewer_button, quiz_library_button]:
+		button.custom_minimum_size = Vector2(0, 56)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.add_theme_stylebox_override("normal", navy_button)
+		button.add_theme_stylebox_override("hover", navy_button)
+		button.add_theme_stylebox_override("pressed", navy_button)
+		button.add_theme_color_override("font_color", UITheme.CREAM)
+	var code_input: LineEdit = get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard/Padding/JoinColumn/CodeInput")
+	var join_button: Button = get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard/Padding/JoinColumn/JoinButton")
+	code_input.visible = false
+	join_button.visible = false
+	get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard/Padding/JoinColumn/EnterCodeLabel").text = "Join with code (coming soon)"
 	if not OS.get_cmdline_user_args().has("--show-wip"):
 		get_node("SafeMargin/RootColumn/BottomNav/InventoryButton").visible = false
 		get_node("SafeMargin/RootColumn/BottomNav/LeaderboardsButton").visible = false
-	var daily_card_button: Button = Button.new()
-	daily_card_button.name = "DailyTasksCardButton"
-	daily_card_button.text = "Daily Tasks"
-	daily_card_button.pressed.connect(_open_daily_tasks)
-	right_column.add_child(daily_card_button)
-	for button: Button in [start_battle_button, upload_reviewer_button, daily_card_button]:
-		button.custom_minimum_size = Vector2(0, 56)
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.add_theme_stylebox_override("normal", UITheme.box(UITheme.CREAM, UITheme.WOOD_LIGHT, 2, 12))
-		button.add_theme_stylebox_override("hover", UITheme.box(UITheme.PAPER, UITheme.WOOD_LIGHT, 2, 12))
-		button.add_theme_stylebox_override("pressed", UITheme.box(UITheme.PAPER, UITheme.WOOD_LIGHT, 2, 12))
-		button.add_theme_color_override("font_color", UITheme.INK)
 	for button: Button in [profile_button, settings_button, stars_shop_button]:
 		button.add_theme_stylebox_override("normal", UITheme.box(UITheme.CREAM, UITheme.WOOD_LIGHT, 2, 10))
 		button.add_theme_stylebox_override("hover", UITheme.box(UITheme.PAPER, UITheme.YELLOW_DEEP, 2, 10))
 		button.add_theme_color_override("font_color", UITheme.INK)
-	status_label.add_theme_color_override("font_color", UITheme.YELLOW)
+	status_label.add_theme_color_override("font_color", UITheme.INK)
 
 
 func _add_pixel_icon(button: Button, kind: String) -> void:
