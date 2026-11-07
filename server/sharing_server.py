@@ -194,16 +194,21 @@ def reviews():
    if not teacher(): return error("Choose Teacher to view submissions.",403)
    return jsonify(ok=True,reviews=annotated_reviews(db))
   data = payload(); questions=data.get("questions",[])
-  if request.headers.get("X-Demo-Role") != "student": return error("Submit from the Student role.",403)
+  role=request.headers.get("X-Demo-Role")
+  if role not in ("student", "teacher"): return error("Choose a valid account role.",403)
   issue=question_error(questions)
   if issue: return error(issue)
   author=str(data.get("author","")).strip()[:80]; source=str(data.get("source_id",""))[:200]
   if not author or not source: return error("Student name and quiz ID are required.")
   course_id=str(data.get("course_id", "")).strip()[:80]
   if course_id:
-   if not enrolled(db, course_id, author): return error("You are not enrolled in this course.",403)
-   valid,reason=semantic_validate(db, course_id, questions)
-   if not valid: return error(reason,422)
+   course=course_professor(db, course_id)
+   if role=="teacher":
+    if not course or str(course["professor"]).lower()!=author.lower(): return error("You do not manage this course.",403)
+   else:
+    if not enrolled(db, course_id, author): return error("You are not enrolled in this course.",403)
+    valid,reason=semantic_validate(db, course_id, questions)
+    if not valid: return error(reason,422)
   db.execute("BEGIN IMMEDIATE")
   candidates=[r for r in db.execute("SELECT * FROM reviews ORDER BY rowid DESC") if same_student(r["author"],author)]
   key=content_key(questions)
@@ -224,7 +229,7 @@ def reviews():
   id=uuid.uuid4().hex
   root=parent["root_id"] if parent else id
   version=db.execute("SELECT COALESCE(MAX(review_version),0)+1 FROM reviews WHERE root_id=?",(root,)).fetchone()[0]
-  status="pending"
+  status="approved" if role=="teacher" else "pending"
   if course_id and db.execute("SELECT auto_publish FROM course_settings WHERE course_id=?", (course_id,)).fetchone()[0]: status="shared"
   db.execute("INSERT INTO reviews(id,author,source_id,title,questions,status,code,parent_id,root_id,review_version,course_id) VALUES(?,?,?,?,? ,?,NULL,?,?,?,?)",(id,author,source,str(data.get("title","Untitled"))[:200],json.dumps(questions),status,parent["id"] if parent else None,root,version,course_id or None))
   if course_id: db.execute("INSERT OR REPLACE INTO validations(review_id,course_id,verdict,reason) VALUES(?,?,?,?)", (id,course_id,"approved","Course-aligned material."))
