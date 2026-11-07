@@ -3,7 +3,6 @@ extends Control
 ## edited in Godot's scene tree instead of being assembled in code.
 
 const MIN_TOUCH := Vector2(0, 48)
-const Cat = preload("res://scripts/ui/cat_mascot.gd")
 
 @onready var safe_margin: MarginContainer = get_node("SafeMargin")
 @onready var status_label: Label = get_node("SafeMargin/RootColumn/StatusLabel")
@@ -30,15 +29,6 @@ func _ready() -> void:
 	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(backdrop)
 	move_child(backdrop, 0)
-	var cat: Control = Cat.new()
-	cat.name = "HomeMascot"
-	cat.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	cat.offset_left = -220.0
-	cat.offset_right = -16.0
-	cat.offset_top = 58.0
-	cat.offset_bottom = 220.0
-	cat.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(cat)
 	_configure_schoolyard_cards()
 	_apply_safe_area()
 	resized.connect(_apply_safe_area)
