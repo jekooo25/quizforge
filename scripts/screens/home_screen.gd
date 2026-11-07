@@ -233,9 +233,6 @@ func _refresh_recent_quizzes() -> void:
 		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_theme_stylebox_override("normal", UITheme.box(UITheme.CREAM, UITheme.WOOD_LIGHT, 1, 8))
 		row.add_theme_color_override("font_color", UITheme.INK)
-		row.add_theme_stylebox_override("normal", cream_button)
-		row.add_theme_stylebox_override("hover", UITheme.box(UITheme.PAPER, UITheme.YELLOW_DEEP, 2, 8))
-		row.add_theme_stylebox_override("pressed", UITheme.box(UITheme.PAPER, UITheme.WOOD, 2, 8))
 		var quiz_id: String = str(quiz.get("id", ""))
 		row.pressed.connect(_open_recent.bind(quiz_id))
 		recent_list.add_child(row)
@@ -262,6 +259,9 @@ func _refresh_courses() -> void:
 		row.custom_minimum_size = Vector2(0, 48)
 		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_theme_color_override("font_color", UITheme.INK)
+		row.add_theme_stylebox_override("normal", UITheme.box(UITheme.CREAM, UITheme.WOOD_LIGHT, 1, 8))
+		row.add_theme_stylebox_override("hover", UITheme.box(UITheme.PAPER, UITheme.YELLOW_DEEP, 2, 8))
+		row.add_theme_stylebox_override("pressed", UITheme.box(UITheme.PAPER, UITheme.WOOD, 2, 8))
 		row.pressed.connect(_open_course.bind(str(course.get("id", "")), str(course.get("title", "Course"))))
 		course_list.add_child(row)
 
