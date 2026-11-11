@@ -77,7 +77,7 @@ func load_profile() -> void:
 
 
 func start() -> void:
-	show_screen(preload("res://scripts/screens/title_screen.gd").new())
+	show_screen(preload("res://scenes/TitleScreen.tscn").instantiate())
 
 
 func show_screen(screen: Control) -> void:
