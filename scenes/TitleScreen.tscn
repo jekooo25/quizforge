@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 [ext_resource type="Script" path="res://scripts/screens/title_screen.gd" id="1"]
 [ext_resource type="Texture2D" path="res://assets/backgrounds/LoginBackground.jpg" id="2"]
 [ext_resource type="Texture2D" path="res://assets/sprites/mascot_cat.png" id="3"]
@@ -6,6 +6,16 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/pedestal_fire.png" id="5"]
 [ext_resource type="FontFile" path="res://assets/fonts/PixelifySans-Bold.ttf" id="6"]
 [ext_resource type="FontFile" path="res://assets/fonts/Montserrat-SemiBold.ttf" id="7"]
+
+[sub_resource type="Gradient" id="Gradient_overlay"]
+colors = PackedColorArray(0.015, 0.035, 0.08, 0.55, 0.02, 0.05, 0.1, 0.05, 0.015, 0.035, 0.08, 0.55)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture_overlay"]
+gradient = SubResource("Gradient_overlay")
+width = 2
+height = 562
+fill_from = Vector2(0.5, 0)
+fill_to = Vector2(0.5, 1)
 
 [node name="TitleScreen" type="Control"]
 layout_mode = 3
@@ -26,29 +36,18 @@ grow_vertical = 2
 texture = ExtResource("2")
 expand_mode = 1
 stretch_mode = 6
+texture_filter = 1
 mouse_filter = 2
 
-[node name="Overlay" type="ColorRect" parent="."]
+[node name="Overlay" type="TextureRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.02, 0.05, 0.1, 0.4)
-mouse_filter = 2
-
-[node name="Clouds" type="TextureRect" parent="."]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_bottom = 170.0
-grow_horizontal = 2
-texture = ExtResource("2")
-expand_mode = 1
-stretch_mode = 6
-modulate = Color(1, 1, 1, 0.18)
+color = Color(1, 1, 1, 1)
+texture = SubResource("GradientTexture_overlay")
 mouse_filter = 2
 
 [node name="Logo" type="Label" parent="."]
@@ -58,7 +57,7 @@ anchors_preset = 10
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -300.0
-offset_top = 92.0
+offset_top = 48.0
 offset_right = 300.0
 offset_bottom = 176.0
 theme_override_colors/font_color = Color(1, 0.82, 0.08, 1)
@@ -75,7 +74,7 @@ anchors_preset = 10
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -320.0
-offset_top = 190.0
+offset_top = 150.0
 offset_right = 320.0
 offset_bottom = 238.0
 theme_override_colors/font_color = Color(1, 1, 1, 1)
@@ -83,7 +82,7 @@ theme_override_colors/font_shadow_color = Color(0.02, 0.04, 0.08, 0.95)
 theme_override_constants/shadow_offset_x = 3
 theme_override_constants/shadow_offset_y = 3
 theme_override_font_sizes/font_size = 30
-theme_override_fonts/font = ExtResource("7")
+theme_override_fonts/font = ExtResource("6")
 text = "Learn. Battle. Improve."
 horizontal_alignment = 1
 
@@ -93,8 +92,8 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 24.0
-offset_top = -180.0
-offset_right = 210.0
+offset_top = -200.0
+offset_right = 230.0
 offset_bottom = -24.0
 texture = ExtResource("3")
 expand_mode = 1
@@ -127,9 +126,9 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -300.0
-offset_top = -300.0
+offset_top = -310.0
 offset_right = -80.0
-offset_bottom = -100.0
+offset_bottom = -110.0
 texture = ExtResource("4")
 expand_mode = 1
 stretch_mode = 5
@@ -148,7 +147,7 @@ offset_left = -240.0
 offset_top = -72.0
 offset_right = 240.0
 offset_bottom = -28.0
-theme_override_colors/font_color = Color(1, 0.85, 0.18, 1)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_shadow_color = Color(0.02, 0.04, 0.08, 1)
 theme_override_constants/shadow_offset_x = 2
 theme_override_constants/shadow_offset_y = 2
