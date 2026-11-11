@@ -4,10 +4,7 @@ extends Control
 ## signing into, even though the menus do not branch on it yet.
 
 ## Role selection is local-only; it is not server authentication.
-const ROLES := [
-	["student", "Student", false],
-	["teacher", "Teacher", false],
-]
+const ROLES := [["student", "Student", false]]
 
 var _username: LineEdit
 var _password: LineEdit
@@ -50,7 +47,7 @@ func _ready() -> void:
 	_error.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_error)
 
-	var login := UITheme.button("Login", "navy", 46)
+	var login := UITheme.button("Log in", "navy", 46)
 	login.custom_minimum_size = Vector2(240, 46)
 	login.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	login.pressed.connect(_on_login)
@@ -150,7 +147,8 @@ func _on_login() -> void:
 		_error.text = "Enter your password to continue."
 		return
 	Nav.user["username"] = entered
-	Nav.user["role"] = _role
+	Nav.user["role"] = "student"
+	AuthService.sign_in(entered, _password.text)
 	var loader: Control = load("res://scenes/LoadingScreen.tscn").instantiate()
 	loader.setup("login")
 	Nav.show_screen(loader)

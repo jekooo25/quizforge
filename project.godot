@@ -21,8 +21,13 @@ config/features=PackedStringArray("4.7", "GL Compatibility")
 SharingService="*res://scripts/sharing_service.gd"
 SaveManager="*res://scripts/save/save_manager.gd"
 Nav="*res://scripts/ui/nav.gd"
+AuthService="*res://scripts/auth/auth_service.gd"
 TaskManager="*res://scripts/TaskManager.gd"
 ShopManager="*res://scripts/ShopManager.gd"
+
+[debug]
+
+gdscript/warnings/inference_on_variant=1
 
 [display]
 

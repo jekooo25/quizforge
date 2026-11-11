@@ -62,14 +62,14 @@ func _ready() -> void:
 	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(column)
 
-	var title := _text("OMSU Review Portal", UITheme.font_pixel, 48, TITLE_YELLOW)
+	var title := _text("Quizforge", UITheme.font_pixel, 48, TITLE_YELLOW)
 	column.add_child(title)
 
 	var powered_row := HBoxContainer.new()
 	powered_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	powered_row.add_theme_constant_override("separation", 18)
 	column.add_child(powered_row)
-	var credit := _text("powered by", UITheme.font_body, 30, WARM_WHITE)
+	var credit := _text("Learn. Battle. Improve.", UITheme.font_body, 30, WARM_WHITE)
 	powered_row.add_child(credit)
 	var logo := TextureRect.new()
 	logo.texture = QUIZFORGE_LOGO
