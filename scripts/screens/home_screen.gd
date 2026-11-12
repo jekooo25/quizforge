@@ -134,7 +134,7 @@ func _configure_schoolyard_cards() -> void:
 	code_input.visible = true
 	join_button.visible = true
 	join_button.disabled = true
-	join_button.text = "↗ Join"
+	join_button.text = "Join"
 	_add_button_icon(join_button, "upload")
 	join_button.disabled = false
 	join_button.add_theme_stylebox_override("normal", navy_button)
@@ -228,6 +228,7 @@ func _refresh_recent_quizzes() -> void:
 		row.text = str(quiz.get("title", "Untitled quiz"))
 		row.custom_minimum_size = Vector2(0, 48)
 		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_theme_font_size_override("font_size", 24)
 		row.add_theme_stylebox_override("normal", UITheme.box(UITheme.CREAM, UITheme.WOOD_LIGHT, 1, 8))
 		row.add_theme_color_override("font_color", UITheme.INK)
 		var quiz_id: String = str(quiz.get("id", ""))

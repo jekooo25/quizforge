@@ -1,9 +1,20 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/screens/home_screen.gd" id="1_home"]
 [ext_resource type="Texture2D" path="res://assets/sprites/default_slime.png" id="2_slime"]
 [ext_resource type="Theme" path="res://assets/themes/quizforge.tres" id="3_theme"]
 [ext_resource type="Texture2D" path="res://assets/sprites/pedestal_fire.png" id="4_pedestal"]
+[sub_resource type="StyleBoxFlat" id="StageBackdrop"]
+bg_color = Color(0.03, 0.08, 0.14, 0.78)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.76, 0.65, 0.38, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
 
 [node name="HomeScreen" type="Control"]
 layout_mode = 3
@@ -87,7 +98,7 @@ theme_override_constants/separation = 8
 [node name="EnterCodeLabel" type="Label" parent="SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard/Padding/JoinColumn"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "ENTER CODE"
+text = "Enter code"
 horizontal_alignment = 1
 
 [node name="CodeInput" type="LineEdit" parent="SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard/Padding/JoinColumn"]
@@ -109,7 +120,7 @@ disabled = true
 [node name="RecentLabel" type="Label" parent="SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard/Padding/JoinColumn"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "RECENT QUIZZES"
+text = "Recent quizzes"
 
 [node name="RecentScroll" type="ScrollContainer" parent="SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard/Padding/JoinColumn"]
 unique_name_in_owner = true
@@ -141,6 +152,17 @@ layout_mode = 2
 size_flags_vertical = 3
 alignment = 1
 theme_override_constants/separation = 6
+
+[node name="StageBackdrop" type="Panel" parent="SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StageBackdrop")
+show_behind_parent = true
 
 [node name="PortalLabel" type="Label" parent="SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage"]
 unique_name_in_owner = true
@@ -227,7 +249,7 @@ theme_override_constants/separation = 8
 unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(0, 48)
-size_flags_horizontal = 3
+size_flags_horizontal = 0
 text = "Daily Tasks"
 
 [node name="InventoryButton" type="Button" parent="SafeMargin/RootColumn/BottomNav"]
@@ -249,6 +271,7 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
 custom_minimum_size = Vector2(0, 150)
+visible = false
 
 [node name="CourseColumn" type="VBoxContainer" parent="SafeMargin/RootColumn/MainContent/LeftColumn/CoursePanel"]
 unique_name_in_owner = true
