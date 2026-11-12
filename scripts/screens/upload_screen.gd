@@ -13,14 +13,6 @@ func _ready() -> void:
  %Count.get_line_edit().theme_type_variation=&"MyQuizzesSearch"
  %Count.get_line_edit().add_theme_font_size_override("font_size",26)
  %Heading.text="Create a quiz"
- %Course.add_item("Choose the subject")
- var seeded: Array = [{"id":"BIO101","code":"BIO101","title":"Biology 101"},{"id":"HIST201","code":"HIST201","title":"World History"},{"id":"MATH120","code":"MATH120","title":"College Algebra"},{"id":"CHEM110","code":"CHEM110","title":"General Chemistry"}]
- for course_value: Variant in seeded:
-  var course: Dictionary = course_value as Dictionary
-  %Course.add_item("%s · %s" % [str(course.get("code", "")), str(course.get("title", "Course"))])
-  %Course.set_item_metadata(%Course.item_count - 1, str(course.get("id", "")))
-  if str(Nav.user.get("course_id", "")) == str(course.get("id", "")):
-   %Course.select(%Course.item_count - 1)
  %Mode.add_item("Quiz Battle · Multiple choice")
  %Mode.select(0)
  %Mode.item_selected.connect(update_mode)
@@ -31,10 +23,14 @@ func _ready() -> void:
  resized.connect(_safe_area)
  _safe_area.call_deferred()
  update_mode(%Mode.selected)
+ _refresh_generate_state()
+
+func _refresh_generate_state() -> void:
+ _continue.disabled = _chosen_path.is_empty()
 func update_mode(index: int) -> void:
  %ModeHint.text="Quiz Battle uses complete multiple-choice questions." if index==0 else "Word Bank uses source sentences with a missing answer. Only supported sentences are kept."
 func _on_file_selected(path: String) -> void:
- _chosen_path="";_continue.disabled=true
+ _chosen_path="";_refresh_generate_state()
  %File.text=path.get_file()
  %FileInfo.text=""
  var extension:=path.get_extension().to_lower()
@@ -48,7 +44,7 @@ func _on_file_selected(path: String) -> void:
  _chosen_path=path
  %FileInfo.text="%s · %.1f KB" % [extension.to_upper(),length/1024.0]
  %Status.text="Ready to generate. You'll preview and edit before saving."
- _continue.disabled=false
+ _refresh_generate_state()
 func _range_pair() -> Vector2i:
  var text := _range.text.strip_edges()
  if text == "":
@@ -73,14 +69,12 @@ func _range_pair() -> Vector2i:
 
 func _on_continue() -> void:
  if _chosen_path=="":return
- if %Course.selected<=0:%Status.text="Choose the subject this reviewer belongs to first.";return
  var pair:=_range_pair() if _chosen_path.get_extension().to_lower()=="pdf" else Vector2i.ZERO
  if pair.x<0:%Status.text="Enter PDF pages like 4-10, or leave the field empty.";return
  Nav.user["reviewer_file"]=_chosen_path
  Nav.user["page_range"]="" if pair==Vector2i.ZERO else "%d-%d" % [pair.x,pair.y]
  Nav.user["generation_mode"]="battle"
  Nav.user["generation_count"]=int(%Count.value)
- Nav.user["course_id"]=str(%Course.get_item_metadata(%Course.selected))
  Nav.show_screen(load("res://scenes/GenerateQuiz.tscn").instantiate())
 func back() -> void:
  Nav.call_deferred("show_screen", load("res://scenes/HomeScreen.tscn").instantiate())

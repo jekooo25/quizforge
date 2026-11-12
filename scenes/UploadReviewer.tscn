@@ -86,14 +86,6 @@ theme_override_font_sizes/font_size = 24
 theme_override_colors/font_color = Color(0.32,0.21,0.11,1)
 visible = false
 
-[node name="Course" type="OptionButton" parent="Margin/Column/Scroll/Fields"]
-unique_name_in_owner = true
-layout_mode = 2
-custom_minimum_size = Vector2(0,64)
-text = "Choose the subject"
-theme_type_variation = &"MyQuizzesTab"
-
-
 [node name="Pick" type="Button" parent="Margin/Column/Scroll/Fields"]
 unique_name_in_owner = true
 layout_mode = 2
