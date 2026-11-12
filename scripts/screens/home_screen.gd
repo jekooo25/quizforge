@@ -15,7 +15,6 @@ const MIN_TOUCH := Vector2(0, 48)
 @onready var upload_reviewer_button: Button = get_node("SafeMargin/RootColumn/MainContent/RightColumn/UploadReviewerButton")
 @onready var quiz_library_button: Button = get_node("SafeMargin/RootColumn/MainContent/RightColumn/QuizLibraryButton")
 @onready var daily_tasks_button: Button = get_node("SafeMargin/RootColumn/MainContent/RightColumn/DailyTasksTile")
-@onready var playing_selector: OptionButton = get_node("SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage/PlayingSelector")
 @onready var recent_list: VBoxContainer = get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard/Padding/JoinColumn/RecentScroll/RecentList")
 @onready var recent_label: Label = get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard/Padding/JoinColumn/RecentLabel")
 @onready var code_input: LineEdit = get_node("SafeMargin/RootColumn/MainContent/LeftColumn/JoinCard/Padding/JoinColumn/CodeInput")
@@ -44,7 +43,6 @@ func _ready() -> void:
 	join_button.pressed.connect(_join_code)
 	code_input.text_changed.connect(_on_code_changed)
 	_refresh_recent_quizzes()
-	playing_selector.item_selected.connect(_on_playing_selected)
 	stars_shop_button.text = "%d Stars | Shop" % TaskManager.stars_balance()
 	stars_shop_button.add_theme_color_override("font_color", UITheme.INK)
 	stars_shop_button.add_theme_font_size_override("font_size", 22)
@@ -207,16 +205,9 @@ func _start_quiz() -> void:
 	if quizzes.is_empty():
 		status_label.text = "Upload a reviewer first"
 		return
-	var selected_id: String = str(playing_selector.get_selected_metadata())
-	if selected_id.is_empty():
-		selected_id = str(quizzes[0].get("id", ""))
 	var picker: Control = load("res://scenes/QuizDetails.tscn").instantiate()
-	picker.library_id = selected_id
+	picker.library_id = str(quizzes[0].get("id", ""))
 	Nav.show_screen(picker)
-
-func _on_playing_selected(index: int) -> void:
-	if index >= 0:
-		playing_selector.set_item_metadata(index, playing_selector.get_item_metadata(index))
 
 
 func _refresh_recent_quizzes() -> void:
@@ -224,15 +215,6 @@ func _refresh_recent_quizzes() -> void:
 		recent_list.remove_child(child)
 		child.queue_free()
 	var quizzes: Array = QuizLibrary.all()
-	playing_selector.clear()
-	for quiz_value: Variant in quizzes:
-		var quiz: Dictionary = quiz_value as Dictionary
-		var title: String = str(quiz.get("title", "Untitled quiz")).get_basename().replace("_", " ").replace("-", " ")
-		var index: int = playing_selector.item_count
-		playing_selector.add_item("Playing: %s" % title)
-		playing_selector.set_item_metadata(index, str(quiz.get("id", "")))
-	if not quizzes.is_empty():
-		playing_selector.select(0)
 	if quizzes.is_empty():
 		var empty: Label = UITheme.sans("No saved quizzes yet. Upload a reviewer to make one.", 20, UITheme.INK)
 		empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

@@ -206,11 +206,6 @@ expand_mode = 1
 stretch_mode = 5
 texture_filter = 1
 
-[node name="PlayingSelector" type="OptionButton" parent="SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage"]
-unique_name_in_owner = true
-layout_mode = 2
-custom_minimum_size = Vector2(0, 44)
-text = "Playing: no quiz"
 
 [node name="RightColumn" type="VBoxContainer" parent="SafeMargin/RootColumn/MainContent"]
 unique_name_in_owner = true
