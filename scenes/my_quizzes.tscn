@@ -181,6 +181,7 @@ size_flags_vertical = 3
 alignment = 1
 
 [node name="ProgressState" type="Label" parent="ContentMargin/SurfacePanel/MainColumn/ProgressPane" unique_id=1595552095]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"MyQuizzesEmpty"
 text = "Play a quiz to start tracking your progress."

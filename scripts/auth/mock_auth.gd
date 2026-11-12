@@ -20,6 +20,6 @@ func sign_up(email: String, password: String, display_name: String) -> void:
 func sign_out() -> void:
 	completed.emit(true, "", {})
 
-func request_password_reset(email: String) -> void:
+func request_password_reset(_email: String) -> void:
 	await get_tree().create_timer(0.25).timeout
 	completed.emit(true, "If that email exists, a reset link has been sent.", {})
