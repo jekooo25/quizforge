@@ -19,9 +19,6 @@ func _create_account() -> void:
 	if display_name.text.strip_edges().is_empty() or not email.text.contains("@") or password.text.is_empty():
 		error_label.text = "Enter your name, a valid email, and a password."
 		return
-	if not %Age.button_pressed:
-		error_label.text = "Please confirm that you are 13 or older."
-		return
 	if not %Terms.button_pressed:
 		error_label.text = "Please agree to the Terms and Privacy Policy."
 		return

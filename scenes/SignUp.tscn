@@ -76,11 +76,6 @@ custom_minimum_size = Vector2(86, 56)
 layout_mode = 2
 theme_override_font_sizes/font_size = 22
 text = "Show"
-[node name="Age" type="CheckButton" parent="Card/Form"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 22
-text = "I'm 13 or older"
 [node name="Terms" type="CheckButton" parent="Card/Form"]
 unique_name_in_owner = true
 layout_mode = 2
