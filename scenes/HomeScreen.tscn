@@ -206,6 +206,12 @@ expand_mode = 1
 stretch_mode = 5
 texture_filter = 1
 
+[node name="PlayingSelector" type="OptionButton" parent="SafeMargin/RootColumn/MainContent/CenterColumn/PortalFrame/Stage"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 44)
+text = "Playing: no quiz"
+
 [node name="RightColumn" type="VBoxContainer" parent="SafeMargin/RootColumn/MainContent"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -232,6 +238,21 @@ layout_mode = 2
 custom_minimum_size = Vector2(0, 48)
 text = "My Quiz Library"
 
+[node name="DailyTasksTile" type="Button" parent="SafeMargin/RootColumn/MainContent/RightColumn"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 56)
+text = "Daily tasks"
+
+[node name="ClaimableDot" type="Label" parent="SafeMargin/RootColumn/MainContent/RightColumn/DailyTasksTile"]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 28.0
+offset_bottom = 28.0
+text = "●"
+visible = false
+
 [node name="StatusLabel" type="Label" parent="SafeMargin/RootColumn"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -251,6 +272,7 @@ layout_mode = 2
 custom_minimum_size = Vector2(0, 48)
 size_flags_horizontal = 0
 text = "Daily Tasks"
+visible = false
 
 [node name="InventoryButton" type="Button" parent="SafeMargin/RootColumn/BottomNav"]
 unique_name_in_owner = true
