@@ -25,4 +25,4 @@ func _on_request_reset() -> void:
 
 
 func _back_to_login() -> void:
-	Nav.show_screen(load("res://scripts/screens/login_screen.gd").new())
+	Nav.show_screen(load("res://scenes/Login.tscn").instantiate())

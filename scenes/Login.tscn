@@ -1,0 +1,184 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/screens/login_screen.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/LoginBackground.jpg" id="2"]
+[ext_resource type="Texture2D" path="res://assets/sprites/quizforge_logo.png" id="3"]
+[ext_resource type="Texture2D" path="res://assets/sprites/mascot_cat.png" id="4"]
+[sub_resource type="StyleBoxFlat" id="Card"]
+bg_color = Color(0.96, 0.9, 0.76, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.35, 0.18, 0.09, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+content_margin_left = 28.0
+content_margin_top = 24.0
+content_margin_right = 28.0
+content_margin_bottom = 24.0
+
+[node name="Login" type="Control"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2")
+expand_mode = 1
+stretch_mode = 6
+mouse_filter = 2
+
+[node name="Shade" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.03, 0.05, 0.08, 0.42)
+mouse_filter = 2
+
+[node name="Columns" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_left = 0.04
+anchor_top = 0.06
+anchor_right = 0.96
+anchor_bottom = 0.94
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 36
+
+[node name="Brand" type="VBoxContainer" parent="Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+theme_override_constants/separation = 18
+
+[node name="Logo" type="TextureRect" parent="Columns/Brand"]
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+texture = ExtResource("3")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Tagline" type="Label" parent="Columns/Brand"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
+theme_override_constants/shadow_offset_x = 3
+theme_override_constants/shadow_offset_y = 3
+theme_override_font_sizes/font_size = 28
+text = "Learn. Battle. Improve."
+horizontal_alignment = 1
+
+[node name="Mascot" type="TextureRect" parent="Columns/Brand"]
+custom_minimum_size = Vector2(0, 170)
+layout_mode = 2
+texture = ExtResource("4")
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+
+[node name="Card" type="PanelContainer" parent="Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("Card")
+
+[node name="Form" type="VBoxContainer" parent="Columns/Card"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Columns/Card/Form"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.25, 0.12, 0.06, 1)
+theme_override_font_sizes/font_size = 34
+text = "Welcome back!"
+horizontal_alignment = 1
+
+[node name="Email" type="LineEdit" parent="Columns/Card/Form"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.12, 0.08, 1)
+theme_override_font_sizes/font_size = 24
+placeholder_text = "Email"
+
+[node name="PasswordRow" type="HBoxContainer" parent="Columns/Card/Form"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Password" type="LineEdit" parent="Columns/Card/Form/PasswordRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.2, 0.12, 0.08, 1)
+theme_override_font_sizes/font_size = 24
+placeholder_text = "Password"
+secret = true
+
+[node name="ShowPassword" type="Button" parent="Columns/Card/Form/PasswordRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(86, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Show"
+
+[node name="Error" type="Label" parent="Columns/Card/Form"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.12, 0.08, 1)
+theme_override_font_sizes/font_size = 20
+autowrap_mode = 2
+
+[node name="Login" type="Button" parent="Columns/Card/Form"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 58)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.12, 0.08, 1)
+theme_override_font_sizes/font_size = 26
+text = "Log in"
+
+[node name="Forgot" type="Button" parent="Columns/Card/Form"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Forgot password?"
+
+[node name="Divider" type="Label" parent="Columns/Card/Form"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "────────  or  ────────"
+horizontal_alignment = 1
+
+[node name="Google" type="Button" parent="Columns/Card/Form"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Continue with Google"
+
+[node name="SignUp" type="Button" parent="Columns/Card/Form"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "New here? Sign up"
+
+[node name="Guest" type="Button" parent="Columns/Card/Form"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Just want to play? Join a game"
