@@ -43,6 +43,7 @@ func _ready() -> void:
 	join_button.pressed.connect(_join_code)
 	code_input.text_changed.connect(_on_code_changed)
 	_refresh_recent_quizzes()
+	get_node("SafeMargin/RootColumn/MainContent/CenterColumn/BattleHint").text = "Play your latest quiz"
 	stars_shop_button.text = "%d Stars | Shop" % TaskManager.stars_balance()
 	stars_shop_button.add_theme_color_override("font_color", UITheme.INK)
 	stars_shop_button.add_theme_font_size_override("font_size", 22)
@@ -201,7 +202,12 @@ func _add_button_icon(button: Button, kind: String) -> void:
 
 
 func _start_quiz() -> void:
-	var quizzes: Array = QuizLibrary.all()
+	var quizzes: Array = []
+	for value: Variant in QuizLibrary.all():
+		var entry: Dictionary = value as Dictionary
+		if str(entry.get("title", "")).to_lower().contains("tactical battle test"):
+			continue
+		quizzes.append(entry)
 	if quizzes.is_empty():
 		status_label.text = "Upload a reviewer first"
 		return
@@ -214,7 +220,12 @@ func _refresh_recent_quizzes() -> void:
 	for child: Node in recent_list.get_children():
 		recent_list.remove_child(child)
 		child.queue_free()
-	var quizzes: Array = QuizLibrary.all()
+	var quizzes: Array = []
+	for value: Variant in QuizLibrary.all():
+		var entry: Dictionary = value as Dictionary
+		if str(entry.get("title", "")).to_lower().contains("tactical battle test"):
+			continue
+		quizzes.append(entry)
 	if quizzes.is_empty():
 		var empty: Label = UITheme.sans("No saved quizzes yet. Upload a reviewer to make one.", 20, UITheme.INK)
 		empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -224,7 +235,7 @@ func _refresh_recent_quizzes() -> void:
 	for index: int in count:
 		var quiz: Dictionary = quizzes[index]
 		var row: Button = Button.new()
-		row.text = str(quiz.get("title", "Untitled quiz"))
+		row.text = _display_quiz_title(str(quiz.get("title", "Untitled quiz")))
 		row.custom_minimum_size = Vector2(0, 48)
 		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_theme_font_size_override("font_size", 24)
@@ -233,6 +244,11 @@ func _refresh_recent_quizzes() -> void:
 		var quiz_id: String = str(quiz.get("id", ""))
 		row.pressed.connect(_open_recent.bind(quiz_id))
 		recent_list.add_child(row)
+
+func _display_quiz_title(raw_title: String) -> String:
+	var title: String = raw_title.get_basename().replace("_", " ").replace("-", " ")
+	title = title.replace("DEMO", "").strip_edges()
+	return title if not title.is_empty() else "Untitled quiz"
 
 
 func _refresh_courses() -> void:
