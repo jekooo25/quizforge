@@ -5,6 +5,7 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/quizforge_logo.png" id="3"]
 [ext_resource type="Texture2D" path="res://assets/sprites/mascot_cat.png" id="4"]
 [ext_resource type="Theme" path="res://assets/themes/quizforge.tres" id="5"]
+[ext_resource type="PackedScene" path="res://scenes/Logo.tscn" id="6"]
 [sub_resource type="StyleBoxFlat" id="Card"]
 bg_color = Color(0.96, 0.9, 0.76, 1)
 border_width_left = 3
@@ -70,30 +71,13 @@ size_flags_horizontal = 3
 alignment = 1
 theme_override_constants/separation = 18
 
-[node name="Logo" type="TextureRect" parent="Columns/Brand"]
-custom_minimum_size = Vector2(0, 110)
+[node name="BrandBackdrop" type="ColorRect" parent="Columns/Brand"]
 layout_mode = 2
-texture = ExtResource("3")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="Tagline" type="Label" parent="Columns/Brand"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
-theme_override_constants/shadow_offset_x = 3
-theme_override_constants/shadow_offset_y = 3
-theme_override_font_sizes/font_size = 28
-text = "Learn. Battle. Improve."
-horizontal_alignment = 1
-
-[node name="Mascot" type="TextureRect" parent="Columns/Brand"]
-custom_minimum_size = Vector2(0, 170)
-layout_mode = 2
-texture = ExtResource("4")
-expand_mode = 1
-stretch_mode = 5
+color = Color(0.03, 0.05, 0.08, 0.62)
 mouse_filter = 2
+
+[node name="Logo" parent="Columns/Brand" instance=ExtResource("6")]
+layout_mode = 2
 
 [node name="Card" type="PanelContainer" parent="Columns"]
 layout_mode = 2
@@ -151,15 +135,16 @@ autowrap_mode = 2
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 58)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.2, 0.12, 0.08, 1)
 theme_override_font_sizes/font_size = 26
 text = "Log in"
+theme_type_variation = "PrimaryButton"
 
 [node name="Forgot" type="Button" parent="Columns/Card/Form"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 22
 text = "Forgot password?"
+theme_type_variation = "LinkButton"
 theme_override_styles/normal = SubResource("Link")
 theme_override_styles/hover = SubResource("Link")
 theme_override_styles/pressed = SubResource("Link")
@@ -168,6 +153,7 @@ theme_override_styles/pressed = SubResource("Link")
 layout_mode = 2
 theme_override_font_sizes/font_size = 22
 text = "────────  or  ────────"
+theme_type_variation = "DarkLabel"
 horizontal_alignment = 1
 
 [node name="Google" type="Button" parent="Columns/Card/Form"]
@@ -183,6 +169,7 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 22
 text = "New here? Sign up"
+theme_type_variation = "LinkButton"
 theme_override_styles/normal = SubResource("Link")
 theme_override_styles/hover = SubResource("Link")
 theme_override_styles/pressed = SubResource("Link")
@@ -192,6 +179,7 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 22
 text = "Just want to play? Join a game"
+theme_type_variation = "LinkButton"
 theme_override_styles/normal = SubResource("Link")
 theme_override_styles/hover = SubResource("Link")
 theme_override_styles/pressed = SubResource("Link")

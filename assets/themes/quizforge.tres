@@ -264,6 +264,8 @@ shadow_color = Color(0.1, 0.08, 0.04, 0.28)
 shadow_size = 8
 shadow_offset = Vector2(0, 4)
 
+[sub_resource type="StyleBoxEmpty" id="LinkEmpty"]
+
 [resource]
 default_font = ExtResource("1_body")
 default_font_size = 16
@@ -277,6 +279,30 @@ Button/styles/normal = SubResource("NavyButton")
 Button/styles/hover = SubResource("NavyButtonHover")
 Button/styles/pressed = SubResource("NavyButtonPressed")
 Button/styles/focus = SubResource("NavyButton")
+PrimaryButton/base_type = &"Button"
+PrimaryButton/colors/font_color = Color(1, 1, 1, 1)
+PrimaryButton/colors/font_hover_color = Color(1, 1, 1, 1)
+PrimaryButton/colors/font_pressed_color = Color(1, 1, 1, 1)
+PrimaryButton/colors/font_disabled_color = Color(0.65, 0.65, 0.65, 1)
+PrimaryButton/font_sizes/font_size = 24
+PrimaryButton/fonts/font = ExtResource("2_display")
+PrimaryButton/styles/normal = SubResource("NavyButton")
+PrimaryButton/styles/hover = SubResource("NavyButtonHover")
+PrimaryButton/styles/pressed = SubResource("NavyButtonPressed")
+PrimaryButton/styles/focus = SubResource("NavyButton")
+LinkButton/base_type = &"Button"
+LinkButton/colors/font_color = Color(0.290196, 0.2, 0.12549, 1)
+LinkButton/colors/font_hover_color = Color(0.545098, 0.364706, 0.109804, 1)
+LinkButton/colors/font_pressed_color = Color(0.290196, 0.2, 0.12549, 1)
+LinkButton/font_sizes/font_size = 22
+LinkButton/fonts/font = ExtResource("1_body")
+LinkButton/styles/normal = SubResource("LinkEmpty")
+LinkButton/styles/hover = SubResource("LinkEmpty")
+LinkButton/styles/pressed = SubResource("LinkEmpty")
+DarkLabel/base_type = &"Label"
+DarkLabel/colors/font_color = Color(0.290196, 0.2, 0.12549, 1)
+DarkLabel/font_sizes/font_size = 22
+DarkLabel/fonts/font = ExtResource("1_body")
 LineEdit/colors/font_color = Color(0.322, 0.208, 0.114, 1)
 LineEdit/colors/font_placeholder_color = Color(0.45, 0.35, 0.25, 1)
 LineEdit/font_sizes/font_size = 24
