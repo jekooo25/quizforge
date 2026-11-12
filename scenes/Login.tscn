@@ -175,7 +175,7 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
-text = "Continue with Google"
+text = "G   Continue with Google"
 theme_type_variation = "MyQuizzesSoonTab"
 
 [node name="SignUp" type="Button" parent="Columns/Card/Form"]
